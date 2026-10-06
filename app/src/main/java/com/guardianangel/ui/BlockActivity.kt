@@ -45,7 +45,6 @@ import com.guardianangel.core.InstalledApps
 import com.guardianangel.core.Line
 import com.guardianangel.core.RestrictionKind
 import com.guardianangel.core.Rules
-import com.guardianangel.data.Intensity
 import com.guardianangel.data.ProofReason
 import com.guardianangel.ui.theme.GuardianTheme
 
@@ -110,7 +109,7 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
     val decision = remember(pkg, config, state, now / 2_000, resumes) { Guardian.decide(pkg) }
     val appLabel = remember(pkg) { InstalledApps.label(context, pkg) }
     var line by remember(pkg) { mutableStateOf("") }
-    var firmWaitUntil by remember(pkg) { mutableLongStateOf(0L) }
+    var waitUntil by remember(pkg) { mutableLongStateOf(0L) }
 
     LaunchedEffect(decision is Decision.Allow) {
         if (decision is Decision.Allow) onOpen()
@@ -121,7 +120,6 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
             when {
                 block == null -> Line.GRANT
                 block.kind == RestrictionKind.BEDTIME -> Line.BEDTIME
-                block.intensity == Intensity.GENTLE && block.selfBypass -> Line.WARNING
                 else -> Line.BLOCKED
             },
         )
@@ -149,35 +147,28 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
             )
-            Muted("Intensity: ${block.intensity.ordinal + 1} ${block.intensity.label}")
             when (block.kind) {
                 RestrictionKind.PUNISHMENT -> Text("${formatDuration(block.until - now)} left", fontWeight = FontWeight.Bold)
                 RestrictionKind.BEDTIME -> Text("Until ${formatMinuteOfDay(config.bedtime.endMinute)}", fontWeight = FontWeight.Bold)
                 else -> Unit
             }
 
-            if (block.selfBypass && block.intensity == Intensity.GENTLE) {
-                Button(onClick = {
-                    Guardian.grant(pkg, Rules.BYPASS_MINUTES, Intensity.GENTLE)
-                    onOpen()
-                }) { Text("Continue anyway") }
-            }
-
-            if (block.selfBypass && block.intensity == Intensity.FIRM) {
+            if (block.selfBypass) {
+                Muted("Way in: wait ${Rules.WAIT_SECONDS} seconds for ${Rules.BYPASS_MINUTES} minutes, or send her an everyday photo for ${Rules.GRANT_MINUTES}. Trying never costs you merit.")
                 when {
-                    firmWaitUntil == 0L -> OutlinedButton(onClick = { firmWaitUntil = now + Rules.FIRM_DELAY_SECONDS * 1_000L }) {
-                        Text("Wait ${Rules.FIRM_DELAY_SECONDS} seconds")
+                    waitUntil == 0L -> OutlinedButton(onClick = { waitUntil = now + Rules.WAIT_SECONDS * 1_000L }) {
+                        Text("Wait ${Rules.WAIT_SECONDS} seconds")
                     }
-                    now < firmWaitUntil -> Text("Wait ${formatDuration(firmWaitUntil - now)}")
+                    now < waitUntil -> Text("Wait ${formatDuration(waitUntil - now)}")
                     else -> Button(onClick = {
-                        Guardian.grant(pkg, Rules.BYPASS_MINUTES, Intensity.FIRM)
+                        Guardian.grant(pkg, Rules.BYPASS_MINUTES)
                         onOpen()
                     }) { Text("Open now") }
                 }
                 OutlinedButton(onClick = {
-                    val request = Guardian.requestProof(ProofReason.PERMISSION, 10, pkg, Intensity.FIRM)
+                    val request = Guardian.requestProof(ProofReason.PERMISSION, 10, pkg)
                     context.startActivity(ProofActivity.intent(context, request.id))
-                }) { Text("Send photo proof instead") }
+                }) { Text("Send a photo instead") }
             }
 
             if (block.askAllowed) {
@@ -196,12 +187,7 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                 ) { Text(if (cooldown > now) "Ask again in ${formatDuration(cooldown - now)}" else "Ask her") }
             }
 
-            if (!block.selfBypass && !block.askAllowed) {
-                Muted(if (block.kind == RestrictionKind.LOCKOUT) "No way past this while she's on." else "Blocked until the timer ends.")
-            }
-            if (block.countsAsFailure) {
-                Text("Absolute: trying to open this counts as a failure.", color = MaterialTheme.colorScheme.error)
-            }
+            if (!block.selfBypass && !block.askAllowed) Muted("Blocked until the timer ends.")
 
             OutlinedButton(onClick = onHome, modifier = Modifier.fillMaxWidth()) { Text("Go home") }
             QuitButton(Modifier.fillMaxWidth()) { Guardian.quitForNow() }

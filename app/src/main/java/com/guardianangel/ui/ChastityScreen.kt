@@ -22,7 +22,6 @@ import com.guardianangel.core.MINUTE
 import com.guardianangel.core.Rules
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
-import com.guardianangel.data.Intensity
 import com.guardianangel.data.ProofReason
 import java.text.DateFormat
 import java.util.Date
@@ -32,7 +31,7 @@ fun ChastityScreen(config: GuardianConfig, state: GuardianState) {
     val context = LocalContext.current
     val now = rememberNow()
     val lock = state.chastity
-    val intensity = config.chastity.intensity
+    val settings = config.chastity
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -46,11 +45,10 @@ fun ChastityScreen(config: GuardianConfig, state: GuardianState) {
             !config.chastity.on && lock == null -> Muted("Chastity mode is off. Turn it on in Settings.")
             !config.enabled && lock == null -> Muted("Switch her on first.")
             lock == null -> SectionCard("Ready to be locked?") {
-                val range = Rules.lockRangeMinutes(intensity)
-                Text("Intensity: ${intensity.ordinal + 1} ${intensity.label}")
                 Muted(
-                    "She picks a timer between ${formatMinutes(range.first)} and ${formatMinutes(range.last)}, " +
-                        "never longer than ${config.chastity.maxHours}h. You'll owe her a photo within 15 minutes.",
+                    "She picks a timer between ${formatMinutes(minOf(settings.minLockMinutes, settings.maxLockMinutes))} and " +
+                        "${formatMinutes(maxOf(settings.minLockMinutes, settings.maxLockMinutes))}, " +
+                        "never longer than ${settings.maxHours}h. You'll owe her a photo within 15 minutes.",
                 )
                 Button(onClick = { Guardian.startChastity() }) { Text("Lock me up") }
             }
@@ -79,24 +77,16 @@ fun ChastityScreen(config: GuardianConfig, state: GuardianState) {
                 if (left <= 0) {
                     Button(onClick = { Guardian.requestRelease() }) { Text("Release me") }
                 } else {
-                    val waitUntil = state.releaseRequestedAt + Rules.EARLY_RELEASE_WAIT_MINUTES * MINUTE
-                    val waiting = intensity == Intensity.FIRM && state.releaseRequestedAt > 0 && now < waitUntil
-                    if (waiting) {
-                        Text("You may ask again in ${formatDuration(waitUntil - now)}")
+                    val begAgainAt = state.lastBegAt + Rules.BEG_COOLDOWN_MINUTES * MINUTE
+                    if (state.lastBegAt > 0 && now < begAgainAt) {
+                        Text("You may beg again in ${formatDuration(begAgainAt - now)}")
                     } else {
-                        OutlinedButton(onClick = { Guardian.requestRelease() }) {
-                            Text(
-                                when (intensity) {
-                                    Intensity.GENTLE -> "Unlock early"
-                                    Intensity.FIRM -> if (state.releaseRequestedAt > 0) "Unlock now" else "Request early release"
-                                    Intensity.STRICT, Intensity.ABSOLUTE -> "Beg to be released"
-                                },
-                            )
-                        }
+                        OutlinedButton(onClick = { Guardian.requestRelease() }) { Text("Beg to be released") }
                     }
-                    if (intensity == Intensity.ABSOLUTE) {
-                        Text("Absolute: begging early counts as a failure.", color = MaterialTheme.colorScheme.error)
-                    }
+                    Muted(
+                        "She decides. A strict mood makes her harder to convince." +
+                            if (settings.canAddTime) " A denial may add ${formatMinutes(settings.addMinutes)}." else "",
+                    )
                 }
             }
         }

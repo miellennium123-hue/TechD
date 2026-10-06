@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.2.2 released. Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 12)
+> **Status:** v0.3.0 (sections 9.1 to 9.3 built). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 13)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -30,7 +30,7 @@
 | **Rewards** | Simple **praise**, plus **merit** points and levels (no unlocks) |
 | **On failure** | **Degradation** messages, possibly **lockout**. **No content limits** set by user. **Claude writes all her lines** |
 
-**Mood rule:** Mood affects **only her dialogue and presentation**. It **never** changes settings, lockouts, timers, or punishments.
+**Mood rule:** Mood affects **only her dialogue and presentation**. It **never** changes settings, lockouts, timers, or punishments. **One exception (round 12):** begging for early chastity release, where a strict mood denies and adds time more often (see 9.3).
 
 ---
 
@@ -96,11 +96,13 @@ Two lockout scopes:
 
 ---
 
-## 5. Settings and intensity
+## 5. Settings
 
-User wants **a list of individual settings**, each toggled on/off, spanning **varying intensity**.
+> **Round 12 / v0.3.0:** the intensity scale below is **removed**. Each setting is one on/off toggle plus its details (see 9.1). The old scale is kept here for history.
 
-**Draft intensity scale** (applies per setting):
+User wants **a list of individual settings**, each toggled on/off.
+
+**Old intensity scale** (removed in v0.3.0):
 
 | Level | Name | Behavior |
 |---|---|---|
@@ -155,7 +157,9 @@ User wants **a list of individual settings**, each toggled on/off, spanning **va
 
 ---
 
-## 8. Build decisions (v0.1)
+## 8. Build decisions
+
+### v0.1 and v0.2
 
 Choices made while building, where the spec left room:
 
@@ -175,21 +179,36 @@ Choices made while building, where the spec left room:
 - **Releases (round 10):** every merge into `main` publishes a GitHub Release with `guardian-angel.apk`. The stable link always points to the newest build. Settings > About shows the installed version and links there
 - **Signing (round 9):** every build is signed with one fixed key (`app/signing/guardian.keystore`) so new APKs install over old ones and keep settings and photos. Before v0.2.1 each CI build had a random key, so updating needed an uninstall
 
-## 9. Planned next (round 12, not built yet)
+> Several v0.1 decisions above (Ask permission intensity, Firm bypass, Absolute, timer ranges, early release) are replaced by v0.3.0 below.
+
+### v0.3.0 (round 13, builds 9.1 to 9.3)
+- **Grouping:** 9.1 to 9.3 ship together. Removing intensity means lockouts, bedtime and chastity each need their new behavior at the same time
+- **Kept sub-options:** photo proof frequency (Occasional / Frequent), degradation (Mild / Harsh), punishment length (Short / Long), wallpaper mode and mood stay. They are details, not intensity levels
+- **Way in (lockouts and bedtime):** wait 60 seconds for 10 minutes of access, or send an everyday photo for 15 minutes. Photos for the way in and for "Ask her" only use non-explicit prompts
+- **Ask permission:** still a toggle. Adds an "Ask her" button, and on its own (lockouts off) guards the lockout scope. Fixed odds, never mood: 40% grant, 40% everyday photo, 20% deny (5 minute cooldown)
+- **Punishment lockout** has no way in. It only comes from real failures (missed proof), never from opening a blocked app. Quit for now still ends it
+- **Lock length:** "Shortest lock" and "Longest picked lock" (30 minute steps, default 1h to 4h). She picks between them, rounded to 15 minutes. The old "Longest lock" is now "Hard cap (incl. added time)", default 24h
+- **Begging:** she releases 35% of the time in a sweet mood, 10% in a strict mood. Denials add time 20% (sweet) or 50% (strict), about 1 in 3 overall. After a denial you wait 10 minutes to beg again. An early release earns no merit
+- **Whim:** with "She can add time" on, each check-in during a lock has a 10% chance of adding time (was Strict and up only)
+- **Upgrade:** old saved intensity values are ignored. Existing settings and photos are kept
+
+## 9. Planned next (round 12)
 
 Agreed in round 12. Build these next, one release at a time.
 
-### 9.1 Simpler settings
+**Build status:** 9.1 to 9.3 built in v0.3.0. 9.4 and 9.5 not built yet.
+
+### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
 - Each setting becomes **one on/off toggle**
 - **Keep the details:** lockout scope, bedtime hours, chastity amounts, check-in frequency, Always-allowed list, photo prompts
 
-### 9.2 Lockouts and bedtime
+### 9.2 Lockouts and bedtime (built, v0.3.0)
 - When on, locked apps are **hard blocked**
 - **Way in:** a short wait, or an everyday (non-explicit) photo prompt from the prompt list
 - **Attempts never count as failures:** opening a blocked app costs no merit and adds no punishment
 
-### 9.3 Chastity
+### 9.3 Chastity (built, v0.3.0)
 - **Lock length:** two settings, **minimum and maximum**. She picks a random length in between (still capped by Longest lock)
 - **Early release:** "Beg to be released". She decides
 - **Denied begs:** about 1 in 3 denials add your add-time amount. Only if "She can add time" is on, capped by Longest lock
@@ -255,3 +274,4 @@ None right now.
 - **2026-10-06 (round 10):** Merged all work into `main`. Added automatic GitHub Releases with a stable download link, an About section in Settings (version and update link), and a full workflow guide in `CLAUDE.md` for future sessions
 - **2026-10-06 (round 11):** No design changes. Added `docs/TESTING.md`, an on-device test checklist for v0.2.2. Releases now publish only when the version number changes
 - **2026-10-06 (round 12):** Planned the next version: one toggle per setting (no intensity levels), hard-block lockouts, chastity min/max length and begging, Rules & Tasks, and Shows up. Popups dropped. Written up in section 9 for the next chat; not built yet
+- **2026-10-06 (round 13):** Building section 9, one part at a time. v0.3.0 builds 9.1 to 9.3: intensity levels removed, lockouts and bedtime hard blocked with a wait or everyday photo as the way in, attempts never fail, chastity min/max lock length and mood-aware begging. Decisions in section 8

@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.guardianangel.R
 import com.guardianangel.core.AssetImages
-import com.guardianangel.data.Intensity
 import kotlinx.coroutines.delay
 
 @Composable
@@ -145,14 +144,6 @@ fun <T> ChoiceChips(options: List<T>, selected: T, label: (T) -> String, enabled
                 enabled = enabled,
             )
         }
-    }
-}
-
-@Composable
-fun IntensityPicker(value: Intensity, enabled: Boolean = true, onChange: (Intensity) -> Unit) {
-    Column {
-        ChoiceChips(Intensity.entries, value, { "${it.ordinal + 1} ${it.label}" }, enabled, onChange)
-        Text(value.blurb, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

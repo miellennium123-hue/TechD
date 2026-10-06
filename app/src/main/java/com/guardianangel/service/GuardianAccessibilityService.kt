@@ -54,7 +54,6 @@ class GuardianAccessibilityService : AccessibilityService() {
         if (pkg == lastBlockedPackage && t - lastBlockAt < 1_500) return
         lastBlockedPackage = pkg
         lastBlockAt = t
-        if (decision.countsAsFailure) Guardian.penalizeAttempt()
         startActivity(BlockActivity.intent(this, pkg))
     }
 

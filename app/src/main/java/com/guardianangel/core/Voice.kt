@@ -6,7 +6,7 @@ import kotlin.random.Random
 enum class Line {
     GREETING, PRAISE, GRANT, DENY, DEMAND_PROOF, WARNING, BLOCKED, BEDTIME, WAIT,
     FAIL_NEUTRAL, DEGRADE_MILD, DEGRADE_HARSH, CHASTITY_START, TIME_ADDED, CHECK_IN,
-    RELEASED, TIMER_DONE, EARLY_DENIED, PROOF_REJECTED, OFF, QUIT,
+    RELEASED, TIMER_DONE, EARLY_DENIED, BEG_GRANTED, BEG_TIME_ADDED, PROOF_REJECTED, OFF, QUIT,
 }
 
 /** Everything she says. Edit freely; every line needs a sweet and a strict version. */
@@ -100,6 +100,16 @@ object Voice {
             "Already? No, pet. Not yet.",
             "So eager. The answer is still no.",
             "Patience, pet. I'll say when.",
+        ),
+        Line.BEG_GRANTED to listOf(
+            "Aww, you begged so nicely. Go on, you can come out.",
+            "Alright, pet. I'm feeling generous. You may unlock.",
+            "Since you asked so sweetly, yes. Out you come.",
+        ),
+        Line.BEG_TIME_ADDED to listOf(
+            "Begging already? Sorry, pet. A little more time for that.",
+            "No, sweetheart. And now you'll wait a bit longer.",
+            "Hmm, I don't think so. Let's add some time instead.",
         ),
         Line.PROOF_REJECTED to listOf(
             "Hmm, that's not what I asked for, pet. Try again.",
@@ -205,6 +215,16 @@ object Voice {
             "No. You stay locked.",
             "Begging won't work.",
             "Not a chance.",
+        ),
+        Line.BEG_GRANTED to listOf(
+            "Fine. Unlock. Don't expect this again.",
+            "You may come out. I'm feeling merciful. For once.",
+            "Released early. Remember who allowed it.",
+        ),
+        Line.BEG_TIME_ADDED to listOf(
+            "Begging? That earned you more time.",
+            "No. And for asking, you'll stay locked longer.",
+            "Denied. Time added. Ask again and see what happens.",
         ),
         Line.PROOF_REJECTED to listOf(
             "Rejected. Do it properly.",
