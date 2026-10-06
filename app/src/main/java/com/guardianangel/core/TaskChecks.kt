@@ -67,10 +67,11 @@ object Lines {
  * Decides whether the phone moved during a stillness task, from accelerometer readings.
  * The first readings set the resting position. Moving means the smoothed reading drifts
  * more than [threshold] m/s² from it for longer than [sustainMs], so a single bump doesn't fail you.
+ * 2.5 m/s² is roughly tilting the phone 15 degrees, or a real shift of position.
  */
 class StillnessJudge(
-    private val threshold: Float = 2.0f,
-    private val sustainMs: Long = 400,
+    private val threshold: Float = 2.5f,
+    private val sustainMs: Long = 500,
     private val calibrationSamples: Int = 10,
 ) {
     private var count = 0

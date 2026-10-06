@@ -33,9 +33,12 @@ class Store<T>(
             ?: default
 
     companion object {
+        // Lenient on purpose: data saved by an older or newer version should still load
+        // (unknown keys are skipped, unknown enum values fall back to the field's default).
         private val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
+            coerceInputValues = true
         }
     }
 }

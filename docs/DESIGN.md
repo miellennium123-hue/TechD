@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.5.0 (all of section 9 built). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 13, v0.5.0)
+> **Status:** v0.6.0 (section 9 built, then a full review pass). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 14, v0.6.0)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -86,6 +86,9 @@ Two lockout scopes:
 - Only while she's **enabled**
 - A few times a day, **at least once every 2 hours**
 - **Discreet notifications** (neutral wording, nothing explicit on the lock screen)
+- A check-in can become a task (9.4), a summons (9.5), a photo request, or a plain "report in"
+- **No hidden deadlines (round 14):** if notifications are off, check-ins never set a task, summons or photo deadline
+- **Quiet at bedtime (round 14):** with Bedtime on, check-ins inside the bedtime window are silent (no notification, no demands)
 
 ### 4.7 Points / levels
 - **Merit only.** A score and level that show how good a pet you've been
@@ -113,25 +116,27 @@ User wants **a list of individual settings**, each toggled on/off.
 
 *"Quit for now" overrides every level.*
 
-**Draft settings list:**
+**Current settings (v0.6.0):** one toggle each, plus details.
 
-| Setting | Default | Intensity range |
+| Setting | Default | Details |
 |---|---|---|
-| Guardian Angel enabled | Off | n/a |
-| App lockouts | Off | Scope: Social media / Everything. Intensity 1 to 4 |
-| Always-allowed list | WhatsApp, Phone, banking | Editable app list |
-| Ask permission for guarded apps | Off | 1 to 4 |
-| Bedtime | Off | 1 to 4 |
+| Guardian Angel enabled | Off | Master switch |
+| App lockouts | Off | Scope: Social media / Everything. Hard block, way in: 60 second wait or an everyday photo |
+| Always-allowed list | WhatsApp, Phone, messages, contacts, clock, maps | Editable app list |
+| Ask permission for guarded apps | Off | Adds "Ask her" |
+| Bedtime | Off | Start and end time. Same way in as lockouts. Check-ins are quiet inside it |
 | Wallpaper control | Off | Set only / Set and lock |
-| Chastity mode | Off | 1 to 4 |
-| Chastity: she can add time | Off | On / Off, plus **amount per addition** (user-set) |
+| Chastity mode | Off | Shortest and longest picked lock (default 1h to 4h) |
+| Chastity: she can add time | Off | Amount per addition, hard cap (default 24h) |
 | Photo proof requests | Off | Occasional / Frequent |
 | Photo proof prompts | 6 defaults (1 explicit) | Editable list, each prompt Explicit or not |
 | Check-in frequency | Every 2 hours | 30 min to 2 hours |
+| Rules & Tasks | Off | Editable list, 12 starters |
+| Shows up | Off | Editable question list, 8 starters |
 | Degradation on failure | Off | Mild / Harsh |
-| Lockout as punishment | Off | Short / Long |
+| Lockout as punishment | Off | Short (30 min) / Long (3h) |
 | Discreet notifications | On | On / Off |
-| Mood mode (dialogue only) | Switching | Sweet / Strict / Switching (random) |
+| Mood | Switching | Sweet / Strict / Switching. Dialogue, plus begging odds |
 | Merit points and levels | On | On / Off |
 
 ---
@@ -217,11 +222,34 @@ Choices made while building, where the spec left room:
 - **Questions:** 8 non-explicit starters (5 multiple choice, 3 phrases), editable in Settings > Shows up > Her questions
 - **Off:** turning the toggle off, turning her off, or Quit for now clears a pending summons with no penalty
 
-## 9. Planned next (round 12)
+### v0.6.0 (round 14, full review of every earlier version)
+**Fixed**
+- **App in front:** the keyboard, notification shade and system popups no longer count as "the app you're in". Before, pulling down the shade or typing made the 30 second re-check stop watching your app, so expiring access, bedtime starting, her rules and the Shows up lock could fail to kick in until you switched apps. Going home always counts as leaving
+- **No hidden deadlines:** with notifications off, check-ins only do a plain "report in". Tasks, summons and photo demands need a working notification
+- **Quiet at bedtime:** with Bedtime on, check-ins in the bedtime window are silent: +2 merit, no notification, no task, summons, photo or added time. Before, she could set deadlines you'd miss asleep
+- **Stillness:** "Start" disappears when the hold can't finish before the deadline (it used to fail you halfway)
+- **Lines:** finished lines are saved in the task, so leaving the screen or app keeps your progress (a typo still restarts from line 1)
+- **Shows up text:** said "3 wrong answers allowed" when the 3rd wrong answer is the failure. Now shows tries left
+- **Notifications:** tasks have their own notification, which opens the task screen. Finishing a task no longer clears an unrelated photo notification
+- **Release notes:** changelog back in date order, so each release's notes show its own changes
+**Safer**
+- **Reset all settings** asks first. It also resets your edited prompts, tasks and questions
+- Tasks and summons can't be issued while she's off, while the toggle is off, or on top of an open one
+- Saved data loads more leniently, so a bad value falls back to its default instead of resetting everything
+**Easier**
+- **Chastity steppers:** 30 minute steps up to 4h, 1h up to a day, then 12h (was 30 minutes all the way, up to 336 taps). Hard cap: 1h steps up to a day, then 12h
+- A warning shows when the hard cap is shorter than the longest picked lock
+- **Stillness** is a little more forgiving: about 15 degrees of drift for half a second (was 12 degrees for 0.4 seconds)
+- **Task editor:** picking a kind sets a sensible length (rule 1h, photo 30 min, stillness 5 min)
+- Button rows wrap on narrow phones (Shows up, task and question editors)
+- **Try it now** opens her screen directly when notifications are off, and Settings says she can't call you
+- Block screen uses her "you ignored me" line for a Shows up lock
 
-Agreed in round 12. Build these next, one release at a time.
+## 9. Round 12 plan (built)
 
-**Build status:** all built. 9.1 to 9.3 in v0.3.0, 9.4 in v0.4.0, 9.5 in v0.5.0.
+Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
+
+**Build status:** all built. 9.1 to 9.3 in v0.3.0, 9.4 in v0.4.0, 9.5 in v0.5.0. Reviewed and fixed in v0.6.0.
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -263,7 +291,8 @@ Agreed in round 12. Build these next, one release at a time.
 
 ## 10. Open questions
 
-None right now.
+- **Night check-ins without Bedtime (round 14):** with Bedtime off, check-ins keep coming all night and can set deadlines while you sleep. Options: turn Bedtime on (check-ins go quiet inside it), or add a separate "Quiet hours" setting. Waiting on the user
+- **Multiple choice can't be failed (round 14):** with 3 options you can only get 2 wrong, so the 3-strikes failure needs 4 or more options. Fine as is, or add more wrong answers to the starter questions? Waiting on the user
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -299,6 +328,7 @@ None right now.
 - **2026-10-06 (round 10):** Merged all work into `main`. Added automatic GitHub Releases with a stable download link, an About section in Settings (version and update link), and a full workflow guide in `CLAUDE.md` for future sessions
 - **2026-10-06 (round 11):** No design changes. Added `docs/TESTING.md`, an on-device test checklist for v0.2.2. Releases now publish only when the version number changes
 - **2026-10-06 (round 12):** Planned the next version: one toggle per setting (no intensity levels), hard-block lockouts, chastity min/max length and begging, Rules & Tasks, and Shows up. Popups dropped. Written up in section 9 for the next chat; not built yet
-- **2026-10-06 (round 13, v0.5.0):** Built 9.5 Shows up: she summons you at some check-ins, everything locks if you ignore her for 10 minutes, and she asks a multiple choice or typed-phrase question. Section 9 is now fully built
+- **2026-10-06 (round 13, v0.3.0):** Building section 9, one part at a time. v0.3.0 builds 9.1 to 9.3: intensity levels removed, lockouts and bedtime hard blocked with a wait or everyday photo as the way in, attempts never fail, chastity min/max lock length and mood-aware begging. Decisions in section 8
 - **2026-10-06 (round 13, v0.4.0):** Built 9.4 Rules & Tasks: app-enforced and honor rules, photo tasks, stillness with the motion sensor, and line writing. Decisions in section 8
-- **2026-10-06 (round 13):** Building section 9, one part at a time. v0.3.0 builds 9.1 to 9.3: intensity levels removed, lockouts and bedtime hard blocked with a wait or everyday photo as the way in, attempts never fail, chastity min/max lock length and mood-aware begging. Decisions in section 8
+- **2026-10-06 (round 13, v0.5.0):** Built 9.5 Shows up: she summons you at some check-ins, everything locks if you ignore her for 10 minutes, and she asks a multiple choice or typed-phrase question. Section 9 is now fully built
+- **2026-10-06 (round 14, v0.6.0):** Full review of every version so far. Fixed app-in-front tracking, hidden deadlines with notifications off, demands at bedtime, stillness and lines edge cases, and Shows up wording. Added a reset confirmation and faster chastity steppers. Two open questions in section 10. Details in section 8

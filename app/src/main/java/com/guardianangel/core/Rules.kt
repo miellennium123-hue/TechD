@@ -6,6 +6,7 @@ import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.Mood
+import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.Question
 import com.guardianangel.data.RuleEnforcement
 import kotlin.math.max
@@ -34,6 +35,12 @@ sealed interface Decision {
 }
 
 enum class AskOutcome { GRANT, PROOF, DENY }
+
+/** What a check-in turns into. QUIET: during bedtime she lets you sleep (no notification, no demands). */
+enum class CheckInAction { TASK, SUMMONS, PROOF, PLAIN, QUIET }
+
+/** Random rolls for one check-in, each in 0 until 1. Kept separate so [Rules.checkInAction] stays pure. */
+data class CheckInRolls(val task: Double, val summons: Double, val proof: Double)
 
 /** Her answer to "please let me out early". [addTime] only applies to a denial. */
 data class BegOutcome(val released: Boolean, val addTime: Boolean)
@@ -155,6 +162,57 @@ object Rules {
 
     private fun normalizeAnswer(text: String): String =
         text.trim().lowercase().replace('’', '\'').replace('‘', '\'').replace(Regex("\\s+"), " ")
+
+    /** Chance a check-in asks for photo proof. Chastity always includes random cage checks. */
+    fun proofChance(config: GuardianConfig, state: GuardianState): Double = when {
+        config.photoProof.on && config.photoProof.frequency == ProofFrequency.FREQUENT -> 0.6
+        config.photoProof.on -> 0.25
+        state.chastity != null -> 0.25
+        else -> 0.0
+    }
+
+    /**
+     * Decides what a check-in does. Anything with a deadline (task, summons, photo) only happens
+     * when she can actually notify you, and never during bedtime, so you can't fail while asleep
+     * or without being told.
+     */
+    fun checkInAction(
+        config: GuardianConfig,
+        state: GuardianState,
+        minuteOfDay: Int,
+        canNotify: Boolean,
+        rolls: CheckInRolls,
+    ): CheckInAction {
+        if (isBedtime(config.bedtime, minuteOfDay)) return CheckInAction.QUIET
+        if (!canNotify) return CheckInAction.PLAIN
+        val proofPending = state.proofs.any { it.reason.penalized }
+        val canTask = config.tasksOn && config.taskList.isNotEmpty() && state.task == null && !proofPending
+        return when {
+            canTask && rolls.task < TASK_CHANCE -> CheckInAction.TASK
+            config.showsUpOn && state.summons == null && rolls.summons < SUMMON_CHANCE -> CheckInAction.SUMMONS
+            !proofPending && rolls.proof < proofChance(config, state) -> CheckInAction.PROOF
+            else -> CheckInAction.PLAIN
+        }
+    }
+
+    /** Settings stepper for lock lengths: 30 minute steps up to 4h, 1h steps up to a day, then 12h, up to 7 days. */
+    fun stepLockMinutes(current: Int, up: Boolean): Int {
+        // Going down uses the step of the band below, so up then down lands back where you started.
+        val probe = if (up) current else current - 1
+        val step = when {
+            probe < 4 * 60 -> 30
+            probe < 24 * 60 -> 60
+            else -> 12 * 60
+        }
+        return (if (up) current + step else current - step).coerceIn(30, 7 * 24 * 60)
+    }
+
+    /** Settings stepper for the hard cap: 1h steps up to a day, then 12h, up to 7 days. */
+    fun stepCapHours(current: Int, up: Boolean): Int {
+        val probe = if (up) current else current - 1
+        val step = if (probe < 24) 1 else 12
+        return (if (up) current + step else current - step).coerceIn(1, 7 * 24)
+    }
 
     /** How she answers "may I?". Fixed odds, never affected by mood. */
     fun askOutcome(roll: Double): AskOutcome = when {

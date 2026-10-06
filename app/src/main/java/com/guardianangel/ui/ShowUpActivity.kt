@@ -74,7 +74,10 @@ private fun ShowUpScreen(onDone: () -> Unit) {
         val result = Guardian.answer(given)
         line = result.line
         typed = ""
-        if (result is AnswerResult.Wrong) line = "${result.line}\n${result.triesLeft} tries left."
+        if (result is AnswerResult.Wrong) {
+            val tries = if (result.triesLeft == 1) "Last try." else "${result.triesLeft} tries left."
+            line = "${result.line}\n$tries"
+        }
     }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -106,8 +109,11 @@ private fun ShowUpScreen(onDone: () -> Unit) {
                         Button(onClick = { answer(typed) }, enabled = typed.isNotBlank()) { Text("Answer her") }
                     }
                 }
-                val wrongLeft = Rules.MAX_WRONG_ANSWERS - summons.wrongAnswers
-                Muted("$wrongLeft wrong answers allowed before it counts as a failure.")
+                val triesLeft = Rules.MAX_WRONG_ANSWERS - summons.wrongAnswers
+                Muted(
+                    if (triesLeft == 1) "Last try. Another wrong answer counts as a failure."
+                    else "$triesLeft tries. Getting it wrong ${Rules.MAX_WRONG_ANSWERS} times counts as a failure.",
+                )
                 if (now >= summons.lockAt) {
                     Text("Everything is locked until you answer.", color = MaterialTheme.colorScheme.error)
                 } else {
