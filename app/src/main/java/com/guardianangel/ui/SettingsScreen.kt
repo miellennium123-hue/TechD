@@ -105,6 +105,30 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
+        SectionCard("Quiet hours") {
+            SwitchRow(
+                "Quiet hours",
+                "She lets you sleep. Check-ins in this window are silent, and she never sets a task, photo or summons " +
+                    "that would be due inside it. Doesn't lock anything; Bedtime does that, and counts as quiet too.",
+                config.quietHours.on,
+            ) { v -> update { it.copy(quietHours = it.quietHours.copy(on = v)) } }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalButton(onClick = {
+                    pickTime(config.quietHours.startMinute) { m -> update { it.copy(quietHours = it.quietHours.copy(startMinute = m)) } }
+                }) { Text("From ${formatMinuteOfDay(config.quietHours.startMinute)}") }
+                FilledTonalButton(onClick = {
+                    pickTime(config.quietHours.endMinute) { m -> update { it.copy(quietHours = it.quietHours.copy(endMinute = m)) } }
+                }) { Text("To ${formatMinuteOfDay(config.quietHours.endMinute)}") }
+            }
+            if (config.quietHours.on && config.quietHours.startMinute == config.quietHours.endMinute) {
+                Text(
+                    "Start and end are the same, so there are no quiet hours.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+
         SectionCard("Wallpaper") {
             SwitchRow("Wallpaper control", "She sets your wallpaper to her images.", config.wallpaper.on) { v ->
                 update { it.copy(wallpaper = it.wallpaper.copy(on = v)) }

@@ -1,9 +1,19 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.6.0 (review fixes). Nothing has been tested on a phone since 0.2.2, so every section is still open. Section 0 covers what 0.6.0 changed
+> **Version under test:** 0.7.0 (adds Quiet hours, harder Shows up questions). Section 0 covers what 0.6.0 and 0.7.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0a. New in 0.7.0 (quick checks)
+- [ ] Settings has a **Quiet hours** card, on, 23:00 to 07:00
+- [ ] **Quiet test:** set quiet hours to start 1 minute from now, check-ins every 30 min. No check-in notifications arrive inside the window
+- [ ] **Near the start:** set quiet hours to start 20 minutes from now. Check-ins in those 20 minutes may summon you (10 min) but never ask for a 30 minute photo
+- [ ] **Ask her for a task** still works inside quiet hours (you asked)
+- [ ] Quiet hours don't block any app
+- [ ] **Shows up:** multiple choice questions show 5 options. Three wrong answers count as a failure
+- [ ] Her questions: your old starter questions now have 4 wrong answers each. Any question you edited is unchanged
+- [ ] Question editor: a multiple choice question with 1 or 2 wrong answers shows a warning
 
 ## 0. New in 0.6.0 (quick checks)
 - [ ] **Shade test:** lockouts on, grant yourself access to X (wait 60 seconds). Inside X, pull down the notification shade and close it. When the 10 minutes run out, X gets blocked within about 30 seconds without leaving it
@@ -19,7 +29,7 @@
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.6.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.7.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
