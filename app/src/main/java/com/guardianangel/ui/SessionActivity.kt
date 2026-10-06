@@ -88,7 +88,7 @@ class SessionActivity : ComponentActivity() {
     }
 }
 
-private enum class Phase { SETUP, RUNNING, HONOR, DONE }
+private enum class SessionPhase { SETUP, RUNNING, HONOR, DONE }
 
 @Composable
 private fun SessionScreen(onDone: () -> Unit) {
@@ -97,7 +97,7 @@ private fun SessionScreen(onDone: () -> Unit) {
     val settings = config.session
     val caged = remember { Guardian.caged() }
 
-    var phase by remember { mutableStateOf(Phase.SETUP) }
+    var phase by remember { mutableStateOf(SessionPhase.SETUP) }
     var soundingReady by remember { mutableStateOf(false) }
     var hasCamera by remember { mutableStateOf(Permissions.camera(context)) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasCamera = it }
@@ -120,7 +120,7 @@ private fun SessionScreen(onDone: () -> Unit) {
         )
         finalLine = line
         relockProof = proof
-        phase = Phase.DONE
+        phase = SessionPhase.DONE
     }
 
     fun advance() {
@@ -129,13 +129,13 @@ private fun SessionScreen(onDone: () -> Unit) {
             return
         }
         when (script?.ending) {
-            SessionEnding.RUINED -> phase = Phase.HONOR
+            SessionEnding.RUINED -> phase = SessionPhase.HONOR
             SessionEnding.PERMISSION -> end(SessionOutcome.FINISHED)
             else -> end(SessionOutcome.DENIED)
         }
     }
 
-    BackHandler(enabled = phase == Phase.RUNNING || phase == Phase.HONOR) { /* Leave with "Stop" or Quit for now. */ }
+    BackHandler(enabled = phase == SessionPhase.RUNNING || phase == SessionPhase.HONOR) { /* Leave with "Stop" or Quit for now. */ }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -148,7 +148,7 @@ private fun SessionScreen(onDone: () -> Unit) {
                     Text("Guided sessions are off. Turn them on in Settings, with her switched on.", Modifier.weight(1f))
                     Button(onClick = onDone) { Text("Close") }
                 }
-                phase == Phase.SETUP -> Setup(
+                phase == SessionPhase.SETUP -> Setup(
                     caged = caged,
                     soundingReady = soundingReady,
                     onSoundingReady = { soundingReady = it },
@@ -160,10 +160,10 @@ private fun SessionScreen(onDone: () -> Unit) {
                         script = built
                         steps = built.steps
                         index = 0
-                        phase = Phase.RUNNING
+                        phase = SessionPhase.RUNNING
                     },
                 )
-                phase == Phase.RUNNING -> Running(
+                phase == SessionPhase.RUNNING -> Running(
                     steps = steps,
                     index = index,
                     caged = caged,
@@ -186,7 +186,7 @@ private fun SessionScreen(onDone: () -> Unit) {
                         clipFailed = file == null
                     },
                 )
-                phase == Phase.HONOR -> Column(
+                phase == SessionPhase.HONOR -> Column(
                     Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -223,7 +223,7 @@ private fun SessionScreen(onDone: () -> Unit) {
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (phase != Phase.DONE) TextButton(onClick = onDone) { Text(if (phase == Phase.SETUP) "Not now" else "Stop") }
+                if (phase != SessionPhase.DONE) TextButton(onClick = onDone) { Text(if (phase == SessionPhase.SETUP) "Not now" else "Stop") }
                 QuitButton {
                     Guardian.quitForNow()
                     onDone()
