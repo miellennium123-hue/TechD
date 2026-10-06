@@ -180,6 +180,12 @@ object Guardian {
     /** Switching her off now needs the slow way. */
     fun offNeedsWait(): Boolean = guarding()
 
+    /** Debug mode (round 56): only while she's off. */
+    fun setDebugMode(on: Boolean) {
+        if (!LockGuard.canSetDebug(config.value)) return
+        config.update { it.copy(debugMode = on) }
+    }
+
     /** The slow switch off is done: it counts as a failure, then she's off. */
     fun slowOff() {
         fail(Failure.SWITCHED_OFF)
@@ -215,7 +221,7 @@ object Guardian {
     /** Her watch (the accessibility service) started. A start during a lock that isn't an update is tampering. */
     fun onWatchStarted(version: Int) {
         val st = state.value
-        val duringLock = config.value.lockGuard && locked()
+        val duringLock = config.value.lockGuard && !config.value.debugMode && locked()
         val tamper = LockGuard.tamperOnStart(duringLock, st.guardVersion, version, st.tamperOffNoticed)
         state.update { it.copy(guardVersion = version, tamperOffNoticed = false) }
         if (tamper) tampered()
@@ -256,7 +262,8 @@ object Guardian {
 
     private fun applyConfig(transform: (GuardianConfig) -> GuardianConfig) {
         val before = config.value
-        val after = config.update { transform(it).copy(enabled = it.enabled) }
+        // Debug mode only changes through setDebugMode, while she's off.
+        val after = config.update { transform(it).copy(enabled = it.enabled, debugMode = it.debugMode) }
         if (before.chastity.on && !after.chastity.on) endChastity()
         if (before.tasksOn && !after.tasksOn) clearTasks()
         if (before.showsUpOn && !after.showsUpOn && state.value.summons != null) clearSummons()

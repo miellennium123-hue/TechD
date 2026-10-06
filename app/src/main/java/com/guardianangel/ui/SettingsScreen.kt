@@ -329,6 +329,14 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }) { Text("Get the latest version") }
             Muted("New versions install over this one and keep your settings and photos.")
             TextButton(onClick = { confirmReset = true }) { Text("Reset all settings to defaults", color = MaterialTheme.colorScheme.error) }
+            HorizontalDivider()
+            SwitchRow(
+                "Debug mode",
+                "An instant \"Debug: shut down\" button next to Quit for now on every screen, and Lock guard is skipped. " +
+                    "Can only be switched while she's off.",
+                config.debugMode,
+            ) { v -> Guardian.setDebugMode(v) }
+            if (config.enabled) Muted("She's on, so debug mode stays ${if (config.debugMode) "on" else "off"} until you switch her off.")
         }
     }
 

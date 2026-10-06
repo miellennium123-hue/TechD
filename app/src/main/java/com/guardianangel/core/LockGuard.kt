@@ -34,8 +34,11 @@ object LockGuard {
                 state.summons != null
             )
 
-    /** Guarded right now: Lock guard on and she's on (round 43: no lock needed). */
-    fun guarding(config: GuardianConfig): Boolean = config.enabled && config.lockGuard
+    /** Guarded right now: Lock guard on and she's on (round 43: no lock needed). Debug mode skips it (round 56). */
+    fun guarding(config: GuardianConfig): Boolean = config.enabled && config.lockGuard && !config.debugMode
+
+    /** Debug mode only changes while she's off, so it's never a way out of her (round 56). */
+    fun canSetDebug(config: GuardianConfig): Boolean = !config.enabled
 
     /** Settings and uninstall screens. When one shows her name while guarding, she sends you away. */
     fun guardedPackage(pkg: String): Boolean =

@@ -123,6 +123,14 @@ class LockGuardTest {
     }
 
     @Test
+    fun debugModeSkipsLockGuardAndOnlyChangesWhileSheIsOff() {
+        assertFalse(LockGuard.guarding(on.copy(debugMode = true)))
+        assertTrue(LockGuard.canSetDebug(on.copy(enabled = false)))
+        assertFalse(LockGuard.canSetDebug(on))
+        assertFalse(LockGuard.canSetDebug(on.copy(debugMode = true)))
+    }
+
+    @Test
     fun guardedScreens() {
         assertTrue(LockGuard.guardedPackage("com.android.settings"))
         assertTrue(LockGuard.guardedPackage("com.google.android.packageinstaller"))
@@ -180,6 +188,7 @@ class LockGuardTest {
         val lockouts = json.decodeFromString(GuardianConfig.serializer(), "{\"lockouts\":{\"on\":true}}").lockouts
         assertEquals(60, lockouts.minBlockMinutes)
         assertEquals(240, lockouts.maxBlockMinutes)
+        assertFalse(json.decodeFromString(GuardianConfig.serializer(), "{\"enabled\":true}").debugMode)
         assertTrue(json.decodeFromString(GuardianConfig.serializer(), "{\"bedtime\":{\"on\":true}}").bedtime.screen)
     }
 }

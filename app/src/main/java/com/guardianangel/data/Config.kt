@@ -56,6 +56,12 @@ data class GuardianConfig(
      * switched off during a lock. Quit for now always works (slowly, see core/LockGuard).
      */
     val lockGuard: Boolean = false,
+    /**
+     * Debug mode (round 56): an instant "shut her down" button next to Quit for now on every screen,
+     * and Lock guard is skipped. Can only be switched while she's off (LockGuard.canSetDebug), so it
+     * can't be used to get out of her once she's on.
+     */
+    val debugMode: Boolean = false,
 )
 
 @Serializable
