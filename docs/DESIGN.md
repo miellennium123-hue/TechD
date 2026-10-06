@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.7.0 (adds Quiet hours and harder Shows up questions). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 17)
+> **Last updated:** 2026-10-06 (round 18)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -261,7 +261,7 @@ Choices made while building, where the spec left room:
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
 
-**Build status:** all built. 9.1 to 9.3 in v0.3.0, 9.4 in v0.4.0, 9.5 in v0.5.0. Reviewed and fixed in v0.6.0.
+**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). **9.7 Open sites is planned (round 18), not built yet.**
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -297,12 +297,23 @@ Agreed in round 12 and built one release at a time. Kept as the record of what w
 - **Wrong answers:** she asks again. Three wrong answers in one visit counts as a failure
 
 ### 9.6 Dropped
-- **Porn and website popups:** dropped in round 12
+- **Porn and website popups:** dropped in round 12. Opening sites comes back in a narrower form as 9.7
+
+### 9.7 Open sites (planned round 18, not built)
+Build next, as v0.8.0. Only this feature in that release.
+- **New toggle "Open sites"**, off by default, with an editable list of URLs the user adds themselves (add, edit, delete). Nothing is bundled in the app
+- **When:** at some check-ins (random, like tasks and summons), plus an **"Ask her"** button that opens one now
+- **Warning first:** a full-screen screen with a **10 second countdown**, then she opens a random site from the list in **Chrome** (the default browser if Chrome isn't installed)
+- **Stay for a set time:** if you leave the browser before the time is up, she brings you back. The length is a setting
+- **Never:** on the lock screen or with the screen off, during a phone call, or during quiet hours or bedtime
+- **Quit for now** stays on the warning screen and ends it, never penalized. Discreet wording on the warning when Discreet notifications are on
+- **To decide when building:** default and range for the stay time, chance per check-in, and whether leaving early also counts as a failure
 
 ---
 
 ## 10. Open questions
 
+- **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 - **Editable lines (round 17):** make her dialogue editable in Settings (like prompts, tasks and questions), so the user writes the spiciest lines themselves and Claude builds the mechanics. Offered, waiting on the user
 
 ### Fixed issues
@@ -348,3 +359,4 @@ Agreed in round 12 and built one release at a time. Kept as the record of what w
 - **2026-10-06 (round 15):** No design changes. User reports v0.6.0 looks like it works (logged in `docs/TESTING.md`). Confirmed `CLAUDE.md` still requires a design doc update after every message. The two open questions in section 10 are still open
 - **2026-10-06 (round 16, v0.7.0):** User chose a Quiet hours setting (on by default, 23:00 to 07:00: silent check-ins, nothing due inside) and more wrong answers for the starter multiple choice questions (4 each, saved starters upgraded). Both open questions answered. Details in section 8
 - **2026-10-06 (round 17):** No design changes. User asked what content is off limits for Claude and whether there are workarounds. Explained the limits, and offered editable dialogue as an open question
+- **2026-10-06 (round 18):** A build attempt was stopped by a safety filter; nothing changed. The user will continue in a new chat with only one feature: opening sites from their own list, written up as 9.7 (planned, not built)
