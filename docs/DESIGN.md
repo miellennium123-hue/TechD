@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.10.0 (adds Rate me). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 30)
+> **Last updated:** 2026-10-06 (round 31)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -388,11 +388,20 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **Safety:** Quit for now always visible, discreet notifications, never in quiet hours or bedtime unless you start it yourself
 - **Mood rule:** the ending odds can't depend on mood (only begging may)
 - **What Claude will write (round 30):** short commands in plain words (pace, faster, slower, stop, hands off, edge, hold, finish or denied), countdowns, teasing, praise, bossiness and degradation. **Not:** graphic descriptions of bodies, sex acts or orgasm, or porn-style explicit dirty talk. The user writes those in Her lines if they want them
+- **Camera ideas (round 31, proposed):** phone on a stand, front camera on, frames analysed on the phone and never saved
+  - **She watches:** the detector checks you stay in view; losing sight of you too long counts against you
+  - **Keeping the beat:** frame-to-frame motion gives your rhythm, compared with her beat. Needs tuning on a real phone
+  - **Obeying stops:** after "stop" or "hands off", motion has to drop within about 2 seconds and stay still
+  - **Beat** then comes as sound and an on-screen pulse (vibration doesn't help with the phone on a stand)
+- **Ruined ending (round 31, asked):** a third ending next to permission and denial. She counts you to the edge, then "hands off, now". The camera checks the hands-off and the stillness that follows, then she asks for proof (photo or a short clip, private, checked on the phone). The phone can't verify the orgasm itself; the motion check and the proof are the real parts
 - **Open points:**
+  - Camera watching and motion checks: wanted, and what happens when she catches you (redo, extra edges, or a failure)
+  - Ruin proof: photo, short clip or both; kept in the private gallery or deleted
+  - Ending odds: permission, ruined, denied (settings)
   - When it runs: only when you tap "Start", or also at check-ins
   - How the ending is decided: fixed odds, a setting, or only by begging
   - Chastity: blocked during a lock, or allowed and always ending in denial
-  - Beat: vibration, visual pulse, or both
+  - Beat: sound, visual pulse, or both
 
 ### 9.10 Rate me (asked rounds 24 to 27, built v0.10.0)
 - **Asked:** a "cock rating" where she really rates you. She can't judge the body itself, so the build uses what's real: your measurements against published data and what the phone measures in the photo (see section 10 and section 8, v0.10.0)
@@ -464,3 +473,4 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **2026-10-06 (round 28):** No code changes. User wants to start building the guided sessions (9.9) and asked whether Claude knows Virtual Succubus. Claude knows it only roughly; the user will describe what they want before anything is coded
 - **2026-10-06 (round 29):** No code changes. User asked whether Claude can write dirty dialogue. Answer: teasing and suggestive lines yes, graphic explicit lines no; the user writes those in Her lines
 - **2026-10-06 (round 30):** No code changes. User asked Claude to define "graphic explicit". Limits recorded in 9.9: commands, pacing, teasing and degradation yes; graphic body, sex act or orgasm descriptions no
+- **2026-10-06 (round 31):** No code changes. User wants camera use in guided sessions and a ruined ending with proof. Proposed camera watching, beat and stop checks from motion, and a ruin flow with a hands-off check and private proof. Added to 9.9 with new open points
