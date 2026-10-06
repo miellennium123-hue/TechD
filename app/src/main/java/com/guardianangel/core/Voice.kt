@@ -23,6 +23,7 @@ enum class Line(val group: String, val label: String, val note: String) {
     DENY("Asking and locks", "No", "\"Ask her\" says no"),
     BLOCKED("Asking and locks", "Blocked app", "Block screen for a locked app"),
     BEDTIME("Asking and locks", "Bedtime", "Block screen during bedtime"),
+    BEDTIME_SCREEN("Asking and locks", "Bedtime screen", "Her full-screen bedtime screen over your home screen"),
     BLOCK_START("Asking and locks", "Apps locked", "A check-in starts one of her timed app blocks"),
     BOUGHT_TIME("Asking and locks", "Bought time", "You spend merit for a few minutes in a blocked app"),
     DEMAND_PROOF("Photo proof", "Wants a photo", "\"Ask her\" or a check-in wants photo proof"),
@@ -320,6 +321,11 @@ object Voice {
         Line.BOUGHT_TIME to listOf(
             "Ten minutes, pet. You paid for them, so make them count.",
             "Fine, a little treat. It cost you, remember that.",
+        ),
+        Line.BEDTIME_SCREEN to listOf(
+            "Locked out, pet. Your nights belong to me.",
+            "Locked out, pet. Be a good little toy and go to sleep.",
+            "Locked out, sweetheart. I'll let you back in when I've had my fun keeping you out.",
         ),
         Line.BEDTIME to listOf(
             "It's bedtime, pet. Phone down, eyes closed.",
@@ -693,6 +699,11 @@ object Voice {
         Line.BOUGHT_TIME to listOf(
             "Ten minutes. Paid for. Don't waste them.",
             "You bought your way in. How desperate.",
+        ),
+        Line.BEDTIME_SCREEN to listOf(
+            "Locked out, pet.",
+            "Locked out. You get nothing from me until morning.",
+            "Locked out, pet. Pathetic little thing, still reaching for your phone.",
         ),
         Line.BEDTIME to listOf(
             "Bedtime. Phone down. Now.",

@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 53)
+> **Last updated:** 2026-10-06 (round 54)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -64,6 +64,7 @@ Two lockout scopes:
 - **Optional setting**, off by default
 - When on, she restricts phone use during a set window
 - **From v0.18.0:** no way in at all until the window ends
+- **From v0.19.0: bedtime screen.** Her full-screen "Locked out, pet." screen covers the home screen and blocked apps. Only Always-allowed apps and the phone open from it
 
 ### 4.3 Wallpaper control
 - She sets your wallpaper to **femdom-themed** images (**placeholders** until user sends real ones)
@@ -142,7 +143,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | App lockouts | Off | Scope: Social media / Everything. Timed blocks she starts at check-ins, shortest and longest (default 1h to 4h). Only way in: 15 merit for 10 minutes |
 | Always-allowed list | WhatsApp, Phone, messages, contacts, clock, maps | Editable app list |
 | Ask permission for guarded apps | Off | Adds "Ask her" outside her blocks |
-| Bedtime | Off | Start and end time. No way in until it ends. Check-ins are quiet inside it |
+| Bedtime | Off | Start and end time. No way in until it ends. Check-ins are quiet inside it. Bedtime screen (on by default): her full-screen "Locked out" screen |
 | Quiet hours | **On**, 23:00 to 07:00 | Start and end time. Silent check-ins, nothing due inside. No locks |
 | Wallpaper control | Off | Set only / Set and lock |
 | Chastity mode | Off | Shortest and longest picked lock (default 1h to 4h) |
@@ -432,6 +433,13 @@ Choices made while building, where the spec left room:
 - **Unchanged:** Quit for now (about 10 minutes, ends everything, also clears the block), the phone dialer, Always-allowed apps, punishment lockouts, her rules and Shows up. Switching her fully off with Lock guard on is still the 30 minute slow switch off, counted as a failure
 - **Tests:** `RulesTest.kt` (blocks, buying, bedtime), `LockGuardTest.kt` (freeze and loosening), `SitesTest.kt` updated
 
+### v0.19.0 (round 54, bedtime screen)
+- **Asked:** during bedtime, a full-screen overlay with a kinky line like "Locked out, pet." that gives access to nothing except the unlocked apps
+- **Built:** `ui/BedtimeActivity.kt`. During bedtime it covers the **home screen** and every app bedtime blocks (pure rule `Rules.bedtimeScreen`, tested). It shows her picture, a new line **Bedtime screen** ("Locked out, pet." and others, sweet and strict, editable in Her lines), "Locked out until 07:00" with the time left, a button per **Always-allowed** app that's installed, a **Phone** button (calls are never blocked), and **Quit for now**
+- **Behaviour:** Back does nothing. Opening an allowed app closes it; going home brings it back. Unlocking the phone during bedtime brings it back too. It closes itself when bedtime ends, when she's switched off, or after Quit for now
+- **Setting:** **Bedtime screen** in the Bedtime card, on by default. Off, bedtime uses the normal block screen. With Lock guard on, switching it off takes the 30 minute screen, and it's frozen while bedtime runs
+- **Honest limits:** the notification shade, recents and system Settings are system screens she never covers (Settings stays reachable by design, so she can always be switched off). Lock guard still sends you away from her own Settings pages. Within about 30 seconds of bedtime starting, she covers the home screen if you're on it; an allowed app you're already in stays open until you leave it
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -649,3 +657,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 51):** No code changes. User wants app locks they can't get out of by waiting, sending a photo or asking her. Noted for the next update in section 10, with six questions to settle before building (lockouts have no end time today, so removing every way in would block apps for as long as lockouts are on)
 - **2026-10-06 (round 52):** No code changes. User answered the app lock questions: timed blocks, no wait, no photo or Ask her, bedtime locked until morning, merit buys time in. Asked what question 6 (Lock guard) means; explained. Recorded in section 10
 - **2026-10-06 (round 53, v0.18.0):** User picked option C and agreed to the three details. Built timed app blocks with no wait, photo or asking, 15 merit for 10 minutes as the only way in, bedtime locked until it ends, and Lock guard freezing block and bedtime settings while they run. Details in section 8
+- **2026-10-06 (round 54, v0.19.0):** User asked for a full-screen bedtime overlay with a kinky line that only lets the unlocked apps through. Built the bedtime screen: covers the home screen and blocked apps during bedtime, her new "Locked out, pet." lines, buttons for Always-allowed apps and the phone, Quit for now. On by default, guarded by Lock guard. Details in section 8

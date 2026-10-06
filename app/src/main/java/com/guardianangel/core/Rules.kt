@@ -192,6 +192,14 @@ object Rules {
         return Decision.Block(RestrictionKind.PERMISSION, askAllowed = true)
     }
 
+    /**
+     * Her full-screen bedtime screen (round 54): during bedtime, with the screen setting on, it covers
+     * the home screen ([launcher]) and every app bedtime blocks. Always-allowed apps stay open.
+     */
+    fun bedtimeScreen(config: GuardianConfig, minuteOfDay: Int, decision: Decision, launcher: Boolean): Boolean =
+        config.enabled && config.bedtime.screen && isBedtime(config.bedtime, minuteOfDay) &&
+            (launcher || (decision is Decision.Block && decision.kind == RestrictionKind.BEDTIME))
+
     /** Her timed app block is running (round 53). */
     fun blockRunning(config: GuardianConfig, state: GuardianState, now: Long): Boolean =
         config.enabled && config.lockouts.on && state.lockoutUntil > now

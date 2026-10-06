@@ -89,6 +89,7 @@ class LockGuardTest {
         assertTrue(LockGuard.loosens(before, before.copy(lockouts = before.lockouts.copy(minBlockMinutes = 30))))
         assertTrue(LockGuard.loosens(before, before.copy(lockouts = before.lockouts.copy(maxBlockMinutes = 180))))
         assertTrue(LockGuard.loosens(before, before.copy(bedtime = before.bedtime.copy(endMinute = 6 * 60))))
+        assertTrue(LockGuard.loosens(before, before.copy(bedtime = before.bedtime.copy(screen = false))))
         // Stricter is instant: longer blocks, wider scope.
         assertFalse(LockGuard.loosens(before, before.copy(lockouts = before.lockouts.copy(maxBlockMinutes = 300))))
         val social = before.copy(lockouts = before.lockouts.copy(scope = LockoutScope.SOCIAL_MEDIA))
@@ -162,7 +163,7 @@ class LockGuardTest {
 
     @Test
     fun newLinesHaveBothMoods() {
-        listOf(Line.QUIT_TALK, Line.OFF_TALK, Line.LOOSEN_TALK, Line.ADMIN_OFF, Line.GUARDED, Line.TAMPERED, Line.BLOCK_START, Line.BOUGHT_TIME).forEach {
+        listOf(Line.QUIT_TALK, Line.OFF_TALK, Line.LOOSEN_TALK, Line.ADMIN_OFF, Line.GUARDED, Line.TAMPERED, Line.BLOCK_START, Line.BOUGHT_TIME, Line.BEDTIME_SCREEN).forEach {
             assertTrue(it.name, Voice.builtIn(it, Mood.SWEET).isNotEmpty())
             assertTrue(it.name, Voice.builtIn(it, Mood.STRICT).isNotEmpty())
         }
@@ -179,5 +180,6 @@ class LockGuardTest {
         val lockouts = json.decodeFromString(GuardianConfig.serializer(), "{\"lockouts\":{\"on\":true}}").lockouts
         assertEquals(60, lockouts.minBlockMinutes)
         assertEquals(240, lockouts.maxBlockMinutes)
+        assertTrue(json.decodeFromString(GuardianConfig.serializer(), "{\"bedtime\":{\"on\":true}}").bedtime.screen)
     }
 }
