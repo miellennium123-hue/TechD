@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.13.0 (adds Lock guard and the slow Quit for now). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 41)
+> **Last updated:** 2026-10-06 (round 42)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -562,3 +562,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 39):** No code changes. User picked phone control and release control as favourites and asked whether they'd trip the safety filter. Explained the risk honestly and suggested one feature per round. Recorded in section 10
 - **2026-10-06 (round 40):** No code changes. User asked for a lock that feels real and a tedious way to turn her off. Proposed a slow off switch, a tamper guard and tamper detection, with Quit for now kept instant. Recorded in section 10, waiting on the user's picks
 - **2026-10-06 (round 41, v0.13.0):** User chose a slow Quit for now (about 3 minutes: hold, type, wait), no emergency exit, and all of Lock guard. Built: slow Quit for now everywhere, Lock guard with a 30 minute switch off that counts as a failure, blocked settings and uninstall screens, optional device admin, and tamper detection. Section 3 and `CLAUDE.md` updated. Details in section 8
+- **2026-10-06 (round 42):** No code changes. User asked for a detailed explanation of every Lock guard part. Explained from section 8 (v0.13.0)
