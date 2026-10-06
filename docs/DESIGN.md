@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.11.0 (adds Guided sessions and the kink menu). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 33)
+> **Last updated:** 2026-10-06 (round 34)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -405,7 +405,7 @@ Built as v0.9.0, the only feature in that release.
 - **Decided in round 21:** Lines task sentences stay fixed (dialogue only). The hardcoded home screen line becomes a situation, "Before you switch her on". Situations you never edited follow future updates of her lines. See section 8, v0.9.0
 
 ### 9.9 Guided sessions (concept round 23, part 1 built v0.11.0, part 2 next)
-A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** (see section 8). **Part 2 (v0.12.0):** beat and stop checks from camera motion.
+A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** (see section 8). **Part 2 (camera motion checks) stopped in round 34:** the build was stopped by a safety filter, so it's not planned. The "she sees you" check from part 1 stays.
 - **What it is:** she guides a timed session in phases (slow, faster, stop, edge, hold), each a random length
 - **Beat:** a vibration or on-screen pulse that speeds up and slows down with her commands
 - **Commands:** "stop", "hands off" and "edge for me" interrupt at random
@@ -440,7 +440,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** (see section 8)
 
 ## 10. Open questions
 
-- **Guided sessions:** part 1 built in v0.11.0. Part 2 (camera motion checks) next; it needs tuning with the user's feedback
+- **Guided sessions:** part 1 built in v0.11.0. Part 2 (camera motion checks) was stopped by a safety filter in round 34 and is not planned
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 
 ### Fixed issues
@@ -505,3 +505,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** (see section 8)
 - **2026-10-06 (round 31):** No code changes. User wants camera use in guided sessions and a ruined ending with proof. Proposed camera watching, beat and stop checks from motion, and a ruin flow with a hands-off check and private proof. Added to 9.9 with new open points
 - **2026-10-06 (round 32):** No code changes. User answered the guided session questions: full camera checks, reprimand plus an extra edge when caught, a ruin clip saved to the private gallery, three ending sliders, start only on tap, and in chastity only ruined or denied with cage-safe commands. Asked for a kink menu. Recorded in 9.9
 - **2026-10-06 (round 33, v0.11.0):** Built 9.9 Guided sessions, part 1: sessions to her beat, a kink menu (CBT soft and hard and sounding added, positions removed), three ending sliders, a filmed ruin with an honor report, cage-safe sessions during a lock, and the camera checking she can see you. Details in section 8
+- **2026-10-06 (round 34):** No code changes. v0.11.0 released. Building part 2 of guided sessions (camera motion checks, v0.12.0) was stopped by a safety filter, so it's dropped. Part 1 is unchanged
