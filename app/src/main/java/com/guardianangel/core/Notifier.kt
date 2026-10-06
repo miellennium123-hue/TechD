@@ -1,0 +1,73 @@
+package com.guardianangel.core
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.guardianangel.R
+import com.guardianangel.ui.MainActivity
+
+/** Discreet mode keeps every notification neutral, so nothing explicit shows on the lock screen. */
+object Notifier {
+    private const val CHANNEL_ID = "reminders"
+    const val ID_CHECK_IN = 1
+    const val ID_PROOF = 2
+    const val ID_MESSAGE = 3
+
+    fun createChannel(context: Context) {
+        val channel = NotificationChannel(CHANNEL_ID, "Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE
+        }
+        context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    fun checkIn(context: Context, line: String) = post(context, ID_CHECK_IN, line, "Time to check in.")
+    fun proof(context: Context, line: String) = post(context, ID_PROOF, line, "You have something to do.")
+    fun message(context: Context, line: String) = post(context, ID_MESSAGE, line, "You have a new message.")
+
+    fun cancel(context: Context, id: Int) = NotificationManagerCompat.from(context).cancel(id)
+    fun cancelAll(context: Context) = NotificationManagerCompat.from(context).cancelAll()
+
+    @SuppressLint("MissingPermission")
+    private fun post(context: Context, id: Int, line: String, neutral: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val discreet = Guardian.config.value.discreetNotifications
+        val open = PendingIntent.getActivity(
+            context,
+            id,
+            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val publicVersion = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Reminder")
+            .setContentText(neutral)
+            .build()
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .setPublicVersion(publicVersion)
+        if (discreet) {
+            builder.setContentTitle("Reminder").setContentText(neutral)
+        } else {
+            builder.setContentTitle("Your Guardian Angel")
+                .setContentText(line)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(line))
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+        }
+        NotificationManagerCompat.from(context).notify(id, builder.build())
+    }
+}

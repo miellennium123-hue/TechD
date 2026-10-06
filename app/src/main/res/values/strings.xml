@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Guardian Angel</string>
+    <string name="accessibility_description">Lets Guardian Angel see which app is in front so she can lock apps you chose to restrict. It only reads the app\'s name, never screen content. Turn this off at any time to stop her.</string>
+</resources>
