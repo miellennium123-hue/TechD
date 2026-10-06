@@ -1,17 +1,17 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.19.2 (debug mode). Sections 0 to 0o cover what 0.6.0 to 0.19.2 changed
+> **Version under test:** 0.19.3 (debug mode keeps Lock guard). Sections 0 to 0o cover what 0.6.0 to 0.19.3 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
-## 0o. New in 0.19.2: debug mode
-- [ ] Settings > About shows **Version 0.19.2** and a **Debug mode** switch
+## 0o. New in 0.19.2 and 0.19.3: debug mode
+- [ ] Settings > About shows **Version 0.19.3** and a **Debug mode** switch
 - [ ] With her on, the switch doesn't move and says why
 - [ ] Switch her off, turn debug mode on, switch her on again
 - [ ] **Debug: shut down** shows next to Quit for now: Home's top bar, block screen, bedtime screen, Shows up, site visit, guided session
 - [ ] Tapping it switches her off instantly, ends any lock, and isn't counted as a failure
-- [ ] With Lock guard on and debug mode on: switching her off is instant, loosening settings is instant, and her Settings pages aren't blocked
+- [ ] With Lock guard on and debug mode on (0.19.3): Lock guard works as usual (30 minute switch off and loosen screen, frozen settings, blocked Settings pages). Only **Debug: shut down** is instant
 - [ ] Switch her off, turn debug mode off: the buttons are gone and Lock guard works again
 
 ## 0n. New in 0.19.0: bedtime screen

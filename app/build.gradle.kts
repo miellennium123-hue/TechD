@@ -13,8 +13,8 @@ android {
         applicationId = "com.guardianangel"
         minSdk = 26
         targetSdk = 35
-        versionCode = 26
-        versionName = "0.19.2"
+        versionCode = 27
+        versionName = "0.19.3"
 
         // ONNX Runtime ships native code; keep real phones (arm) and the emulator (x86_64).
         ndk {

@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 56)
+> **Last updated:** 2026-10-06 (round 57)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -452,6 +452,11 @@ Choices made while building, where the spec left room:
 - **Lock guard skipped:** with debug mode on, `LockGuard.guarding` is false. No slow switch off, no 30 minute loosen screen, no frozen settings, no blocked Settings screens, no tamper failures
 - **Unchanged:** Quit for now (about 10 minutes) is still there. Tested in `LockGuardTest.kt`
 
+### v0.19.3 (round 57, debug mode keeps Lock guard)
+- **Asked:** with Lock guard on and debug mode on, Lock guard should still work. Debug mode should only add the button that shuts everything down
+- **Changed:** debug mode no longer skips Lock guard (`LockGuard.guarding` ignores it again). Slow switch off, the loosen screen, frozen settings, blocked Settings pages and tamper detection all work as usual
+- **Kept:** the **Debug: shut down** button next to every Quit for now. It ends everything and switches her off instantly, never a failure. Debug mode still only changes while she's off
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -672,3 +677,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 54, v0.19.0):** User asked for a full-screen bedtime overlay with a kinky line that only lets the unlocked apps through. Built the bedtime screen: covers the home screen and blocked apps during bedtime, her new "Locked out, pet." lines, buttons for Always-allowed apps and the phone, Quit for now. On by default, guarded by Lock guard. Details in section 8
 - **2026-10-06 (round 55, v0.19.1):** User couldn't reach bedtime hours during bedtime with Lock guard off: the bedtime screen hid her app. Added an Open Guardian Angel button to the bedtime screen. Details in section 8
 - **2026-10-06 (round 56, v0.19.2):** User asked for a debug mode. Built: a Debug mode switch that only changes while she's off, adding an instant Debug: shut down button next to every Quit for now and skipping Lock guard. Details in section 8
+- **2026-10-06 (round 57, v0.19.3):** User wants Lock guard to keep working in debug mode, with debug mode only adding the shut down button. Debug mode no longer skips Lock guard. Details in section 8

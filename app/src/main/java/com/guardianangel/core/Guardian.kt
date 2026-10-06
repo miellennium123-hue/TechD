@@ -221,7 +221,7 @@ object Guardian {
     /** Her watch (the accessibility service) started. A start during a lock that isn't an update is tampering. */
     fun onWatchStarted(version: Int) {
         val st = state.value
-        val duringLock = config.value.lockGuard && !config.value.debugMode && locked()
+        val duringLock = config.value.lockGuard && locked()
         val tamper = LockGuard.tamperOnStart(duringLock, st.guardVersion, version, st.tamperOffNoticed)
         state.update { it.copy(guardVersion = version, tamperOffNoticed = false) }
         if (tamper) tampered()
