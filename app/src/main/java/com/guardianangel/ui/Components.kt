@@ -23,6 +23,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.AlertDialog
@@ -137,6 +138,11 @@ fun QuitButton(modifier: Modifier = Modifier, onQuit: () -> Unit) {
         ),
     ) {
         Text("Quit for now", fontWeight = FontWeight.Bold)
+    }
+    // Debug mode (round 56): the same exit, instantly. Only switchable while she's off.
+    val config by Guardian.config.flow.collectAsState()
+    if (config.debugMode) {
+        OutlinedButton(onClick = onQuit, modifier = modifier) { Text("Debug: shut down") }
     }
 }
 
