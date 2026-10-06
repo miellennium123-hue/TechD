@@ -14,6 +14,8 @@ data class GuardianConfig(
     val alwaysAllowed: Set<String> = AppLists.DEFAULT_ALLOWED,
     val askPermission: AskPermissionSettings = AskPermissionSettings(),
     val bedtime: BedtimeSettings = BedtimeSettings(),
+    /** Quiet hours: she lets you sleep. Doesn't lock anything; that's what Bedtime is for. */
+    val quietHours: QuietHoursSettings = QuietHoursSettings(),
     val wallpaper: WallpaperSettings = WallpaperSettings(),
     val chastity: ChastitySettings = ChastitySettings(),
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
@@ -42,6 +44,17 @@ data class LockoutSettings(
 @Serializable
 data class AskPermissionSettings(
     val on: Boolean = false,
+)
+
+/**
+ * Inside this window check-ins are silent, and she never sets anything due inside it.
+ * On by default (round 16): nobody should fail a deadline in their sleep.
+ */
+@Serializable
+data class QuietHoursSettings(
+    val on: Boolean = true,
+    val startMinute: Int = 23 * 60,
+    val endMinute: Int = 7 * 60,
 )
 
 @Serializable

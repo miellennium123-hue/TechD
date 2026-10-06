@@ -64,6 +64,9 @@ fun QuestionsScreen(config: GuardianConfig) {
         )
         if (kind == QuestionKind.CHOICE) {
             OutlinedTextField(wrong, { wrong = it }, Modifier.fillMaxWidth(), label = { Text("Wrong answers, one per line") }, minLines = 2)
+            if (wrongList.size < Questions.MIN_WRONG) {
+                Muted("Give at least ${Questions.MIN_WRONG} wrong answers, or 3 strikes can never happen on this question.")
+            }
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(

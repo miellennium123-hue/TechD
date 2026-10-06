@@ -66,6 +66,14 @@ object Guardian {
         config = Store(appContext, "config", GuardianConfig.serializer(), GuardianConfig())
         state = Store(appContext, "state", GuardianState.serializer(), GuardianState())
         Notifier.createChannel(appContext)
+        migrate()
+    }
+
+    /** Small fix-ups for data saved by older versions. */
+    private fun migrate() {
+        val questions = config.value.questions
+        val upgraded = Questions.upgrade(questions)
+        if (upgraded != questions) config.update { it.copy(questions = upgraded) }
     }
 
     fun now(): Long = System.currentTimeMillis()
@@ -373,10 +381,11 @@ object Guardian {
         val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls)
         val handled = when (action) {
             CheckInAction.QUIET -> true // bedtime: let her pet sleep
-            CheckInAction.TASK -> issueTask()
+            CheckInAction.TASK -> issueTask(fitQuiet = true)
             CheckInAction.SUMMONS -> summon()
             CheckInAction.PROOF -> {
-                requestProof(if (lock != null) ProofReason.CHASTITY_CHECK else ProofReason.CHECK_IN, 30, notify = true)
+                val reason = if (lock != null) ProofReason.CHASTITY_CHECK else ProofReason.CHECK_IN
+                requestProof(reason, Rules.CHECK_IN_PROOF_MINUTES, notify = true)
                 true
             }
             CheckInAction.PLAIN -> false
@@ -401,12 +410,17 @@ object Guardian {
 
     // ---- Rules & Tasks -----------------------------------------------------------------------
 
-    /** Picks one from the list and issues it. Photo tasks become a proof request. One open task at a time. */
-    fun issueTask(): Boolean {
+    /**
+     * Picks one from the list and issues it. Photo tasks become a proof request. One open task at a time.
+     * [fitQuiet]: at check-ins she only picks tasks whose deadline ends before quiet hours. When you
+     * ask her for one yourself, anything goes.
+     */
+    fun issueTask(fitQuiet: Boolean = false): Boolean {
         val c = config.value
         val st = state.value
         if (!c.enabled || !c.tasksOn || st.task != null || st.proofs.any { it.reason == ProofReason.TASK }) return false
-        val template = c.taskList.randomOrNull(random) ?: return false
+        val choices = if (fitQuiet) Rules.tasksThatFit(c, minuteOfDay()) else c.taskList
+        val template = choices.randomOrNull(random) ?: return false
         val t = now()
         if (template.kind == TaskKind.PHOTO) {
             requestProof(ProofReason.TASK, template.minutes.coerceAtLeast(5), custom = ProofPrompt(template.text, template.explicit))

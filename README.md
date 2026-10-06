@@ -39,6 +39,7 @@ Open **Permissions** in the app and grant:
 - You can also turn off the Accessibility service in Android Settings at any time
 - Mood only changes her words, with one exception: in a strict mood she's harsher when you beg for early chastity release
 - Opening a blocked app never counts as a failure
+- **Quiet hours** (on by default, 23:00 to 07:00): check-ins are silent and nothing she sets is due while you sleep
 
 ## Customizing
 

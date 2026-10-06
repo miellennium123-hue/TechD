@@ -19,9 +19,11 @@ import com.guardianangel.data.ProofRequest
 import com.guardianangel.data.Question
 import com.guardianangel.data.QuestionKind
 import com.guardianangel.data.Questions
+import com.guardianangel.data.QuietHoursSettings
 import com.guardianangel.data.RuleEnforcement
 import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
+import com.guardianangel.data.TaskTemplate
 import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
@@ -199,9 +201,80 @@ class RulesTest {
 
     @Test
     fun checkInIsQuietAtBedtime() {
-        val c = busy.copy(bedtime = BedtimeSettings(on = true))
+        val c = busy.copy(bedtime = BedtimeSettings(on = true), quietHours = QuietHoursSettings(on = false))
         assertEquals(CheckInAction.QUIET, Rules.checkInAction(c, GuardianState(), 2 * 60, true, sure))
         assertEquals(CheckInAction.TASK, Rules.checkInAction(c, GuardianState(), noon, true, sure))
+    }
+
+    @Test
+    fun checkInIsQuietDuringQuietHours() {
+        // On by default, 23:00 to 07:00.
+        assertEquals(CheckInAction.QUIET, Rules.checkInAction(busy, GuardianState(), 23 * 60 + 30, true, sure))
+        assertEquals(CheckInAction.QUIET, Rules.checkInAction(busy, GuardianState(), 6 * 60 + 59, true, sure))
+        assertEquals(CheckInAction.TASK, Rules.checkInAction(busy, GuardianState(), 7 * 60, true, sure))
+        val off = busy.copy(quietHours = QuietHoursSettings(on = false))
+        assertEquals(CheckInAction.TASK, Rules.checkInAction(off, GuardianState(), 23 * 60 + 30, true, sure))
+    }
+
+    @Test
+    fun nothingDueInsideQuietHours() {
+        val c = GuardianConfig(enabled = true)
+        assertTrue(Rules.reachesQuiet(c, 22 * 60 + 30, 30))
+        assertFalse(Rules.reachesQuiet(c, 22 * 60 + 30, 29))
+        assertFalse(Rules.reachesQuiet(c, noon, 60))
+        // A window that wraps midnight is still found.
+        val early = c.copy(quietHours = QuietHoursSettings(startMinute = 0, endMinute = 6 * 60))
+        assertTrue(Rules.reachesQuiet(early, 23 * 60 + 50, 15))
+    }
+
+    @Test
+    fun checkInsNearQuietHoursOnlySetWhatFits() {
+        // 22:45: a 10 minute summons fits, a 30 minute photo doesn't.
+        val nearlyNight = 22 * 60 + 45
+        val summonsOnly = busy.copy(tasksOn = false)
+        assertEquals(CheckInAction.SUMMONS, Rules.checkInAction(summonsOnly, GuardianState(), nearlyNight, true, sure))
+        val proofOnly = busy.copy(tasksOn = false, showsUpOn = false)
+        assertEquals(CheckInAction.PLAIN, Rules.checkInAction(proofOnly, GuardianState(), nearlyNight, true, sure))
+        // Only app-enforced rules (nothing to fail) fit 15 minutes before quiet hours.
+        val fits = Rules.tasksThatFit(busy, nearlyNight)
+        assertTrue(fits.isNotEmpty())
+        assertTrue(fits.all { it.kind == TaskKind.RULE && it.enforce != RuleEnforcement.NONE })
+        assertEquals(CheckInAction.TASK, Rules.checkInAction(busy, GuardianState(), nearlyNight, true, sure))
+        // Without any enforced rules, no task at all.
+        val noEnforced = busy.copy(taskList = busy.taskList.filter { it.enforce == RuleEnforcement.NONE })
+        assertEquals(CheckInAction.SUMMONS, Rules.checkInAction(noEnforced, GuardianState(), nearlyNight, true, sure))
+    }
+
+    @Test
+    fun taskDeadlines() {
+        assertEquals(0, Rules.taskDeadlineMinutes(TaskTemplate("x", TaskKind.RULE, 120, RuleEnforcement.SOCIAL_MEDIA)))
+        assertEquals(150, Rules.taskDeadlineMinutes(TaskTemplate("x", TaskKind.RULE, 120)))
+        assertEquals(45, Rules.taskDeadlineMinutes(TaskTemplate("x", TaskKind.PHOTO, 45)))
+        assertEquals(Rules.TASK_DUE_MINUTES, Rules.taskDeadlineMinutes(TaskTemplate("x", TaskKind.LINES)))
+    }
+
+    @Test
+    fun everyStarterChoiceQuestionCanBeFailed() {
+        Questions.DEFAULTS.filter { it.kind == QuestionKind.CHOICE }.forEach { q ->
+            assertTrue(q.text, q.wrong.distinct().size >= Rules.MAX_WRONG_ANSWERS)
+            assertFalse(q.text, q.answer in q.wrong)
+        }
+        assertTrue(Questions.MIN_WRONG >= Rules.MAX_WRONG_ANSWERS)
+    }
+
+    @Test
+    fun savedStarterQuestionsUpgradeButEditsAreKept() {
+        val old = Question("Who do you belong to?", QuestionKind.CHOICE, "My angel", listOf("Myself", "Nobody"))
+        val edited = Question("What are you?", QuestionKind.CHOICE, "Your pet", listOf("In charge", "A brat"))
+        val mine = Question("Favorite color?", QuestionKind.CHOICE, "Pink", listOf("Blue"))
+        val phrase = Question("Tell me what you are.", QuestionKind.PHRASE, "I am your good pet.")
+        val upgraded = Questions.upgrade(listOf(old, edited, mine, phrase))
+        assertEquals(Questions.DEFAULTS.first(), upgraded[0])
+        assertEquals(edited, upgraded[1])
+        assertEquals(mine, upgraded[2])
+        assertEquals(phrase, upgraded[3])
+        // Already up to date: nothing changes.
+        assertEquals(Questions.DEFAULTS, Questions.upgrade(Questions.DEFAULTS))
     }
 
     @Test

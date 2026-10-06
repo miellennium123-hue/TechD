@@ -39,7 +39,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 - There are no intensity levels (removed in v0.3.0). Each setting is an on/off toggle plus its details.
 - **Quit for now** must stay reachable on every screen, never be penalized, and never be removable by any setting or future partner sync.
 - Proof photos stay in private app storage and never leave the phone. Photo checks run on device (`core/PhotoVerifier.kt`, NudeNet model in `assets/models/`, AGPL-3.0).
-- Check-ins decide what to do in the pure `Rules.checkInAction`: no deadlines when she can't notify, and quiet during bedtime.
+- Check-ins decide what to do in the pure `Rules.checkInAction`: no deadlines when she can't notify, silent during quiet hours and bedtime, and nothing set at a check-in may be due inside quiet time (`Rules.reachesQuiet`).
 - The **Changelog** in `docs/DESIGN.md` is oldest first. The release workflow uses its last 3 entries as release notes, so always append at the bottom.
 - Writing style in docs and replies: plain language, short bullets, bold cues, no em dashes.
 

@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.6.0 (section 9 built, then a full review pass). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 15)
+> **Status:** v0.7.0 (adds Quiet hours and harder Shows up questions). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 16, v0.7.0)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -89,6 +89,7 @@ Two lockout scopes:
 - A check-in can become a task (9.4), a summons (9.5), a photo request, or a plain "report in"
 - **No hidden deadlines (round 14):** if notifications are off, check-ins never set a task, summons or photo deadline
 - **Quiet at bedtime (round 14):** with Bedtime on, check-ins inside the bedtime window are silent (no notification, no demands)
+- **Quiet hours (round 16):** its own setting, on by default (23:00 to 07:00). Check-ins inside are silent, and she never sets anything due inside it. It doesn't lock apps
 
 ### 4.7 Points / levels
 - **Merit only.** A score and level that show how good a pet you've been
@@ -116,7 +117,7 @@ User wants **a list of individual settings**, each toggled on/off.
 
 *"Quit for now" overrides every level.*
 
-**Current settings (v0.6.0):** one toggle each, plus details.
+**Current settings (v0.7.0):** one toggle each, plus details.
 
 | Setting | Default | Details |
 |---|---|---|
@@ -125,6 +126,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Always-allowed list | WhatsApp, Phone, messages, contacts, clock, maps | Editable app list |
 | Ask permission for guarded apps | Off | Adds "Ask her" |
 | Bedtime | Off | Start and end time. Same way in as lockouts. Check-ins are quiet inside it |
+| Quiet hours | **On**, 23:00 to 07:00 | Start and end time. Silent check-ins, nothing due inside. No locks |
 | Wallpaper control | Off | Set only / Set and lock |
 | Chastity mode | Off | Shortest and longest picked lock (default 1h to 4h) |
 | Chastity: she can add time | Off | Amount per addition, hard cap (default 24h) |
@@ -132,7 +134,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Photo proof prompts | 6 defaults (1 explicit) | Editable list, each prompt Explicit or not |
 | Check-in frequency | Every 2 hours | 30 min to 2 hours |
 | Rules & Tasks | Off | Editable list, 12 starters |
-| Shows up | Off | Editable question list, 8 starters |
+| Shows up | Off | Editable question list, 8 starters (5 multiple choice with 4 wrong answers each, 3 phrases) |
 | Degradation on failure | Off | Mild / Harsh |
 | Lockout as punishment | Off | Short (30 min) / Long (3h) |
 | Discreet notifications | On | On / Off |
@@ -245,6 +247,16 @@ Choices made while building, where the spec left room:
 - **Try it now** opens her screen directly when notifications are off, and Settings says she can't call you
 - Block screen uses her "you ignored me" line for a Shows up lock
 
+### v0.7.0 (round 16, answers the two open questions)
+- **Quiet hours** is a new setting, **on by default** from 23:00 to 07:00, so nobody fails a deadline asleep. Editable start and end
+- **Inside quiet hours:** check-ins are silent (+2 merit, no notification, no demands, no added chastity time), same as inside Bedtime
+- **Nothing due inside quiet hours:** near the start of quiet hours she only sets what finishes first. A summons needs 10 minutes, a check-in photo 30, a task its deadline (honor rules include the 30 minutes to report back). App-enforced rules can't be failed, so they always fit. If nothing fits, the check-in is a plain "report in"
+- **Asking her yourself** ("Ask her for a task", "Try it now") ignores quiet hours: you chose it
+- **Doesn't lock anything.** Locking the phone at night is Bedtime's job. Bedtime still counts as quiet too
+- **More wrong answers:** each of the 5 starter multiple choice questions now has 4 wrong answers (5 options), so the 3-strikes failure can happen
+- **Upgrade:** saved starter questions get the new wrong answers automatically. A question you wrote, or whose wrong answers you changed, is left alone
+- **Question editor** warns when a multiple choice question has fewer than 3 wrong answers
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -291,13 +303,14 @@ Agreed in round 12 and built one release at a time. Kept as the record of what w
 
 ## 10. Open questions
 
-- **Night check-ins without Bedtime (round 14):** with Bedtime off, check-ins keep coming all night and can set deadlines while you sleep. Options: turn Bedtime on (check-ins go quiet inside it), or add a separate "Quiet hours" setting. Waiting on the user
-- **Multiple choice can't be failed (round 14):** with 3 options you can only get 2 wrong, so the 3-strikes failure needs 4 or more options. Fine as is, or add more wrong answers to the starter questions? Waiting on the user
+None right now.
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
 ### Answered
+- **Night check-ins without Bedtime:** a separate Quiet hours setting (round 16)
+- **Multiple choice couldn't be failed:** more wrong answers on the starter questions (round 16)
 - **Proof subject outside chastity:** an editable prompt list she picks from at random (round 8)
 - **Photo verification:** basic checks on every photo, plus an on-device explicit check for prompts marked Explicit (round 8)
 - **Mood:** Set via Settings, switches somewhat randomly, affects dialogue only (rounds 2 and 3)
@@ -333,3 +346,4 @@ Agreed in round 12 and built one release at a time. Kept as the record of what w
 - **2026-10-06 (round 13, v0.5.0):** Built 9.5 Shows up: she summons you at some check-ins, everything locks if you ignore her for 10 minutes, and she asks a multiple choice or typed-phrase question. Section 9 is now fully built
 - **2026-10-06 (round 14, v0.6.0):** Full review of every version so far. Fixed app-in-front tracking, hidden deadlines with notifications off, demands at bedtime, stillness and lines edge cases, and Shows up wording. Added a reset confirmation and faster chastity steppers. Two open questions in section 10. Details in section 8
 - **2026-10-06 (round 15):** No design changes. User reports v0.6.0 looks like it works (logged in `docs/TESTING.md`). Confirmed `CLAUDE.md` still requires a design doc update after every message. The two open questions in section 10 are still open
+- **2026-10-06 (round 16, v0.7.0):** User chose a Quiet hours setting (on by default, 23:00 to 07:00: silent check-ins, nothing due inside) and more wrong answers for the starter multiple choice questions (4 each, saved starters upgraded). Both open questions answered. Details in section 8

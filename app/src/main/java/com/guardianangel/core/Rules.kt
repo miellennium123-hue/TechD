@@ -9,6 +9,8 @@ import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.Question
 import com.guardianangel.data.RuleEnforcement
+import com.guardianangel.data.TaskKind
+import com.guardianangel.data.TaskTemplate
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -69,6 +71,31 @@ object Rules {
 
     fun isBedtime(bedtime: BedtimeSettings, minuteOfDay: Int): Boolean =
         bedtime.on && isInWindow(bedtime.startMinute, bedtime.endMinute, minuteOfDay)
+
+    /** Quiet hours or bedtime: she lets you sleep. */
+    fun isQuiet(config: GuardianConfig, minuteOfDay: Int): Boolean {
+        val q = config.quietHours
+        return (q.on && isInWindow(q.startMinute, q.endMinute, minuteOfDay)) || isBedtime(config.bedtime, minuteOfDay)
+    }
+
+    /** True if something due [minutes] from now would run into quiet time on the way. */
+    fun reachesQuiet(config: GuardianConfig, minuteOfDay: Int, minutes: Int): Boolean =
+        (0..minutes.coerceIn(0, 24 * 60)).any { isQuiet(config, (minuteOfDay + it) % (24 * 60)) }
+
+    /**
+     * How long a task gives you before you can fail it. App-enforced rules can't be failed, so 0.
+     * Honor rules include the time to report back.
+     */
+    fun taskDeadlineMinutes(template: TaskTemplate): Int = when (template.kind) {
+        TaskKind.RULE ->
+            if (template.enforce != RuleEnforcement.NONE) 0 else template.minutes.coerceAtLeast(5) + RULE_REPORT_MINUTES
+        TaskKind.PHOTO -> template.minutes.coerceAtLeast(5)
+        TaskKind.STILLNESS, TaskKind.LINES -> TASK_DUE_MINUTES
+    }
+
+    /** Tasks she can issue now without a deadline landing in quiet time. */
+    fun tasksThatFit(config: GuardianConfig, minuteOfDay: Int): List<TaskTemplate> =
+        config.taskList.filter { !reachesQuiet(config, minuteOfDay, taskDeadlineMinutes(it)) }
 
     fun inScope(pkg: String, scope: LockoutScope): Boolean = when (scope) {
         LockoutScope.SOCIAL_MEDIA -> pkg in AppLists.SOCIAL_MEDIA
@@ -171,10 +198,13 @@ object Rules {
         else -> 0.0
     }
 
+    /** How long you get for a photo she asks for at a check-in. */
+    const val CHECK_IN_PROOF_MINUTES = 30
+
     /**
      * Decides what a check-in does. Anything with a deadline (task, summons, photo) only happens
-     * when she can actually notify you, and never during bedtime, so you can't fail while asleep
-     * or without being told.
+     * when she can actually notify you, and never during or running into quiet hours or bedtime,
+     * so you can't fail while asleep or without being told.
      */
     fun checkInAction(
         config: GuardianConfig,
@@ -183,14 +213,16 @@ object Rules {
         canNotify: Boolean,
         rolls: CheckInRolls,
     ): CheckInAction {
-        if (isBedtime(config.bedtime, minuteOfDay)) return CheckInAction.QUIET
+        if (isQuiet(config, minuteOfDay)) return CheckInAction.QUIET
         if (!canNotify) return CheckInAction.PLAIN
         val proofPending = state.proofs.any { it.reason.penalized }
-        val canTask = config.tasksOn && config.taskList.isNotEmpty() && state.task == null && !proofPending
+        val canTask = config.tasksOn && state.task == null && !proofPending && tasksThatFit(config, minuteOfDay).isNotEmpty()
+        val canSummon = config.showsUpOn && state.summons == null && !reachesQuiet(config, minuteOfDay, SUMMON_LOCK_MINUTES)
+        val canProof = !proofPending && !reachesQuiet(config, minuteOfDay, CHECK_IN_PROOF_MINUTES)
         return when {
             canTask && rolls.task < TASK_CHANCE -> CheckInAction.TASK
-            config.showsUpOn && state.summons == null && rolls.summons < SUMMON_CHANCE -> CheckInAction.SUMMONS
-            !proofPending && rolls.proof < proofChance(config, state) -> CheckInAction.PROOF
+            canSummon && rolls.summons < SUMMON_CHANCE -> CheckInAction.SUMMONS
+            canProof && rolls.proof < proofChance(config, state) -> CheckInAction.PROOF
             else -> CheckInAction.PLAIN
         }
     }
