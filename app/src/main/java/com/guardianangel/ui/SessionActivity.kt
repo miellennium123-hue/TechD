@@ -150,7 +150,7 @@ private fun SessionScreen(onDone: () -> Unit) {
         ) {
             when {
                 !config.session.on || !config.enabled -> {
-                    Text("Guided sessions are off. Turn them on in Settings, with her switched on.", Modifier.weight(1f))
+                    Text("Guided sessions are off. Turn them on in Guided sessions on the home screen, with her switched on.", Modifier.weight(1f))
                     Button(onClick = onDone) { Text("Close") }
                 }
                 phase == SessionPhase.SETUP -> Setup(
