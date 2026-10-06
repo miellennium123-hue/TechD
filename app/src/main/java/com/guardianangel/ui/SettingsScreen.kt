@@ -223,6 +223,12 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 "About every ${Peek.EVERY_MINUTES} minutes she captures your screen into her private gallery and comments on what you were doing.",
                 config.peek.on,
             ) { v -> if (supported || !v) update { it.copy(peek = it.peek.copy(on = v)) } }
+            SwitchRow(
+                "Show her comment",
+                "Right after she peeks, her comment pops up on screen for a few seconds. Anyone looking at your screen can read it. Not in quiet time.",
+                config.peek.showComment,
+            ) { v -> update { it.copy(peek = it.peek.copy(showComment = v)) } }
+            Muted("Her comments are also in the gallery: open a peek to read it. Notifications show her words only with Discreet notifications off.")
             if (!supported) {
                 Text("Needs Android 11 or later.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }

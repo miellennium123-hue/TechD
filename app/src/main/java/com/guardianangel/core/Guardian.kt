@@ -1,6 +1,7 @@
 package com.guardianangel.core
 
 import android.content.Context
+import android.widget.Toast
 import com.guardianangel.data.ActiveTask
 import com.guardianangel.data.ChastityLock
 import com.guardianangel.data.DegradationLevel
@@ -818,7 +819,9 @@ object Guardian {
             st.copy(peeks = kept)
         }
         dropped.forEach { File(File(appContext.filesDir, ProofFiles.DIR), it.file).delete() }
-        if (!Rules.isQuiet(config.value, minuteOfDay())) Notifier.peek(appContext, "$app. $line")
+        val quiet = Rules.isQuiet(config.value, minuteOfDay())
+        if (Peek.showsComment(config.value, quiet)) Toast.makeText(appContext, line, Toast.LENGTH_LONG).show()
+        if (!quiet) Notifier.peek(appContext, "$app. $line")
     }
 
     /** The gallery deleted screenshots: forget their peeks too. */

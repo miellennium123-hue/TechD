@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.21.0 (Her mark and She peeks). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 63)
+> **Status:** v0.21.1 (Her mark and She peeks, her peek comments now visible). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 64)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -496,6 +496,14 @@ Choices made while building, where the spec left room:
 - **After updating:** Android may need her watch switched off and on in Accessibility before screenshots work (with Lock guard on, that counts as tampering, so do it with Lock guard off)
 - **Tests:** `PeekTest.kt` (due, when she won't look, kinds, lines in both moods, keeping 100, Lock guard, older saves)
 
+### v0.21.1 (round 64, her peek comments)
+- **Reported:** screenshots get saved, but the user never sees her comments
+- **Cause:** in the gallery, a full-height screenshot filled the whole popup and pushed her comment off the screen. Her notification is silent, and with Discreet notifications on (the default) it only says "You have a new message."
+- **Fixed:** opening a peek shows her comment at the top in a card (the app, the time, her line), and the screenshot takes only the room left, so the comment and Delete always fit. The **Peek** tag on thumbnails is now a gold label that's easier to see
+- **New:** **Show her comment** in the She peeks card (`PeekSettings.showComment`, on by default). Right after she peeks, her comment pops up on screen for a few seconds (`Peek.showsComment`). Not in quiet time. Anyone looking at the screen can read it
+- **Older peeks:** their comments were saved all along, so they show in the gallery now too
+- **Tests:** `PeekTest.kt` (comment on screen unless off or quiet)
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -736,3 +744,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 61, v0.21.0):** Added to the same update: She peeks. About every 5 minutes her watch captures your screen into her private gallery and she comments on what you were doing (home, social, videos, games, messages, browser, other), as a silent notification. Never with the screen off or locked, the keyboard up, her own screens, the phone or Always-allowed apps. Android 11 or later. Details in section 8
 - **2026-10-06 (round 62):** No code changes. User says v0.21.0 (Her mark and She peeks) seems to work, recorded in TESTING.md. Asked for more Accessibility and device admin features. Proposed eight ideas in section 10, waiting on the user's picks
 - **2026-10-06 (round 63):** No code changes. User picked the unlock counter with daily report and search and site watch for v0.22.0. The build attempt was stopped by a safety filter, so they're not planned. Recorded in section 10
+- **2026-10-06 (round 64, v0.21.1):** User saw her screenshots but none of her comments. In the gallery, a tall screenshot pushed the comment off screen, and Discreet notifications hide her words. Fixed: the comment now shows at the top when you open a peek, and a new Show her comment setting (on) pops it up on screen right after she peeks. Details in section 8

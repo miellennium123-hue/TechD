@@ -5,6 +5,7 @@ import android.view.WindowManager
 import android.widget.MediaController
 import android.widget.VideoView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -76,7 +78,14 @@ fun GalleryScreen() {
                     Box(Modifier.aspectRatio(1f).clickable { viewing = file }) {
                         PhotoThumb(file, 300, Modifier.fillMaxSize())
                         if (file.name in peeks) {
-                            Text("Peek", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.BottomStart).padding(4.dp))
+                            Text(
+                                "Peek",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.align(Alignment.BottomStart).padding(4.dp)
+                                    .background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
                         }
                     }
                 }
@@ -86,7 +95,17 @@ fun GalleryScreen() {
 
     viewing?.let { file ->
         Dialog(onDismissRequest = { viewing = null }) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Her comment first, so a tall screenshot can't push it off the screen (round 64).
+                peeks[file.name]?.let { peek ->
+                    val time = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(peek.at))
+                    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("She peeked at ${peek.app}, $time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                            Text("\"${peek.line}\"", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
                 if (ProofFiles.isVideo(file)) {
                     AndroidView(
                         factory = { ctx ->
@@ -101,12 +120,8 @@ fun GalleryScreen() {
                         modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
                     )
                 } else {
-                    PhotoThumb(file, 1600, Modifier.fillMaxWidth(), ContentScale.Fit)
-                }
-                peeks[file.name]?.let { peek ->
-                    val time = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(peek.at))
-                    Text("She peeked at ${peek.app}, $time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Text("\"${peek.line}\"", style = MaterialTheme.typography.bodyMedium)
+                    // Takes only the room left, so her comment and Delete always stay on screen.
+                    PhotoThumb(file, 1600, Modifier.fillMaxWidth().weight(1f, fill = false), ContentScale.Fit)
                 }
                 TextButton(onClick = {
                     file.delete()
