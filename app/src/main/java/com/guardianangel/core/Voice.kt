@@ -8,6 +8,7 @@ enum class Line {
     FAIL_NEUTRAL, DEGRADE_MILD, DEGRADE_HARSH, CHASTITY_START, TIME_ADDED, CHECK_IN,
     RELEASED, TIMER_DONE, EARLY_DENIED, BEG_GRANTED, BEG_TIME_ADDED, PROOF_REJECTED, OFF, QUIT,
     TASK_ISSUED, RULE_REPORT, MOVED, TYPO, SUMMON, IGNORED, WRONG_ANSWER,
+    SITE_WARNING, SITE_DONE,
 }
 
 /** Everything she says. Edit freely; every line needs a sweet and a strict version. */
@@ -149,6 +150,15 @@ object Voice {
             "Wrong, pet. Try again for me.",
             "Hmm, no. Think harder.",
             "That's not right, sweetheart. Again.",
+        ),
+        Line.SITE_WARNING to listOf(
+            "I picked something for you to look at, pet. Eyes on it until I say.",
+            "I have something to show you, sweetheart. Stay right there for me.",
+            "Look where I send you, pet, and don't wander off.",
+        ),
+        Line.SITE_DONE to listOf(
+            "Good pet. You stayed exactly as long as I wanted.",
+            "That's my pet. You can go now.",
         ),
         Line.OFF to listOf(
             "Resting now. I'll be here when you want me.",
@@ -297,6 +307,15 @@ object Voice {
             "Wrong. Again.",
             "No. Answer properly.",
             "Do you even listen? Try again.",
+        ),
+        Line.SITE_WARNING to listOf(
+            "You'll look at what I choose. And you'll stay until I say.",
+            "Eyes where I put them. Don't you dare leave.",
+            "I'm sending you somewhere. Stay there.",
+        ),
+        Line.SITE_DONE to listOf(
+            "Time's up. You may go.",
+            "Adequate. You stayed. Dismissed.",
         ),
         Line.OFF to listOf(
             "Fine. I'm off duty. For now.",

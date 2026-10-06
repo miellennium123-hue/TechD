@@ -21,6 +21,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,7 +31,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Notifier
+import com.guardianangel.core.Permissions
 import com.guardianangel.core.Rules
+import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.data.ChastitySettings
@@ -40,14 +43,16 @@ import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.PunishmentLength
+import com.guardianangel.data.Sites
 import com.guardianangel.data.WallpaperMode
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit) {
+fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit, openSites: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
+    val state by Guardian.state.flow.collectAsState()
     var confirmReset by remember { mutableStateOf(false) }
 
     fun pickTime(initial: Int, onPicked: (Int) -> Unit) {
@@ -243,6 +248,37 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
+        SectionCard("Open sites") {
+            SwitchRow(
+                "Open sites",
+                "At almost every check-in she warns you for ${Rules.SITE_WARNING_SECONDS} seconds, then opens one of your sites " +
+                    "in Chrome. Stay for the set time; leaving early counts as a failure. Never on the lock screen, " +
+                    "during a call, or in quiet hours or bedtime.",
+                config.sitesOn,
+            ) { v -> update { it.copy(sitesOn = v) } }
+            Stepper(
+                "Stay for",
+                formatMinutes(config.siteMinutes),
+                onMinus = { update { it.copy(siteMinutes = (it.siteMinutes - 1).coerceIn(Sites.MIN_MINUTES, Sites.MAX_MINUTES)) } },
+                onPlus = { update { it.copy(siteMinutes = (it.siteMinutes + 1).coerceIn(Sites.MIN_MINUTES, Sites.MAX_MINUTES)) } },
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = openSites) { Text("Your sites (${config.siteList.size})") }
+                OutlinedButton(
+                    onClick = { Guardian.startVisit(asked = true) },
+                    enabled = config.enabled && config.sitesOn && config.siteList.isNotEmpty() && state.visit == null,
+                ) { Text("Ask her now") }
+            }
+            val browser = remember { SiteOpener.browserPackage(context) }
+            when {
+                browser == null -> Muted("No browser found, so she can't open sites.")
+                browser != SiteOpener.CHROME -> Muted("Chrome isn't installed, so she uses your default browser.")
+            }
+            if (!Permissions.accessibility(context)) {
+                Muted("She needs Accessibility (in Permissions) to open sites and see when you leave.")
+            }
+        }
+
         SectionCard("Discipline") {
             SwitchRow("Degradation on failure", null, config.degradation.on) { v ->
                 update { it.copy(degradation = it.degradation.copy(on = v)) }
@@ -289,7 +325,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             title = { Text("Reset all settings?") },
             text = {
                 Text(
-                    "Every setting goes back to its default, including your photo prompts, rules and tasks, and questions. " +
+                    "Every setting goes back to its default, including your photo prompts, rules and tasks, questions and sites. " +
                         "Your merit, photos and any running lock are kept.",
                 )
             },

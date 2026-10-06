@@ -8,6 +8,7 @@ import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.Question
+import com.guardianangel.data.SiteVisit
 import com.guardianangel.data.RuleEnforcement
 import com.guardianangel.data.TaskKind
 import com.guardianangel.data.TaskTemplate
@@ -39,10 +40,17 @@ sealed interface Decision {
 enum class AskOutcome { GRANT, PROOF, DENY }
 
 /** What a check-in turns into. QUIET: during bedtime she lets you sleep (no notification, no demands). */
-enum class CheckInAction { TASK, SUMMONS, PROOF, PLAIN, QUIET }
+enum class CheckInAction { SITE, TASK, SUMMONS, PROOF, PLAIN, QUIET }
 
 /** Random rolls for one check-in, each in 0 until 1. Kept separate so [Rules.checkInAction] stays pure. */
-data class CheckInRolls(val task: Double, val summons: Double, val proof: Double)
+data class CheckInRolls(val task: Double, val summons: Double, val proof: Double, val site: Double = 1.0)
+
+/**
+ * What a change of app in front means for an open site visit. ON_SITE: back in her browser.
+ * PAUSE: her app, a call, Settings or another system screen (time stops, no failure). LEFT: anything
+ * else, including the home screen and recents. NONE: no open visit.
+ */
+enum class SiteMove { ON_SITE, PAUSE, LEFT, NONE }
 
 /** Her answer to "please let me out early". [addTime] only applies to a denial. */
 data class BegOutcome(val released: Boolean, val addTime: Boolean)
@@ -114,6 +122,9 @@ object Rules {
         protectedPackages: Set<String>,
     ): List<Restriction> {
         if (!config.enabled || isExempt(pkg, config, protectedPackages)) return emptyList()
+        // She sent you there, so nothing blocks her browser while you stay.
+        val visit = state.visit
+        if (visit != null && visit.open && pkg == visit.browser) return emptyList()
         val result = mutableListOf<Restriction>()
         val guarded = inScope(pkg, config.lockouts.scope)
         val ask = config.askPermission.on
@@ -183,6 +194,49 @@ object Rules {
     const val SUMMON_LOCK_MINUTES = 10
     const val MAX_WRONG_ANSWERS = 3
 
+    /** Open sites: chance per check-in ("almost every single time", round 19), warning length, how long a locked phone can delay it. */
+    const val SITE_CHANCE = 0.9
+    const val SITE_WARNING_SECONDS = 10
+    const val SITE_SHOW_WITHIN_MINUTES = 30
+    const val SITE_OPEN_GRACE_MS = 3_000L
+
+    /** Minutes a visit needs, counting the warning, so it can be checked against quiet time. */
+    fun siteMinutes(config: GuardianConfig): Int = config.siteMinutes + 1
+
+    /** Time spent on the site so far. */
+    fun stayedMs(visit: SiteVisit, now: Long): Long =
+        visit.stayedMs + if (visit.onSiteSince > 0) (now - visit.onSiteSince).coerceAtLeast(0L) else 0L
+
+    fun visitDone(visit: SiteVisit, now: Long): Boolean = visit.open && stayedMs(visit, now) >= visit.stayMs
+
+    /**
+     * A visit that never got shown (phone stayed locked) is dropped at [SiteVisit.showBy].
+     * Anything left far past its time (service killed mid-visit) is dropped too, never penalized.
+     */
+    fun visitExpired(visit: SiteVisit, now: Long): Boolean =
+        (visit.pending && now > visit.showBy) ||
+            now > visit.showBy + visit.stayMs + HOUR
+
+    /** She only shows a waiting visit outside quiet time, with room to finish before it. Asking her yourself skips that. */
+    fun canShowVisit(config: GuardianConfig, visit: SiteVisit, minuteOfDay: Int): Boolean =
+        visit.asked || !reachesQuiet(config, minuteOfDay, (visit.stayMs / MINUTE).toInt() + 1)
+
+    /**
+     * Leaving the browser before time is up is a failure (round 19). Going home or to another app
+     * counts. Her own app (Quit for now must stay reachable), calls and system screens only pause.
+     * [exempt] is the never-blocked set; launchers are checked first because they're in it too.
+     * For a moment after the page opens, other windows only pause, so the hand-off from her
+     * warning screen to the browser can't count as leaving.
+     */
+    fun siteMove(visit: SiteVisit?, pkg: String, now: Long, ownApp: Boolean, launcher: Boolean, exempt: Boolean): SiteMove = when {
+        visit == null || !visit.open -> SiteMove.NONE
+        pkg == visit.browser -> SiteMove.ON_SITE
+        now - visit.openedAt < SITE_OPEN_GRACE_MS -> SiteMove.PAUSE
+        launcher -> SiteMove.LEFT
+        ownApp || exempt -> SiteMove.PAUSE
+        else -> SiteMove.LEFT
+    }
+
     /** Choice answers must match the right option. Phrases must match exactly, ignoring case, spacing at the ends and curly quotes. */
     fun isCorrect(question: Question, given: String): Boolean =
         normalizeAnswer(given) == normalizeAnswer(question.answer)
@@ -205,6 +259,9 @@ object Rules {
      * Decides what a check-in does. Anything with a deadline (task, summons, photo) only happens
      * when she can actually notify you, and never during or running into quiet hours or bedtime,
      * so you can't fail while asleep or without being told.
+     *
+     * Site visits come first, almost every time (round 19). They need no notification because the
+     * warning shows itself, but they do need [canOpenSites]: the accessibility service and a browser.
      */
     fun checkInAction(
         config: GuardianConfig,
@@ -212,12 +269,17 @@ object Rules {
         minuteOfDay: Int,
         canNotify: Boolean,
         rolls: CheckInRolls,
+        canOpenSites: Boolean = false,
     ): CheckInAction {
         if (isQuiet(config, minuteOfDay)) return CheckInAction.QUIET
+        val canSite = canOpenSites && config.sitesOn && config.siteList.isNotEmpty() && state.visit == null &&
+            state.summons == null && !reachesQuiet(config, minuteOfDay, siteMinutes(config))
+        if (canSite && rolls.site < SITE_CHANCE) return CheckInAction.SITE
         if (!canNotify) return CheckInAction.PLAIN
         val proofPending = state.proofs.any { it.reason.penalized }
         val canTask = config.tasksOn && state.task == null && !proofPending && tasksThatFit(config, minuteOfDay).isNotEmpty()
-        val canSummon = config.showsUpOn && state.summons == null && !reachesQuiet(config, minuteOfDay, SUMMON_LOCK_MINUTES)
+        val canSummon = config.showsUpOn && state.summons == null && state.visit == null &&
+            !reachesQuiet(config, minuteOfDay, SUMMON_LOCK_MINUTES)
         val canProof = !proofPending && !reachesQuiet(config, minuteOfDay, CHECK_IN_PROOF_MINUTES)
         return when {
             canTask && rolls.task < TASK_CHANCE -> CheckInAction.TASK

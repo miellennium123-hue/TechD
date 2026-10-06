@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.Rules
+import com.guardianangel.core.SiteOpener
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.ProofReason
@@ -80,6 +81,22 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
                     fontWeight = FontWeight.Bold,
                 )
                 Button(onClick = { context.startActivity(ShowUpActivity.intent(context)) }) { Text("Go to her") }
+            }
+        }
+
+        state.visit?.let { visit ->
+            SectionCard("She's showing you something") {
+                if (visit.open) {
+                    Text(
+                        "${formatDuration(visit.stayMs - Rules.stayedMs(visit, now))} left on the site",
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Muted("The timer is paused while you're here. Going home or to another app counts as a failure.")
+                    Button(onClick = { SiteOpener.bringBack(context, visit.browser) }) { Text("Back to the site") }
+                } else {
+                    Muted("She'll open it in a moment.")
+                }
             }
         }
 
@@ -152,6 +169,12 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
         val photoTaskOpen = state.proofs.any { it.reason == ProofReason.TASK }
         if (config.enabled && config.tasksOn && state.task == null && !photoTaskOpen) {
             OutlinedButton(onClick = { Guardian.issueTask() }, modifier = Modifier.fillMaxWidth()) { Text("Ask her for a task") }
+        }
+
+        if (config.enabled && config.sitesOn && config.siteList.isNotEmpty() && state.visit == null) {
+            OutlinedButton(onClick = { Guardian.startVisit(asked = true) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Ask her to open a site")
+            }
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

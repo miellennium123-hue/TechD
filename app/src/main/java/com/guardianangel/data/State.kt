@@ -25,6 +25,8 @@ data class GuardianState(
     val linesFloor: Int = 0,
     /** She has shown up and is waiting for an answer. */
     val summons: Summons? = null,
+    /** She is opening one of your sites, or has opened it and is timing your stay. */
+    val visit: SiteVisit? = null,
 )
 
 @Serializable
