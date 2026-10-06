@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.9.0 (adds Her lines). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 23)
+> **Last updated:** 2026-10-06 (round 24)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -377,6 +377,7 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 
 ## 10. Open questions
 
+- **Rating idea (round 24, not decided):** user asked about a cock rating feature. Possible: an explicit photo through the in-app camera (checked on device like other Explicit prompts), then her verdict with a score. She can't really judge the photo (no on-device model can, and photos never leave the phone), so the score comes from chance, your own measurements or a setting. Claude writes mild lines; explicit wording via Her lines. Open: what decides the score, tone, when it happens, any effects, and whether the photo is kept
 - **Guided sessions (round 22):** written up as concept 9.9 (round 23). Four open points listed there. Not planned until the user has tested v0.9.0
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 
@@ -431,3 +432,4 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **2026-10-06 (round 21, v0.9.0):** Built 9.8 Editable lines: Settings > Her lines lists every situation with a note, and you can add, edit and delete her sweet and strict lines, reset one or all. User chose dialogue only (not Lines task sentences), an editable home screen line, and untouched situations following updates. Unused `WAIT` line removed. Details in section 8
 - **2026-10-06 (round 22):** No design changes. User asked whether a JOI-style feature is possible. Answered: the mechanics yes, with non-graphic starter lines and their own explicit lines via Her lines. Recorded as an open question in section 10
 - **2026-10-06 (round 23):** No code changes. Guided sessions (JOI-style) added as concept 9.9, not planned. The user is testing v0.9.0 first and will send feedback
+- **2026-10-06 (round 24):** No code changes. User asked whether a cock rating feature is possible. Answered yes, with open questions. Recorded in section 10
