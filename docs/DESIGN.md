@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.12.1 (Guided sessions: motion checks, and a front or back camera switch). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 39)
+> **Last updated:** 2026-10-06 (round 40)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -474,6 +474,11 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Rules that stay:** Quit for now on every screen, never block calls or emergency use, quiet hours respected
   - **Round 39:** the user likes phone control and release control most. Asked whether they'd trip the safety filter. Answer: Claude can't predict the filter, but these are mostly timers, blocking and calendars, like lockouts and chastity, which built fine. Build one feature per round
 
+- **A lock that feels real (round 40, proposed, not decided):** the user wants turning her off to be tedious
+  - **Proposed:** a slow off switch during a lock (wait, type a line, logged as a failure), a tamper guard (accessibility blocks her app info, accessibility and uninstall screens during a lock, plus device admin so uninstalling takes extra steps), and tamper detection (accessibility turned off, force stop or a reboot during a lock is noticed next start and counts as a failure)
+  - **Unchanged:** Quit for now stays instant and penalty free (section 3). Claude recommends no delay on it; at most a one-tap confirm, the user's call
+  - **Honest limit:** Android can't make it unbreakable (safe mode, ADB, factory reset, Quit for now)
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -542,3 +547,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 37, v0.12.1):** User asked for the right camera or a switch. Added a front or back camera switch to guided sessions (setup screen and during the session), remembered between sessions. Switching resets the motion check. Details in section 8
 - **2026-10-06 (round 38):** No code changes. User asked for more femdom and techdom features (they like it strict). Proposed ideas grouped as discipline, routine, phone control, release control and presence, recorded in section 10. Nothing picked yet
 - **2026-10-06 (round 39):** No code changes. User picked phone control and release control as favourites and asked whether they'd trip the safety filter. Explained the risk honestly and suggested one feature per round. Recorded in section 10
+- **2026-10-06 (round 40):** No code changes. User asked for a lock that feels real and a tedious way to turn her off. Proposed a slow off switch, a tamper guard and tamper detection, with Quit for now kept instant. Recorded in section 10, waiting on the user's picks
