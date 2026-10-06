@@ -1,13 +1,14 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.19.0 (bedtime screen). Sections 0 to 0n cover what 0.6.0 to 0.19.0 changed
+> **Version under test:** 0.19.1 (bedtime screen fix). Sections 0 to 0n cover what 0.6.0 to 0.19.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
 ## 0n. New in 0.19.0: bedtime screen
 Bedtime on, set to start 2 minutes from now. Settings > Bedtime > **Bedtime screen** on (default).
-- [ ] Settings > About shows **Version 0.19.0**
+- [ ] Settings > About shows **Version 0.19.1**
+- [ ] **Open Guardian Angel** on her screen opens the app. With Lock guard off, bedtime hours change. With it on, "Not now"
 - [ ] On the home screen when bedtime starts: within about 30 seconds her full-screen "Locked out" screen appears
 - [ ] It shows her picture, her line, "Locked out until HH:MM" and the time left
 - [ ] Buttons for your installed Always-allowed apps open them. **Phone** opens the dialer
@@ -291,4 +292,5 @@ Use **Try it now** in Settings to summon her.
 | Date | Version | Item | Result |
 |---|---|---|---|
 | 2026-10-06 | 0.6.0 | General use | User: "Looks like it works." No specific checklist items reported yet |
+| 2026-10-06 | 0.19.0 | Bedtime screen | User couldn't reach her app to change bedtime hours (Lock guard off): the screen hid it. Fixed in 0.19.1 |
 | 2026-10-06 | 0.17.0 | Quickshot button | User couldn't see it (hidden while her or Guided sessions were off). Fixed in 0.17.1 |
