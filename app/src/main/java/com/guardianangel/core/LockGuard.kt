@@ -2,6 +2,7 @@ package com.guardianangel.core
 
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
+import com.guardianangel.data.LockoutScope
 
 /**
  * Lock guard and the slow Quit for now (rounds 41 and 43). Pure Kotlin, tested in LockGuardTest.
@@ -42,12 +43,21 @@ object LockGuard {
 
     /**
      * Whether a settings change loosens her control: one of her controls switched off, Quiet hours
-     * switched on, or a new always-allowed app. Those take the slow way while guarding. Anything
-     * that makes her stricter, and every other detail, changes instantly.
+     * switched on, or a new always-allowed app. Since round 53 also: lockout scope narrowed to social
+     * media, shorter blocks, and any change to bedtime hours while bedtime is on. Those take the slow
+     * way while guarding. Anything that makes her stricter, and every other detail, changes instantly.
      */
     fun loosens(before: GuardianConfig, after: GuardianConfig): Boolean {
         fun off(b: Boolean, a: Boolean) = b && !a
+        val b = before.lockouts
+        val a = after.lockouts
+        val bedtimeMoved = before.bedtime.on && after.bedtime.on &&
+            (before.bedtime.startMinute != after.bedtime.startMinute || before.bedtime.endMinute != after.bedtime.endMinute)
         return off(before.lockGuard, after.lockGuard) ||
+            (b.scope == LockoutScope.EVERYTHING && a.scope != LockoutScope.EVERYTHING) ||
+            a.minBlockMinutes < b.minBlockMinutes ||
+            a.maxBlockMinutes < b.maxBlockMinutes ||
+            bedtimeMoved ||
             off(before.lockouts.on, after.lockouts.on) ||
             off(before.askPermission.on, after.askPermission.on) ||
             off(before.bedtime.on, after.bedtime.on) ||
@@ -61,6 +71,23 @@ object LockGuard {
             off(before.punishment.on, after.punishment.on) ||
             off(!before.quietHours.on, !after.quietHours.on) ||
             !before.alwaysAllowed.containsAll(after.alwaysAllowed)
+    }
+
+    /**
+     * Option C (round 53): while her timed block or bedtime is running, its settings can't be changed
+     * at all, no app can be added to Always-allowed, and Lock guard can't be switched off. Checked while guarding, before [loosens].
+     * Returns what's frozen, for her refusal, or null if the change can go ahead.
+     */
+    fun frozen(before: GuardianConfig, after: GuardianConfig, state: GuardianState, now: Long, minuteOfDay: Int): String? {
+        // Switching Lock guard off would undo all of this, so it waits too.
+        val loosened = !before.alwaysAllowed.containsAll(after.alwaysAllowed) || (before.lockGuard && !after.lockGuard)
+        if (Rules.isBedtime(before.bedtime, minuteOfDay) && (before.bedtime != after.bedtime || loosened)) {
+            return "Bedtime is running. Bedtime, Always-allowed and Lock guard are locked until it ends."
+        }
+        if (Rules.blockRunning(before, state, now) && (before.lockouts != after.lockouts || loosened)) {
+            return "Her app block is running. App lockouts, Always-allowed and Lock guard are locked until it ends."
+        }
+        return null
     }
 
     /**

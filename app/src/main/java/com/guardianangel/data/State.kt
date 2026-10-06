@@ -10,6 +10,8 @@ data class GuardianState(
     val proofs: List<ProofRequest> = emptyList(),
     val grants: List<Grant> = emptyList(),
     val punishmentUntil: Long = 0,
+    /** Her timed app block (round 53) runs until this time. 0 or past means no block. */
+    val lockoutUntil: Long = 0,
     val askCooldownUntil: Map<String, Long> = emptyMap(),
     val currentMood: Mood = Mood.SWEET,
     val moodUntil: Long = 0,
@@ -74,11 +76,15 @@ data class ProofRequest(
     val subject: String get() = prompt.ifBlank { reason.prompt }
 }
 
-/** Temporary permission to open an app. Covers everything except a punishment lockout. */
+/**
+ * Temporary permission to open an app. Never covers bedtime, a punishment, her rules or a summons.
+ * Only [bought] time (merit, round 53) gets through her timed block; asking her only covers Ask permission.
+ */
 @Serializable
 data class Grant(
     val packageName: String,
     val until: Long,
+    val bought: Boolean = false,
 )
 
 /** [everydayOnly] requests only pick non-explicit prompts. */

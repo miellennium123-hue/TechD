@@ -25,7 +25,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -172,6 +174,16 @@ fun EnabledSwitch(title: String, subtitle: String?, checked: Boolean) {
  */
 @Composable
 fun LoosenHost() {
+    val refusal by Guardian.refusal.collectAsState()
+    refusal?.let { text ->
+        // Round 53: her block or bedtime is running, so the change can't be made at all.
+        AlertDialog(
+            onDismissRequest = { Guardian.refusal.value = null },
+            title = { Text("Not now") },
+            text = { Text(text) },
+            confirmButton = { TextButton(onClick = { Guardian.refusal.value = null }) { Text("OK") } },
+        )
+    }
     val pending by Guardian.pendingLoosen.collectAsState()
     if (pending == null) return
     SlowExitDialog(

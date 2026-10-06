@@ -8,6 +8,8 @@ import com.guardianangel.data.ChastityLock
 import com.guardianangel.data.ChastitySettings
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
+import com.guardianangel.data.BedtimeSettings
+import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.LockoutSettings
 import com.guardianangel.data.Mood
 import com.guardianangel.data.PunishmentSettings
@@ -78,6 +80,48 @@ class LockGuardTest {
     }
 
     @Test
+    fun narrowingLockoutsAndMovingBedtimeLoosen() {
+        val before = on.copy(
+            lockouts = LockoutSettings(on = true, scope = LockoutScope.EVERYTHING, minBlockMinutes = 60, maxBlockMinutes = 240),
+            bedtime = BedtimeSettings(on = true),
+        )
+        assertTrue(LockGuard.loosens(before, before.copy(lockouts = before.lockouts.copy(scope = LockoutScope.SOCIAL_MEDIA))))
+        assertTrue(LockGuard.loosens(before, before.copy(lockouts = before.lockouts.copy(minBlockMinutes = 30))))
+        assertTrue(LockGuard.loosens(before, before.copy(lockouts = before.lockouts.copy(maxBlockMinutes = 180))))
+        assertTrue(LockGuard.loosens(before, before.copy(bedtime = before.bedtime.copy(endMinute = 6 * 60))))
+        // Stricter is instant: longer blocks, wider scope.
+        assertFalse(LockGuard.loosens(before, before.copy(lockouts = before.lockouts.copy(maxBlockMinutes = 300))))
+        val social = before.copy(lockouts = before.lockouts.copy(scope = LockoutScope.SOCIAL_MEDIA))
+        assertFalse(LockGuard.loosens(social, before))
+        // Bedtime hours are free to change while bedtime is off.
+        val off = before.copy(bedtime = BedtimeSettings(on = false))
+        assertFalse(LockGuard.loosens(off, off.copy(bedtime = off.bedtime.copy(endMinute = 6 * 60))))
+    }
+
+    @Test
+    fun blockAndBedtimeFreezeTheirSettings() {
+        val noon = 12 * 60
+        val c = on.copy(lockouts = LockoutSettings(on = true), bedtime = BedtimeSettings(on = true))
+        val running = GuardianState(lockoutUntil = now + 60_000)
+        val changes = listOf(
+            c.copy(lockouts = c.lockouts.copy(on = false)),
+            c.copy(lockouts = c.lockouts.copy(scope = LockoutScope.EVERYTHING)),
+            c.copy(alwaysAllowed = c.alwaysAllowed + "com.instagram.android"),
+            c.copy(lockGuard = false),
+        )
+        changes.forEach { assertTrue(it.toString(), LockGuard.frozen(c, it, running, now, noon) != null) }
+        // No block running: nothing frozen (the slow way still applies to loosening).
+        changes.forEach { assertEquals(null, LockGuard.frozen(c, it, GuardianState(), now, noon)) }
+        // Other settings change freely during a block.
+        assertEquals(null, LockGuard.frozen(c, c.copy(meritOn = false), running, now, noon))
+        // Bedtime running (midnight): bedtime is frozen, even without a block.
+        val later = c.copy(bedtime = c.bedtime.copy(endMinute = 6 * 60))
+        assertTrue(LockGuard.frozen(c, later, GuardianState(), now, 0) != null)
+        assertTrue(LockGuard.frozen(c, c.copy(bedtime = BedtimeSettings(on = false)), GuardianState(), now, 0) != null)
+        assertEquals(null, LockGuard.frozen(c, later, GuardianState(), now, noon))
+    }
+
+    @Test
     fun guardedScreens() {
         assertTrue(LockGuard.guardedPackage("com.android.settings"))
         assertTrue(LockGuard.guardedPackage("com.google.android.packageinstaller"))
@@ -118,7 +162,7 @@ class LockGuardTest {
 
     @Test
     fun newLinesHaveBothMoods() {
-        listOf(Line.QUIT_TALK, Line.OFF_TALK, Line.LOOSEN_TALK, Line.ADMIN_OFF, Line.GUARDED, Line.TAMPERED).forEach {
+        listOf(Line.QUIT_TALK, Line.OFF_TALK, Line.LOOSEN_TALK, Line.ADMIN_OFF, Line.GUARDED, Line.TAMPERED, Line.BLOCK_START, Line.BOUGHT_TIME).forEach {
             assertTrue(it.name, Voice.builtIn(it, Mood.SWEET).isNotEmpty())
             assertTrue(it.name, Voice.builtIn(it, Mood.STRICT).isNotEmpty())
         }
@@ -131,5 +175,9 @@ class LockGuardTest {
         val st = json.decodeFromString(GuardianState.serializer(), "{\"merit\":3}")
         assertEquals(0, st.guardVersion)
         assertFalse(st.tamperOffNoticed)
+        assertEquals(0L, st.lockoutUntil)
+        val lockouts = json.decodeFromString(GuardianConfig.serializer(), "{\"lockouts\":{\"on\":true}}").lockouts
+        assertEquals(60, lockouts.minBlockMinutes)
+        assertEquals(240, lockouts.maxBlockMinutes)
     }
 }

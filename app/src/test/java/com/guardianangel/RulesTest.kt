@@ -46,44 +46,106 @@ class RulesTest {
     private fun config(scope: LockoutScope = LockoutScope.SOCIAL_MEDIA) =
         GuardianConfig(enabled = true, lockouts = LockoutSettings(on = true, scope = scope))
 
+    /** Her timed block running for another hour (round 53). */
+    private val blocked = GuardianState(lockoutUntil = now + HOUR)
+
     @Test
     fun disabledNeverBlocks() {
         val c = config().copy(enabled = false)
-        assertEquals(Decision.Allow, Rules.decide(instagram, c, GuardianState(), now, noon))
+        assertEquals(Decision.Allow, Rules.decide(instagram, c, blocked, now, noon))
     }
 
     @Test
     fun socialScopeBlocksOnlySocialApps() {
         val c = config()
-        assertTrue(Rules.decide(instagram, c, GuardianState(), now, noon) is Decision.Block)
-        assertEquals(Decision.Allow, Rules.decide(bank, c, GuardianState(), now, noon))
+        assertTrue(Rules.decide(instagram, c, blocked, now, noon) is Decision.Block)
+        assertEquals(Decision.Allow, Rules.decide(bank, c, blocked, now, noon))
     }
 
     @Test
     fun everythingScopeRespectsAllowedAndProtectedLists() {
         val c = config(LockoutScope.EVERYTHING).copy(alwaysAllowed = setOf(bank))
-        assertTrue(Rules.decide("com.example.game", c, GuardianState(), now, noon) is Decision.Block)
-        assertEquals(Decision.Allow, Rules.decide(bank, c, GuardianState(), now, noon))
-        assertEquals(Decision.Allow, Rules.decide("com.android.settings", c, GuardianState(), now, noon))
-        assertEquals(Decision.Allow, Rules.decide("com.android.phone", c, GuardianState(), now, noon))
-        assertEquals(Decision.Allow, Rules.decide("com.launcher", c, GuardianState(), now, noon, setOf("com.launcher")))
+        assertTrue(Rules.decide("com.example.game", c, blocked, now, noon) is Decision.Block)
+        assertEquals(Decision.Allow, Rules.decide(bank, c, blocked, now, noon))
+        assertEquals(Decision.Allow, Rules.decide("com.android.settings", c, blocked, now, noon))
+        assertEquals(Decision.Allow, Rules.decide("com.android.phone", c, blocked, now, noon))
+        assertEquals(Decision.Allow, Rules.decide("com.launcher", c, blocked, now, noon, setOf("com.launcher")))
     }
 
     @Test
-    fun lockoutIsHardBlockWithWayIn() {
-        val d = Rules.decide(instagram, config(), GuardianState(), now, noon) as Decision.Block
+    fun lockoutsOnlyBlockDuringHerTimedBlock() {
+        val d = Rules.decide(instagram, config(), blocked, now, noon) as Decision.Block
         assertEquals(RestrictionKind.LOCKOUT, d.kind)
-        assertTrue(d.selfBypass)
+        assertEquals(now + HOUR, d.until)
+        assertTrue(d.canBuy)
         assertFalse(d.askAllowed)
+        // No block running, or it ended: free.
+        assertEquals(Decision.Allow, Rules.decide(instagram, config(), GuardianState(), now, noon))
+        assertEquals(Decision.Allow, Rules.decide(instagram, config(), blocked, now + HOUR, noon))
+        // Lockouts switched off: an old block doesn't count.
+        assertEquals(Decision.Allow, Rules.decide(instagram, GuardianConfig(enabled = true), blocked, now, noon))
     }
 
     @Test
-    fun grantLetsYouIn() {
-        val granted = GuardianState(grants = listOf(Grant(instagram, now + HOUR)))
-        assertEquals(Decision.Allow, Rules.decide(instagram, config(), granted, now, noon))
+    fun noAskingDuringABlock() {
+        val c = config().copy(askPermission = AskPermissionSettings(on = true))
+        val d = Rules.decide(instagram, c, blocked, now, noon) as Decision.Block
+        assertEquals(RestrictionKind.LOCKOUT, d.kind)
+        assertFalse(d.askAllowed)
+        // Outside a block, Ask permission works as before.
+        val outside = Rules.decide(instagram, c, GuardianState(), now, noon) as Decision.Block
+        assertEquals(RestrictionKind.PERMISSION, outside.kind)
+        assertTrue(outside.askAllowed)
+    }
 
-        val expired = GuardianState(grants = listOf(Grant(instagram, now - 1)))
+    @Test
+    fun onlyBoughtTimeGetsThroughABlock() {
+        val asked = blocked.copy(grants = listOf(Grant(instagram, now + HOUR)))
+        assertTrue(Rules.decide(instagram, config(), asked, now, noon) is Decision.Block)
+        val bought = blocked.copy(grants = listOf(Grant(instagram, now + HOUR, bought = true)))
+        assertEquals(Decision.Allow, Rules.decide(instagram, config(), bought, now, noon))
+        val expired = blocked.copy(grants = listOf(Grant(instagram, now - 1, bought = true)))
         assertTrue(Rules.decide(instagram, config(), expired, now, noon) is Decision.Block)
+    }
+
+    @Test
+    fun grantLetsYouInOutsideABlock() {
+        val c = GuardianConfig(enabled = true, askPermission = AskPermissionSettings(on = true))
+        val granted = GuardianState(grants = listOf(Grant(instagram, now + HOUR)))
+        assertEquals(Decision.Allow, Rules.decide(instagram, c, granted, now, noon))
+        val expired = GuardianState(grants = listOf(Grant(instagram, now - 1)))
+        assertTrue(Rules.decide(instagram, c, expired, now, noon) is Decision.Block)
+    }
+
+    @Test
+    fun buyingTimeNeedsMerit() {
+        assertTrue(Rules.canBuyTime(config(), GuardianState(merit = Rules.BUY_MERIT)))
+        assertFalse(Rules.canBuyTime(config(), GuardianState(merit = Rules.BUY_MERIT - 1)))
+        assertFalse(Rules.canBuyTime(config().copy(meritOn = false), GuardianState(merit = 100)))
+    }
+
+    @Test
+    fun checkInsStartBlocks() {
+        val c = config()
+        assertTrue(Rules.startsBlock(c, GuardianState(), now, noon, 0.1))
+        assertFalse(Rules.startsBlock(c, GuardianState(), now, noon, 0.9))
+        // Not while one runs, not with lockouts off, not in quiet time.
+        assertFalse(Rules.startsBlock(c, blocked, now, noon, 0.1))
+        assertFalse(Rules.startsBlock(GuardianConfig(enabled = true), GuardianState(), now, noon, 0.1))
+        assertFalse(Rules.startsBlock(c, GuardianState(), now, 0, 0.1))
+        // A finished block lets her start the next one.
+        assertTrue(Rules.startsBlock(c, blocked, now + HOUR, noon, 0.1))
+    }
+
+    @Test
+    fun blockLengthStaysBetweenYourShortestAndLongest() {
+        val c = config().copy(lockouts = LockoutSettings(on = true, minBlockMinutes = 60, maxBlockMinutes = 240))
+        val random = Random(4)
+        repeat(200) {
+            val m = Rules.blockMinutes(c, random)
+            assertTrue("$m", m in 60..240)
+            assertEquals(0, m % 15)
+        }
     }
 
     @Test
@@ -101,7 +163,7 @@ class RulesTest {
         val d = Rules.decide(instagram, c, GuardianState(), now, noon) as Decision.Block
         assertEquals(RestrictionKind.PERMISSION, d.kind)
         assertTrue(d.askAllowed)
-        assertFalse(d.selfBypass)
+        assertFalse(d.canBuy)
     }
 
     @Test
@@ -119,14 +181,25 @@ class RulesTest {
         val c = GuardianConfig(enabled = true, bedtime = BedtimeSettings(on = true))
         val d = Rules.decide("com.example.game", c, GuardianState(), now, 0) as Decision.Block
         assertEquals(RestrictionKind.BEDTIME, d.kind)
-        assertTrue(d.selfBypass)
+        assertFalse(d.canBuy)
+        assertFalse(d.askAllowed)
         assertEquals(Decision.Allow, Rules.decide("com.example.game", c, GuardianState(), now, noon))
+    }
+
+    @Test
+    fun bedtimeHasNoWayInUntilMorning() {
+        val c = GuardianConfig(enabled = true, bedtime = BedtimeSettings(on = true), askPermission = AskPermissionSettings(on = true))
+        val st = GuardianState(grants = listOf(Grant("com.example.game", now + HOUR, bought = true)))
+        val d = Rules.decide("com.example.game", c, st, now, 0) as Decision.Block
+        assertEquals(RestrictionKind.BEDTIME, d.kind)
+        assertFalse(d.askAllowed)
+        assertFalse(d.canBuy)
     }
 
     @Test
     fun bedtimeWinsOverLockoutOnTheBlockScreen() {
         val c = config(LockoutScope.EVERYTHING).copy(bedtime = BedtimeSettings(on = true))
-        val d = Rules.decide("com.example.game", c, GuardianState(), now, 0) as Decision.Block
+        val d = Rules.decide("com.example.game", c, blocked, now, 0) as Decision.Block
         assertEquals(RestrictionKind.BEDTIME, d.kind)
     }
 
@@ -140,7 +213,7 @@ class RulesTest {
         val st = GuardianState(task = rule, grants = listOf(Grant(instagram, now + HOUR)))
         val d = Rules.decide(instagram, c, st, now, noon) as Decision.Block
         assertEquals(RestrictionKind.RULE, d.kind)
-        assertFalse(d.selfBypass)
+        assertFalse(d.canBuy)
         assertFalse(d.askAllowed)
         assertEquals(now + HOUR, d.until)
         // Other apps, and the time after the rule, are free.
@@ -161,7 +234,7 @@ class RulesTest {
         val later = now + 11 * 60_000L
         val d = Rules.decide("com.example.game", c, st, later, noon) as Decision.Block
         assertEquals(RestrictionKind.SUMMONS, d.kind)
-        assertFalse(d.selfBypass)
+        assertFalse(d.canBuy)
         assertEquals(Decision.Allow, Rules.decide(bank, c, st, later, noon))
         assertEquals(Decision.Allow, Rules.decide("com.android.phone", c, st, later, noon))
     }

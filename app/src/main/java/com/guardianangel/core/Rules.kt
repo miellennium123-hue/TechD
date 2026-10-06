@@ -31,9 +31,9 @@ sealed interface Decision {
         val askAllowed: Boolean,
         val until: Long = 0,
     ) : Decision {
-        /** Lockouts and bedtime have a way in: a short wait or an everyday photo. */
-        val selfBypass: Boolean
-            get() = kind == RestrictionKind.LOCKOUT || kind == RestrictionKind.BEDTIME
+        /** Round 53: the only way into her timed block is spending merit. Bedtime has no way in at all. */
+        val canBuy: Boolean
+            get() = kind == RestrictionKind.LOCKOUT
     }
 }
 
@@ -65,9 +65,12 @@ data class MeritLevel(val level: Int, val title: String, val floor: Int, val nex
  * except [begOutcome] (round 12: strict mood is harsher about begging).
  */
 object Rules {
-    const val BYPASS_MINUTES = 10
     const val GRANT_MINUTES = 15
-    const val WAIT_SECONDS = 60
+    /** Merit buys this much time in one app during her timed block (round 53). */
+    const val BUY_MINUTES = 10
+    const val BUY_MERIT = 15
+    /** At a check-in with no block running, she starts one about this often. */
+    const val LOCKOUT_CHANCE = 0.5
     const val ASK_COOLDOWN_MINUTES = 5
     const val BEG_COOLDOWN_MINUTES = 10
 
@@ -129,13 +132,14 @@ object Rules {
         val guarded = inScope(pkg, config.lockouts.scope)
         val ask = config.askPermission.on
 
-        if (guarded && config.lockouts.on) {
-            result += Restriction(RestrictionKind.LOCKOUT, ask)
+        // Round 53: lockouts only block during her timed block, and asking doesn't get you through.
+        if (guarded && blockRunning(config, state, now)) {
+            result += Restriction(RestrictionKind.LOCKOUT, false)
         } else if (guarded && ask) {
             result += Restriction(RestrictionKind.PERMISSION, true)
         }
         if (isBedtime(config.bedtime, minuteOfDay)) {
-            result += Restriction(RestrictionKind.BEDTIME, ask)
+            result += Restriction(RestrictionKind.BEDTIME, false)
         }
         val summons = state.summons
         if (summons != null && now >= summons.lockAt) {
@@ -175,12 +179,38 @@ object Rules {
         if (list.any { it.kind == RestrictionKind.RULE }) {
             return Decision.Block(RestrictionKind.RULE, askAllowed = false, until = state.task?.ruleUntil ?: 0)
         }
-        if (state.grants.any { it.packageName == pkg && it.until > now }) return Decision.Allow
-
         val kinds = list.map { it.kind }
-        val kind = listOf(RestrictionKind.BEDTIME, RestrictionKind.LOCKOUT, RestrictionKind.PERMISSION).first { it in kinds }
-        return Decision.Block(kind, askAllowed = list.all { it.askAllowed })
+        // Bedtime has no way in until it ends (round 53). Grants don't cover it.
+        if (RestrictionKind.BEDTIME in kinds) return Decision.Block(RestrictionKind.BEDTIME, askAllowed = false)
+        val grants = state.grants.filter { it.packageName == pkg && it.until > now }
+        // Her timed block: only time bought with merit gets through.
+        if (RestrictionKind.LOCKOUT in kinds) {
+            if (grants.any { it.bought }) return Decision.Allow
+            return Decision.Block(RestrictionKind.LOCKOUT, askAllowed = false, until = state.lockoutUntil)
+        }
+        if (grants.isNotEmpty()) return Decision.Allow
+        return Decision.Block(RestrictionKind.PERMISSION, askAllowed = true)
     }
+
+    /** Her timed app block is running (round 53). */
+    fun blockRunning(config: GuardianConfig, state: GuardianState, now: Long): Boolean =
+        config.enabled && config.lockouts.on && state.lockoutUntil > now
+
+    /**
+     * Whether a check-in starts a timed block: lockouts on, none running, not in quiet time or bedtime
+     * (she lets you sleep), and [roll] (0 until 1) under [LOCKOUT_CHANCE].
+     */
+    fun startsBlock(config: GuardianConfig, state: GuardianState, now: Long, minuteOfDay: Int, roll: Double): Boolean =
+        config.enabled && config.lockouts.on && state.lockoutUntil <= now && !isQuiet(config, minuteOfDay) &&
+            roll < LOCKOUT_CHANCE
+
+    /** A block's length: between your shortest and longest, rounded to 15 minutes. */
+    fun blockMinutes(config: GuardianConfig, random: Random): Int =
+        lockMinutes(config.lockouts.minBlockMinutes, config.lockouts.maxBlockMinutes, 7 * 24, random)
+
+    /** Spending merit for time in a blocked app needs merit on and enough of it. */
+    fun canBuyTime(config: GuardianConfig, state: GuardianState): Boolean =
+        config.meritOn && state.merit >= BUY_MERIT
 
     /** At check-ins with Rules & Tasks on, she issues one about 1 in 3 times. */
     const val TASK_CHANCE = 1.0 / 3

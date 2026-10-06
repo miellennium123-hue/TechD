@@ -1,9 +1,25 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.17.1 (Quickshot always visible). Sections 0 to 0l cover what 0.6.0 to 0.17.1 changed
+> **Version under test:** 0.18.0 (timed app blocks). Sections 0 to 0m cover what 0.6.0 to 0.18.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0m. New in 0.18.0: timed app blocks, no easy way in
+Set check-ins to 30 min, App lockouts on (Social media), Shortest block 30m, Longest block 1h.
+- [ ] Settings > About shows **Version 0.18.0**
+- [ ] Settings > App lockouts has **Shortest block** and **Longest block**. Making shortest longer than longest moves longest up (and the other way)
+- [ ] Right after switching lockouts on, social apps still open (no block yet)
+- [ ] Within a check-in or two, a notification says her apps are locked. Home shows **Apps locked** with time left
+- [ ] Opening Instagram during the block: time left shows, no Wait, no Send a photo, no Ask her (even with Ask permission on)
+- [ ] With 15+ merit: **Spend 15 merit for 10 minutes** opens the app and merit drops by 15. With less, the button is greyed out
+- [ ] With merit off: the screen says there's no way in
+- [ ] When the block ends, the apps open again (or show Ask her, if Ask permission is on)
+- [ ] **Bedtime:** inside the window, no buttons except Go home and Quit for now. "No way in until bedtime ends"
+- [ ] **Lock guard on, during a block:** switching lockouts off, changing scope or block lengths, adding an Always-allowed app, or switching Lock guard off shows "Not now"
+- [ ] **Lock guard on, during bedtime:** changing bedtime hours or switching it off shows "Not now"
+- [ ] **Lock guard on, no block:** Everything to Social media, shorter blocks, or moving bedtime hours opens the 30 minute screen. Longer blocks change instantly
+- [ ] Quit for now still ends a block
 
 ## 0l. New in 0.17.0: Quickshot
 - [ ] Settings > About shows **Version 0.17.1**

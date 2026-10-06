@@ -134,6 +134,13 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        if (Rules.blockRunning(config, state, now)) {
+            SectionCard("Apps locked") {
+                Text("${formatDuration(state.lockoutUntil - now)} left", fontWeight = FontWeight.Bold)
+                Muted("Her timed block. The only way in is ${Rules.BUY_MERIT} merit for ${Rules.BUY_MINUTES} minutes, from the block screen.")
+            }
+        }
+
         if (config.enabled && state.punishmentUntil > now) {
             SectionCard("Punishment lockout") {
                 Text("${formatDuration(state.punishmentUntil - now)} left", fontWeight = FontWeight.Bold)
