@@ -38,6 +38,7 @@ import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.Voice
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
+import com.guardianangel.data.Backgrounds
 import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.LockoutScope
@@ -52,7 +53,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit, openSites: () -> Unit, openLines: () -> Unit) {
+fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit, openSites: () -> Unit, openLines: () -> Unit, openBackgrounds: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
     val state by Guardian.state.flow.collectAsState()
@@ -167,13 +168,27 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
         }
 
         FoldCard("Wallpaper", config.wallpaper.on) {
-            SwitchRow("Wallpaper control", "She sets your wallpaper to her images.", config.wallpaper.on) { v ->
+            SwitchRow("Wallpaper control", "She sets your home and lock screen to her backgrounds.", config.wallpaper.on) { v ->
                 update { it.copy(wallpaper = it.wallpaper.copy(on = v)) }
             }
             ChoiceChips(WallpaperMode.entries, config.wallpaper.mode, { it.label }, config.wallpaper.on) { v ->
                 update { it.copy(wallpaper = it.wallpaper.copy(mode = v)) }
             }
             Muted("\"Set and lock\" puts her wallpaper back whenever it changes, while she's on.")
+            SwitchRow("Cycle backgrounds", "She changes to the next background every few minutes.", config.wallpaper.cycle) { v ->
+                update { it.copy(wallpaper = it.wallpaper.copy(cycle = v)) }
+            }
+            if (config.wallpaper.cycle) {
+                Stepper(
+                    "Every",
+                    formatMinutes(config.wallpaper.cycleMinutes),
+                    onMinus = { update { it.copy(wallpaper = it.wallpaper.copy(cycleMinutes = (it.wallpaper.cycleMinutes - 1).coerceIn(Backgrounds.MIN_CYCLE_MINUTES, Backgrounds.MAX_CYCLE_MINUTES))) } },
+                    onPlus = { update { it.copy(wallpaper = it.wallpaper.copy(cycleMinutes = (it.wallpaper.cycleMinutes + 1).coerceIn(Backgrounds.MIN_CYCLE_MINUTES, Backgrounds.MAX_CYCLE_MINUTES))) } },
+                )
+            }
+            OutlinedButton(onClick = openBackgrounds) {
+                Text("Backgrounds (${Backgrounds.BUILT_IN.size - config.wallpaper.hiddenBuiltIns.size} hers, add your own)")
+            }
             OutlinedButton(
                 onClick = { WallpaperController.applyAsync(context) },
                 enabled = config.enabled && config.wallpaper.on,

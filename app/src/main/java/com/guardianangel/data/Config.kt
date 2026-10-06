@@ -125,6 +125,12 @@ data class BedtimeSettings(
 data class WallpaperSettings(
     val on: Boolean = false,
     val mode: WallpaperMode = WallpaperMode.SET_AND_LOCK,
+    /** Round 59: she changes to the next background every [cycleMinutes]. */
+    val cycle: Boolean = true,
+    val cycleMinutes: Int = Backgrounds.DEFAULT_CYCLE_MINUTES,
+    /** Her built-in designs in the cycle, minus the ones you hid. Your own images live in private storage. */
+    val builtIns: Boolean = true,
+    val hiddenBuiltIns: Set<String> = emptySet(),
 )
 
 @Serializable
