@@ -1,6 +1,6 @@
 # Guardian Angel
 
-An Android app with a dominant angel who manages your phone: app lockouts, bedtime, wallpaper control, chastity timers with photo proof, rules and tasks, check-ins, and merit levels. Self-use only. You consent by turning her on, and **Quit for now** always ends everything instantly.
+An Android app with a dominant angel who manages your phone: app lockouts, bedtime, wallpaper control, chastity timers with photo proof, rules and tasks, surprise summons, check-ins, and merit levels. Self-use only. You consent by turning her on, and **Quit for now** always ends everything instantly.
 
 Full spec: [`docs/DESIGN.md`](docs/DESIGN.md). Section 8 lists the decisions made while building it.
 

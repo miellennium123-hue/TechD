@@ -38,6 +38,7 @@ enum class Screen(val title: String) {
     PROMPTS("What she can ask for"),
     TASK("Her task"),
     TASKS("Rules & Tasks"),
+    QUESTIONS("Her questions"),
     SETUP("Permissions"),
 }
 
@@ -59,7 +60,7 @@ private fun MainContent() {
     val config by Guardian.config.flow.collectAsState()
     val state by Guardian.state.flow.collectAsState()
     val back = {
-        screen = if (screen == Screen.ALLOWED || screen == Screen.PROMPTS || screen == Screen.TASKS) Screen.SETTINGS else Screen.HOME
+        screen = if (screen == Screen.ALLOWED || screen == Screen.PROMPTS || screen == Screen.TASKS || screen == Screen.QUESTIONS) Screen.SETTINGS else Screen.HOME
     }
 
     BackHandler(enabled = screen != Screen.HOME) { back() }
@@ -82,7 +83,7 @@ private fun MainContent() {
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (screen) {
                 Screen.HOME -> HomeScreen(config, state) { screen = it }
-                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS })
+                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS }, { screen = Screen.QUESTIONS })
                 Screen.CHASTITY -> ChastityScreen(config, state)
                 Screen.GALLERY -> GalleryScreen()
                 Screen.ALLOWED -> AllowedAppsScreen(config)
@@ -90,6 +91,7 @@ private fun MainContent() {
                 Screen.SETUP -> SetupScreen()
                 Screen.TASK -> TaskScreen(state)
                 Screen.TASKS -> TasksListScreen(config)
+                Screen.QUESTIONS -> QuestionsScreen(config)
             }
         }
     }

@@ -143,6 +143,7 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                         RestrictionKind.BEDTIME -> "off limits at bedtime"
                         RestrictionKind.PUNISHMENT -> "locked as punishment"
                         RestrictionKind.RULE -> "locked by her rule"
+                        RestrictionKind.SUMMONS -> "locked. She wants you, and you kept her waiting."
                     }
                 }",
                 style = MaterialTheme.typography.titleMedium,
@@ -189,8 +190,13 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                 ) { Text(if (cooldown > now) "Ask again in ${formatDuration(cooldown - now)}" else "Ask her") }
             }
 
+            if (block.kind == RestrictionKind.SUMMONS) {
+                Button(onClick = { context.startActivity(ShowUpActivity.intent(context)) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Answer her")
+                }
+            }
             if (block.kind == RestrictionKind.RULE) state.task?.let { Text(it.text, textAlign = TextAlign.Center) }
-            if (!block.selfBypass && !block.askAllowed) Muted("Blocked until the timer ends.")
+            if (!block.selfBypass && !block.askAllowed && block.kind != RestrictionKind.SUMMONS) Muted("Blocked until the timer ends.")
 
             OutlinedButton(onClick = onHome, modifier = Modifier.fillMaxWidth()) { Text("Go home") }
             QuitButton(Modifier.fillMaxWidth()) { Guardian.quitForNow() }

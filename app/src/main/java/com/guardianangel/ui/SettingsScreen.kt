@@ -35,7 +35,7 @@ import com.guardianangel.data.WallpaperMode
 import kotlin.math.roundToInt
 
 @Composable
-fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit) {
+fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
 
@@ -177,6 +177,19 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 config.tasksOn,
             ) { v -> update { it.copy(tasksOn = v) } }
             OutlinedButton(onClick = openTasks) { Text("Her list (${config.taskList.size})") }
+        }
+
+        SectionCard("Shows up") {
+            SwitchRow(
+                "Shows up",
+                "At some check-ins she wants you. Ignore her for ${Rules.SUMMON_LOCK_MINUTES} minutes and everything locks until you answer " +
+                    "(phone and Quit for now still work). ${Rules.MAX_WRONG_ANSWERS} wrong answers count as a failure.",
+                config.showsUpOn,
+            ) { v -> update { it.copy(showsUpOn = v) } }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = openQuestions) { Text("Her questions (${config.questions.size})") }
+                OutlinedButton(onClick = { Guardian.summon() }, enabled = config.enabled && config.showsUpOn) { Text("Try it now") }
+            }
         }
 
         SectionCard("Discipline") {

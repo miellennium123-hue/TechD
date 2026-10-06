@@ -6,6 +6,7 @@ import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.Mood
+import com.guardianangel.data.Question
 import com.guardianangel.data.RuleEnforcement
 import kotlin.math.max
 import kotlin.math.min
@@ -14,7 +15,7 @@ import kotlin.random.Random
 const val MINUTE = 60_000L
 const val HOUR = 60 * MINUTE
 
-enum class RestrictionKind { LOCKOUT, PERMISSION, BEDTIME, PUNISHMENT, RULE }
+enum class RestrictionKind { LOCKOUT, PERMISSION, BEDTIME, PUNISHMENT, RULE, SUMMONS }
 
 data class Restriction(val kind: RestrictionKind, val askAllowed: Boolean)
 
@@ -91,6 +92,10 @@ object Rules {
         if (isBedtime(config.bedtime, minuteOfDay)) {
             result += Restriction(RestrictionKind.BEDTIME, ask)
         }
+        val summons = state.summons
+        if (summons != null && now >= summons.lockAt) {
+            result += Restriction(RestrictionKind.SUMMONS, false)
+        }
         state.task?.takeIf { it.enforced && it.ruleUntil > now }?.let { rule ->
             if (rule.enforce == RuleEnforcement.EVERYTHING || pkg in AppLists.SOCIAL_MEDIA) {
                 result += Restriction(RestrictionKind.RULE, false)
@@ -116,6 +121,8 @@ object Rules {
     ): Decision {
         val list = restrictions(pkg, config, state, now, minuteOfDay, protectedPackages)
         if (list.isEmpty()) return Decision.Allow
+        // Ignored her for too long: everything locks until you answer. Only answering opens it.
+        if (list.any { it.kind == RestrictionKind.SUMMONS }) return Decision.Block(RestrictionKind.SUMMONS, askAllowed = false)
         if (list.any { it.kind == RestrictionKind.PUNISHMENT }) {
             return Decision.Block(RestrictionKind.PUNISHMENT, askAllowed = false, until = state.punishmentUntil)
         }
@@ -136,6 +143,18 @@ object Rules {
     /** How long you have to start a stillness task or finish lines, and to report back after an honor rule. */
     const val TASK_DUE_MINUTES = 60
     const val RULE_REPORT_MINUTES = 30
+
+    /** Shows up: chance per check-in, minutes before an ignored summons locks everything, wrong answers allowed. */
+    const val SUMMON_CHANCE = 0.25
+    const val SUMMON_LOCK_MINUTES = 10
+    const val MAX_WRONG_ANSWERS = 3
+
+    /** Choice answers must match the right option. Phrases must match exactly, ignoring case, spacing at the ends and curly quotes. */
+    fun isCorrect(question: Question, given: String): Boolean =
+        normalizeAnswer(given) == normalizeAnswer(question.answer)
+
+    private fun normalizeAnswer(text: String): String =
+        text.trim().lowercase().replace('’', '\'').replace('‘', '\'').replace(Regex("\\s+"), " ")
 
     /** How she answers "may I?". Fixed odds, never affected by mood. */
     fun askOutcome(roll: Double): AskOutcome = when {

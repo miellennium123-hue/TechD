@@ -23,6 +23,8 @@ data class GuardianState(
     val task: ActiveTask? = null,
     /** Lowest lines difficulty for the next lines task. Failures raise it, finished lines reset it. */
     val linesFloor: Int = 0,
+    /** She has shown up and is waiting for an answer. */
+    val summons: Summons? = null,
 )
 
 @Serializable
