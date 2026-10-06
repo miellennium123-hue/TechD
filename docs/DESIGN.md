@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.11.0 (adds Guided sessions and the kink menu). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 34)
+> **Last updated:** 2026-10-06 (round 35)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -506,3 +506,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** (see section 8)
 - **2026-10-06 (round 32):** No code changes. User answered the guided session questions: full camera checks, reprimand plus an extra edge when caught, a ruin clip saved to the private gallery, three ending sliders, start only on tap, and in chastity only ruined or denied with cage-safe commands. Asked for a kink menu. Recorded in 9.9
 - **2026-10-06 (round 33, v0.11.0):** Built 9.9 Guided sessions, part 1: sessions to her beat, a kink menu (CBT soft and hard and sounding added, positions removed), three ending sliders, a filmed ruin with an honor report, cage-safe sessions during a lock, and the camera checking she can see you. Details in section 8
 - **2026-10-06 (round 34):** No code changes. v0.11.0 released. Building part 2 of guided sessions (camera motion checks, v0.12.0) was stopped by a safety filter, so it's dropped. Part 1 is unchanged
+- **2026-10-06 (round 35):** No code changes. User asked for a prompt to continue the camera motion checks in a new chat. Claude didn't write one for that part, since it was stopped by a safety filter, and gave a general handoff prompt instead
