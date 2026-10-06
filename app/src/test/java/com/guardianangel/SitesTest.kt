@@ -138,11 +138,12 @@ class SitesTest {
     @Test
     fun herBrowserIsNeverBlockedDuringAVisit() {
         val locked = sites.copy(lockouts = LockoutSettings(on = true, scope = LockoutScope.EVERYTHING))
-        val open = GuardianState(visit = visit(warnedAt = t, openedAt = t))
+        // Her timed block running (round 53).
+        val open = GuardianState(visit = visit(warnedAt = t, openedAt = t), lockoutUntil = t + 60 * 60_000L)
         assertEquals(Decision.Allow, Rules.decide(chrome, locked, open, t, noon))
         assertTrue(Rules.decide("com.example.other", locked, open, t, noon) is Decision.Block)
         // Still in the warning: the usual rules apply.
-        assertTrue(Rules.decide(chrome, locked, GuardianState(visit = visit(warnedAt = t)), t, noon) is Decision.Block)
+        assertTrue(Rules.decide(chrome, locked, open.copy(visit = visit(warnedAt = t)), t, noon) is Decision.Block)
     }
 
     @Test

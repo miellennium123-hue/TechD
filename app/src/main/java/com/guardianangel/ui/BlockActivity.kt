@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,7 +44,6 @@ import com.guardianangel.core.InstalledApps
 import com.guardianangel.core.Line
 import com.guardianangel.core.RestrictionKind
 import com.guardianangel.core.Rules
-import com.guardianangel.data.ProofReason
 import com.guardianangel.ui.theme.GuardianTheme
 
 /** Her block screen, launched over a guarded app by the accessibility service. */
@@ -109,7 +107,6 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
     val decision = remember(pkg, config, state, now / 2_000, resumes) { Guardian.decide(pkg) }
     val appLabel = remember(pkg) { InstalledApps.label(context, pkg) }
     var line by remember(pkg) { mutableStateOf("") }
-    var waitUntil by remember(pkg) { mutableLongStateOf(0L) }
 
     LaunchedEffect(decision is Decision.Allow) {
         if (decision is Decision.Allow) onOpen()
@@ -151,28 +148,29 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                 textAlign = TextAlign.Center,
             )
             when (block.kind) {
-                RestrictionKind.PUNISHMENT, RestrictionKind.RULE ->
+                RestrictionKind.PUNISHMENT, RestrictionKind.RULE, RestrictionKind.LOCKOUT ->
                     Text("${formatDuration(block.until - now)} left", fontWeight = FontWeight.Bold)
                 RestrictionKind.BEDTIME -> Text("Until ${formatMinuteOfDay(config.bedtime.endMinute)}", fontWeight = FontWeight.Bold)
                 else -> Unit
             }
 
-            if (block.selfBypass) {
-                Muted("Way in: wait ${Rules.WAIT_SECONDS} seconds for ${Rules.BYPASS_MINUTES} minutes, or send her an everyday photo for ${Rules.GRANT_MINUTES}. Trying never costs you merit.")
+            // Round 53: her timed block has one way in, merit. No waiting, no photos, no asking.
+            if (block.canBuy) {
                 when {
-                    waitUntil == 0L -> OutlinedButton(onClick = { waitUntil = now + Rules.WAIT_SECONDS * 1_000L }) {
-                        Text("Wait ${Rules.WAIT_SECONDS} seconds")
+                    !config.meritOn -> Muted("Merit is off, so there's no way in. Her block ends on its own.")
+                    else -> {
+                        Muted("No asking, no photos. The only way in: ${Rules.BUY_MERIT} merit for ${Rules.BUY_MINUTES} minutes. You have ${state.merit}.")
+                        OutlinedButton(
+                            enabled = Rules.canBuyTime(config, state),
+                            onClick = {
+                                Guardian.buyTime(pkg)?.let {
+                                    line = it
+                                    onOpen()
+                                }
+                            },
+                        ) { Text("Spend ${Rules.BUY_MERIT} merit for ${Rules.BUY_MINUTES} minutes") }
                     }
-                    now < waitUntil -> Text("Wait ${formatDuration(waitUntil - now)}")
-                    else -> Button(onClick = {
-                        Guardian.grant(pkg, Rules.BYPASS_MINUTES)
-                        onOpen()
-                    }) { Text("Open now") }
                 }
-                OutlinedButton(onClick = {
-                    val request = Guardian.requestProof(ProofReason.PERMISSION, 10, pkg)
-                    context.startActivity(ProofActivity.intent(context, request.id))
-                }) { Text("Send a photo instead") }
             }
 
             if (block.askAllowed) {
@@ -197,7 +195,11 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                 }
             }
             if (block.kind == RestrictionKind.RULE) state.task?.let { Text(it.text, textAlign = TextAlign.Center) }
-            if (!block.selfBypass && !block.askAllowed && block.kind != RestrictionKind.SUMMONS) Muted("Blocked until the timer ends.")
+            when (block.kind) {
+                RestrictionKind.BEDTIME -> Muted("No way in until bedtime ends.")
+                RestrictionKind.PUNISHMENT, RestrictionKind.RULE -> Muted("Blocked until the timer ends.")
+                else -> Unit
+            }
 
             OutlinedButton(onClick = onHome, modifier = Modifier.fillMaxWidth()) { Text("Go home") }
             QuitButton(Modifier.fillMaxWidth()) { Guardian.quitForNow() }

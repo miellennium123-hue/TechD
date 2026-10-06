@@ -41,6 +41,7 @@ import com.guardianangel.data.AppLists
 import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.LockoutScope
+import com.guardianangel.data.LockoutSettings
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.PunishmentLength
@@ -92,11 +93,28 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                     "Every app except the Always-allowed list, the phone, and this app."
                 },
             )
-            Muted("Hard blocked. Way in: a ${Rules.WAIT_SECONDS} second wait or an everyday photo. Trying never counts as a failure.")
+            Muted(
+                "Timed blocks: at check-ins she locks these apps for a while, between the two lengths below. " +
+                    "During a block there's no waiting, no photo and no asking. The only way in: " +
+                    "${Rules.BUY_MERIT} merit for ${Rules.BUY_MINUTES} minutes. Trying never counts as a failure.",
+            )
+            Stepper(
+                "Shortest block",
+                formatMinutes(config.lockouts.minBlockMinutes),
+                onMinus = { update { it.copy(lockouts = it.lockouts.withMinBlock(Rules.stepLockMinutes(it.lockouts.minBlockMinutes, up = false))) } },
+                onPlus = { update { it.copy(lockouts = it.lockouts.withMinBlock(Rules.stepLockMinutes(it.lockouts.minBlockMinutes, up = true))) } },
+            )
+            Stepper(
+                "Longest block",
+                formatMinutes(config.lockouts.maxBlockMinutes),
+                onMinus = { update { it.copy(lockouts = it.lockouts.withMaxBlock(Rules.stepLockMinutes(it.lockouts.maxBlockMinutes, up = false))) } },
+                onPlus = { update { it.copy(lockouts = it.lockouts.withMaxBlock(Rules.stepLockMinutes(it.lockouts.maxBlockMinutes, up = true))) } },
+            )
+            if (config.lockGuard) Muted("Lock guard: while a block runs, these settings and Always-allowed can't be changed.")
             HorizontalDivider()
             SwitchRow(
                 "Ask permission for guarded apps",
-                "Adds an \"Ask her\" button. She may grant, deny, or demand an everyday photo.",
+                "Outside her blocks: an \"Ask her\" button. She may grant, deny, or demand an everyday photo. During a block, no asking.",
                 config.askPermission.on,
             ) { v -> update { it.copy(askPermission = it.askPermission.copy(on = v)) } }
             HorizontalDivider()
@@ -106,7 +124,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
         }
 
         FoldCard("Bedtime", config.bedtime.on) {
-            SwitchRow("Bedtime", "Hard blocks everything not always-allowed in this window, with the same way in as lockouts.", config.bedtime.on) { v ->
+            SwitchRow("Bedtime", "Hard blocks everything not always-allowed in this window. No way in until it ends.", config.bedtime.on) { v ->
                 update { it.copy(bedtime = it.bedtime.copy(on = v)) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -165,7 +183,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             ChoiceChips(ProofFrequency.entries, config.photoProof.frequency, { it.label }, config.photoProof.on) { v ->
                 update { it.copy(photoProof = it.photoProof.copy(frequency = v)) }
             }
-            Muted("Outside chastity, she picks what to photograph from your prompt list. This list is also used when you ask permission or bypass a lockout.")
+            Muted("Outside chastity, she picks what to photograph from your prompt list. This list is also used when you ask permission.")
             OutlinedButton(onClick = openPrompts) {
                 Text("What she can ask for (${config.proofPrompts.size})")
             }
@@ -337,3 +355,10 @@ fun formatMinutes(minutes: Int): String = when {
     minutes > 60 -> "${minutes / 60}h ${minutes % 60}m"
     else -> "${minutes}m"
 }
+
+/** Keeps the shortest block no longer than the longest (and the other way round). */
+private fun LockoutSettings.withMinBlock(minutes: Int): LockoutSettings =
+    copy(minBlockMinutes = minutes, maxBlockMinutes = maxOf(maxBlockMinutes, minutes))
+
+private fun LockoutSettings.withMaxBlock(minutes: Int): LockoutSettings =
+    copy(maxBlockMinutes = minutes, minBlockMinutes = minOf(minBlockMinutes, minutes))

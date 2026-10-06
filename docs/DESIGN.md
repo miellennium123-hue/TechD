@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 50)
+> **Last updated:** 2026-10-06 (round 53)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -58,10 +58,12 @@ Two lockout scopes:
 - **Always-allowed list:** WhatsApp, Phone, banking apps, and similar essentials. Editable list in Settings, prefilled with these defaults
 - **Ask permission:** Opening a guarded app requires asking her first (she may grant, deny, or demand photo proof)
 - Lockouts can be used as a **punishment for failure**
+- **From v0.18.0: timed blocks.** At check-ins she locks the scope for a while (between your shortest and longest block). During a block there's no waiting, no photo and no asking. The only way in is merit: 15 merit for 10 minutes
 
 ### 4.2 Bedtime
 - **Optional setting**, off by default
 - When on, she restricts phone use during a set window
+- **From v0.18.0:** no way in at all until the window ends
 
 ### 4.3 Wallpaper control
 - She sets your wallpaper to **femdom-themed** images (**placeholders** until user sends real ones)
@@ -137,10 +139,10 @@ User wants **a list of individual settings**, each toggled on/off.
 | Setting | Default | Details |
 |---|---|---|
 | Guardian Angel enabled | Off | Master switch |
-| App lockouts | Off | Scope: Social media / Everything. Hard block, way in: 60 second wait or an everyday photo |
+| App lockouts | Off | Scope: Social media / Everything. Timed blocks she starts at check-ins, shortest and longest (default 1h to 4h). Only way in: 15 merit for 10 minutes |
 | Always-allowed list | WhatsApp, Phone, messages, contacts, clock, maps | Editable app list |
-| Ask permission for guarded apps | Off | Adds "Ask her" |
-| Bedtime | Off | Start and end time. Same way in as lockouts. Check-ins are quiet inside it |
+| Ask permission for guarded apps | Off | Adds "Ask her" outside her blocks |
+| Bedtime | Off | Start and end time. No way in until it ends. Check-ins are quiet inside it |
 | Quiet hours | **On**, 23:00 to 07:00 | Start and end time. Silent check-ins, nothing due inside. No locks |
 | Wallpaper control | Off | Set only / Set and lock |
 | Chastity mode | Off | Shortest and longest picked lock (default 1h to 4h) |
@@ -418,6 +420,18 @@ Choices made while building, where the spec left room:
 - **Reported:** the user couldn't find the quickshot. Its button only showed when she and Guided sessions were both on
 - **Fixed:** Start a session and Quickshot always show at the top of the Guided sessions screen, greyed out until she and Guided sessions are on, with a line saying which switch to turn on
 
+### v0.18.0 (round 53, timed blocks with no easy way in)
+- **Asked (rounds 51 to 53):** a lock you can't just get out of by waiting, sending a photo or asking her
+- **App lockouts are timed blocks now:** at a check-in with no block running (not in quiet time or bedtime), she starts one about half the time (`Rules.LOCKOUT_CHANCE`), for a length between **Shortest block** and **Longest block** (new settings, default 1h and 4h, rounded to 15 minutes). Notification line **Apps locked**. Outside a block, apps in the scope are free
+- **During a block:** no 60 second wait, no photo, no Ask her. The only way in: **15 merit for 10 minutes** in that app (`Rules.BUY_MERIT`, `BUY_MINUTES`), new line **Bought time**. With merit off there's no way in. Grants from asking don't get through a block, only bought time (`Grant.bought`)
+- **Ask permission:** still works outside her blocks, as before
+- **Bedtime:** no way in at all until the window ends. Grants don't cover it
+- **Home:** an **Apps locked** card with the time left
+- **Lock guard, option C:** while a block runs, App lockouts, Always-allowed and switching Lock guard off are frozen (a "Not now" message). Same for Bedtime, Always-allowed and Lock guard while bedtime runs. A slow change finishing inside a block or bedtime is refused the same way
+- **Lock guard, option B (after it ends):** narrowing scope from Everything to Social media, shorter blocks, and moving bedtime hours (while bedtime is on) now take the 30 minute "Loosen her control" screen
+- **Unchanged:** Quit for now (about 10 minutes, ends everything, also clears the block), the phone dialer, Always-allowed apps, punishment lockouts, her rules and Shows up. Switching her fully off with Lock guard on is still the 30 minute slow switch off, counted as a failure
+- **Tests:** `RulesTest.kt` (blocks, buying, bedtime), `LockGuardTest.kt` (freeze and loosening), `SitesTest.kt` updated
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -532,6 +546,27 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Decided in round 41:** built as Lock guard in v0.13.0 (section 8). Claude recommended keeping Quit for now instant; the user chose a slow Quit for now (about 3 minutes) and no emergency exit
   - **Honest limit:** Android can't make it unbreakable (safe mode, ADB, factory reset, Quit for now)
 
+- **App locks you can't just get out of (asked round 51, decided round 53, built v0.18.0, see section 8)**
+  - **The problem:** a lockout or bedtime block has three ways in. **Wait 60 seconds** (10 minutes of access), **Send a photo instead** (any everyday photo, 15 minutes), and **Ask her** (40% grant, 40% photo, 20% deny). The user says that's not really a lock
+  - **Already no way in today:** punishment lockouts, her app-enforced rules and the Shows up summons. Those stay as they are
+  - **The change:** take away the easy ways in, so a locked app stays locked
+  - **What stays (fixed rules):** Quit for now (about 10 minutes, ends everything), the phone dialer, and the Always-allowed list
+  - **To decide before building:**
+    1. **Lockouts have no end time today.** With no way in, social media (or everything) stays blocked for as long as lockouts are on. Is that what you want, or should she lock in timed blocks (for example, she picks how many hours)?
+    2. **Wait 60 seconds:** remove it, or make it much longer?
+    3. **Photo and Ask her:** remove both, or keep **Ask her** with much worse odds (mostly denied) and only harder photos?
+    4. **Bedtime:** same rules as lockouts, or no way in at all until morning?
+    5. **Earned access:** should merit buy time in (for example, spend merit for 10 minutes)? This ties in with the round 39 screen time allowance idea
+    6. **Lock guard:** switching lockouts off already takes the 30 minute slow screen. Keep that as the only way to loosen them?
+  - **Answered in round 52:**
+    1. **Timed blocks:** lockouts become timed blocks instead of always-on
+    2. **Wait 60 seconds:** removed
+    3. **Send a photo and Ask her:** both removed for lockouts
+    4. **Bedtime:** no way in at all until the bedtime window ends
+    5. **Merit buys time in:** yes, for lockouts (not bedtime)
+    6. **Lock guard:** the user asked what this means. Explained in round 52, waiting on their pick
+  - **Decided in round 53:** option C for Lock guard, and yes to Claude's three proposals: she starts blocks at check-ins (default 1h to 4h), 15 merit buys 10 minutes in one app (lockouts only), and the freeze only applies while Lock guard is on
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -611,3 +646,6 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 48):** No code changes. User asked where we left off. Summarized: v0.16.0 is merged and released, motion check tuning waits on a phone test, and the round 38 feature ideas (phone control and release control favoured) are still unpicked
 - **2026-10-06 (round 49, v0.17.0):** User asked for a quickshot in Guided sessions that always ends ruined and films the ruin. Built: a Quickshot button, about 2 minutes, always ruined, camera always on to film it. Works during a lock (unlock, ruin, relock). Details in section 8
 - **2026-10-06 (round 50, v0.17.1):** User couldn't see the quickshot. It was hidden unless she and Guided sessions were both on. Both Start buttons now always show, greyed out with the reason until they're usable. Details in section 8
+- **2026-10-06 (round 51):** No code changes. User wants app locks they can't get out of by waiting, sending a photo or asking her. Noted for the next update in section 10, with six questions to settle before building (lockouts have no end time today, so removing every way in would block apps for as long as lockouts are on)
+- **2026-10-06 (round 52):** No code changes. User answered the app lock questions: timed blocks, no wait, no photo or Ask her, bedtime locked until morning, merit buys time in. Asked what question 6 (Lock guard) means; explained. Recorded in section 10
+- **2026-10-06 (round 53, v0.18.0):** User picked option C and agreed to the three details. Built timed app blocks with no wait, photo or asking, 15 merit for 10 minutes as the only way in, bedtime locked until it ends, and Lock guard freezing block and bedtime settings while they run. Details in section 8

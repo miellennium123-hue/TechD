@@ -23,6 +23,8 @@ enum class Line(val group: String, val label: String, val note: String) {
     DENY("Asking and locks", "No", "\"Ask her\" says no"),
     BLOCKED("Asking and locks", "Blocked app", "Block screen for a locked app"),
     BEDTIME("Asking and locks", "Bedtime", "Block screen during bedtime"),
+    BLOCK_START("Asking and locks", "Apps locked", "A check-in starts one of her timed app blocks"),
+    BOUGHT_TIME("Asking and locks", "Bought time", "You spend merit for a few minutes in a blocked app"),
     DEMAND_PROOF("Photo proof", "Wants a photo", "\"Ask her\" or a check-in wants photo proof"),
     PRAISE("Photo proof", "Praise", "Proof accepted, a check-in answered, a task done, a right answer"),
     WARNING("Photo proof", "Sent anyway", "A photo sent anyway after failed checks (no merit)"),
@@ -309,6 +311,15 @@ object Voice {
             "Not this one, pet. Go do something better.",
             "Shh. This one's closed for you.",
             "Nope. Your angel says no.",
+        ),
+        Line.BLOCK_START to listOf(
+            "I'm locking your apps for a while, pet. No asking, no photos. Just be good.",
+            "Your apps are mine for now, sweetheart. You'll get them back when I say.",
+            "Time for a break from that screen. I've locked them for you.",
+        ),
+        Line.BOUGHT_TIME to listOf(
+            "Ten minutes, pet. You paid for them, so make them count.",
+            "Fine, a little treat. It cost you, remember that.",
         ),
         Line.BEDTIME to listOf(
             "It's bedtime, pet. Phone down, eyes closed.",
@@ -673,6 +684,15 @@ object Voice {
             "Blocked. Go away.",
             "This is off limits. You know that.",
             "Closed. Don't test me.",
+        ),
+        Line.BLOCK_START to listOf(
+            "Apps locked. Don't bother asking.",
+            "Locked. You'll wait until I'm done.",
+            "Your apps are gone for now. Deal with it.",
+        ),
+        Line.BOUGHT_TIME to listOf(
+            "Ten minutes. Paid for. Don't waste them.",
+            "You bought your way in. How desperate.",
         ),
         Line.BEDTIME to listOf(
             "Bedtime. Phone down. Now.",

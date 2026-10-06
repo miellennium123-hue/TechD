@@ -78,10 +78,16 @@ data class LineSet(
     val strict: List<String> = emptyList(),
 )
 
+/**
+ * App lockouts are timed blocks (round 53): at check-ins she starts one, between these two lengths.
+ * During a block there's no way in except merit. Outside one, apps are free (or need Ask permission).
+ */
 @Serializable
 data class LockoutSettings(
     val on: Boolean = false,
     val scope: LockoutScope = LockoutScope.SOCIAL_MEDIA,
+    val minBlockMinutes: Int = 60,
+    val maxBlockMinutes: Int = 240,
 )
 
 @Serializable

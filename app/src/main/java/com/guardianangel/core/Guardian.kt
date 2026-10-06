@@ -156,6 +156,7 @@ object Guardian {
                 proofs = emptyList(),
                 grants = emptyList(),
                 punishmentUntil = 0,
+                lockoutUntil = 0,
                 askCooldownUntil = emptyMap(),
                 checkInPending = false,
                 lastBegAt = 0,
@@ -191,10 +192,19 @@ object Guardian {
      */
     val pendingLoosen = MutableStateFlow<((GuardianConfig) -> GuardianConfig)?>(null)
 
+    /** Her refusal when a change is frozen (round 53: her block or bedtime is running). Shown in MainActivity. */
+    val refusal = MutableStateFlow<String?>(null)
+
     /** The slow way is done: apply the change, on top of whatever changed meanwhile. */
     fun applyLoosen() {
         val change = pendingLoosen.value ?: return
         pendingLoosen.value = null
+        // A block or bedtime may have started during the 30 minutes: then it waits until that ends.
+        val before = config.value
+        LockGuard.frozen(before, change(before), state.value, now(), minuteOfDay())?.let {
+            refusal.value = it
+            return
+        }
         applyConfig(change)
     }
 
@@ -231,6 +241,12 @@ object Guardian {
      */
     fun updateConfig(transform: (GuardianConfig) -> GuardianConfig) {
         val before = config.value
+        if (guarding()) {
+            LockGuard.frozen(before, transform(before), state.value, now(), minuteOfDay())?.let {
+                refusal.value = it
+                return
+            }
+        }
         if (guarding() && LockGuard.loosens(before, transform(before))) {
             pendingLoosen.value = transform
             return
@@ -245,6 +261,7 @@ object Guardian {
         if (before.tasksOn && !after.tasksOn) clearTasks()
         if (before.showsUpOn && !after.showsUpOn && state.value.summons != null) clearSummons()
         if (before.sitesOn && !after.sitesOn) clearVisit()
+        if (before.lockouts.on && !after.lockouts.on) state.update { it.copy(lockoutUntil = 0) }
         if (!after.enabled) return
         if (after.checkInMinutes != before.checkInMinutes) Scheduler.scheduleNextCheckIn(appContext)
         val wallpaperChanged = after.wallpaper.on &&
@@ -286,11 +303,29 @@ object Guardian {
     fun decide(pkg: String, protectedPackages: Set<String> = emptySet()): Decision =
         Rules.decide(pkg, config.value, state.value, now(), minuteOfDay(), protectedPackages)
 
-    fun grant(pkg: String, minutes: Int) {
+    fun grant(pkg: String, minutes: Int, bought: Boolean = false) {
         val t = now()
         state.update { st ->
-            st.copy(grants = st.grants.filter { it.until > t && it.packageName != pkg } + Grant(pkg, t + minutes * MINUTE))
+            st.copy(grants = st.grants.filter { it.until > t && it.packageName != pkg } + Grant(pkg, t + minutes * MINUTE, bought))
         }
+    }
+
+    /** Spend merit for a few minutes in an app during her timed block (round 53). Returns her line, or null if you can't. */
+    fun buyTime(pkg: String): String? {
+        if (!Rules.canBuyTime(config.value, state.value)) return null
+        state.update { it.copy(merit = it.merit - Rules.BUY_MERIT) }
+        grant(pkg, Rules.BUY_MINUTES, bought = true)
+        return say(Line.BOUGHT_TIME)
+    }
+
+    /** At a check-in: she may start a timed app block (round 53). */
+    private fun maybeStartBlock(roll: Double) {
+        val c = config.value
+        val t = now()
+        if (!Rules.startsBlock(c, state.value, t, minuteOfDay(), roll)) return
+        val minutes = Rules.blockMinutes(c, random)
+        state.update { it.copy(lockoutUntil = t + minutes * MINUTE) }
+        Notifier.message(appContext, say(Line.BLOCK_START))
     }
 
     fun ask(pkg: String): AskResult {
@@ -485,6 +520,7 @@ object Guardian {
             state.update { it.copy(checkInPending = true) }
             Notifier.checkIn(appContext, say(Line.CHECK_IN))
         }
+        if (action != CheckInAction.QUIET) maybeStartBlock(random.nextDouble())
         val whim = action != CheckInAction.QUIET && lock != null && c.chastity.canAddTime
         if (whim && random.nextDouble() < 0.1) addChastityTime()
         Scheduler.scheduleNextCheckIn(appContext)
