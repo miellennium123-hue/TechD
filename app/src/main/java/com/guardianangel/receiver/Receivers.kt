@@ -13,6 +13,7 @@ class AlarmReceiver : BroadcastReceiver() {
             Scheduler.ACTION_CHECK_IN -> Guardian.onCheckIn()
             Scheduler.ACTION_PROOF_DEADLINE -> Guardian.onProofDeadline(intent.getLongExtra(Scheduler.EXTRA_ID, -1))
             Scheduler.ACTION_CHASTITY_END -> Guardian.onChastityEnd()
+            Scheduler.ACTION_TASK -> Guardian.onTaskAlarm()
         }
     }
 }

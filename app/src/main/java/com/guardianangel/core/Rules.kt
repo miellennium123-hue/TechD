@@ -6,6 +6,7 @@ import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.Mood
+import com.guardianangel.data.RuleEnforcement
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -13,7 +14,7 @@ import kotlin.random.Random
 const val MINUTE = 60_000L
 const val HOUR = 60 * MINUTE
 
-enum class RestrictionKind { LOCKOUT, PERMISSION, BEDTIME, PUNISHMENT }
+enum class RestrictionKind { LOCKOUT, PERMISSION, BEDTIME, PUNISHMENT, RULE }
 
 data class Restriction(val kind: RestrictionKind, val askAllowed: Boolean)
 
@@ -90,6 +91,11 @@ object Rules {
         if (isBedtime(config.bedtime, minuteOfDay)) {
             result += Restriction(RestrictionKind.BEDTIME, ask)
         }
+        state.task?.takeIf { it.enforced && it.ruleUntil > now }?.let { rule ->
+            if (rule.enforce == RuleEnforcement.EVERYTHING || pkg in AppLists.SOCIAL_MEDIA) {
+                result += Restriction(RestrictionKind.RULE, false)
+            }
+        }
         if (state.punishmentUntil > now) {
             val everything = config.lockouts.on && config.lockouts.scope == LockoutScope.EVERYTHING
             if (everything || pkg in AppLists.SOCIAL_MEDIA) {
@@ -113,12 +119,23 @@ object Rules {
         if (list.any { it.kind == RestrictionKind.PUNISHMENT }) {
             return Decision.Block(RestrictionKind.PUNISHMENT, askAllowed = false, until = state.punishmentUntil)
         }
+        // Her rules have no way in, like punishment. Grants don't cover them.
+        if (list.any { it.kind == RestrictionKind.RULE }) {
+            return Decision.Block(RestrictionKind.RULE, askAllowed = false, until = state.task?.ruleUntil ?: 0)
+        }
         if (state.grants.any { it.packageName == pkg && it.until > now }) return Decision.Allow
 
         val kinds = list.map { it.kind }
         val kind = listOf(RestrictionKind.BEDTIME, RestrictionKind.LOCKOUT, RestrictionKind.PERMISSION).first { it in kinds }
         return Decision.Block(kind, askAllowed = list.all { it.askAllowed })
     }
+
+    /** At check-ins with Rules & Tasks on, she issues one about 1 in 3 times. */
+    const val TASK_CHANCE = 1.0 / 3
+
+    /** How long you have to start a stillness task or finish lines, and to report back after an honor rule. */
+    const val TASK_DUE_MINUTES = 60
+    const val RULE_REPORT_MINUTES = 30
 
     /** How she answers "may I?". Fixed odds, never affected by mood. */
     fun askOutcome(roll: Double): AskOutcome = when {

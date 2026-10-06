@@ -8,7 +8,10 @@ import com.guardianangel.core.Line
 import com.guardianangel.core.RestrictionKind
 import com.guardianangel.core.Rules
 import com.guardianangel.core.Voice
+import com.guardianangel.data.ActiveTask
 import com.guardianangel.data.BedtimeSettings
+import com.guardianangel.data.RuleEnforcement
+import com.guardianangel.data.TaskKind
 import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
@@ -113,6 +116,27 @@ class RulesTest {
         val c = config(LockoutScope.EVERYTHING).copy(bedtime = BedtimeSettings(on = true))
         val d = Rules.decide("com.example.game", c, GuardianState(), now, 0) as Decision.Block
         assertEquals(RestrictionKind.BEDTIME, d.kind)
+    }
+
+    @Test
+    fun enforcedRuleBlocksWithNoWayInAndIgnoresGrants() {
+        val rule = ActiveTask(
+            id = 1, text = "No social media", kind = TaskKind.RULE, issuedAt = now, dueAt = now + HOUR,
+            ruleUntil = now + HOUR, enforce = RuleEnforcement.SOCIAL_MEDIA,
+        )
+        val c = GuardianConfig(enabled = true)
+        val st = GuardianState(task = rule, grants = listOf(Grant(instagram, now + HOUR)))
+        val d = Rules.decide(instagram, c, st, now, noon) as Decision.Block
+        assertEquals(RestrictionKind.RULE, d.kind)
+        assertFalse(d.selfBypass)
+        assertFalse(d.askAllowed)
+        assertEquals(now + HOUR, d.until)
+        // Other apps, and the time after the rule, are free.
+        assertEquals(Decision.Allow, Rules.decide(bank, c, st, now, noon))
+        assertEquals(Decision.Allow, Rules.decide(instagram, c, st, now + HOUR, noon))
+        // Honor rules don't lock anything.
+        val honor = st.copy(task = rule.copy(enforce = RuleEnforcement.NONE))
+        assertEquals(Decision.Allow, Rules.decide(instagram, c, honor, now, noon))
     }
 
     @Test

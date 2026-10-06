@@ -19,6 +19,9 @@ data class GuardianConfig(
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
     /** What she can ask you to photograph when it isn't about chastity. */
     val proofPrompts: List<ProofPrompt> = ProofPrompts.DEFAULTS,
+    /** Rules & Tasks: at about 1 in 3 check-ins she issues one from [taskList]. */
+    val tasksOn: Boolean = false,
+    val taskList: List<TaskTemplate> = TaskTemplates.DEFAULTS,
     val checkInMinutes: Int = 120,
     val degradation: DegradationSettings = DegradationSettings(),
     val punishment: PunishmentSettings = PunishmentSettings(),

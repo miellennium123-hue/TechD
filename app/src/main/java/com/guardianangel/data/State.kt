@@ -19,6 +19,10 @@ data class GuardianState(
     val checkInPending: Boolean = false,
     /** When she last denied a beg for release. Begging again waits for the cooldown. */
     val lastBegAt: Long = 0,
+    /** The rule or task she has issued (photo tasks are in [proofs]). */
+    val task: ActiveTask? = null,
+    /** Lowest lines difficulty for the next lines task. Failures raise it, finished lines reset it. */
+    val linesFloor: Int = 0,
 )
 
 @Serializable
@@ -64,4 +68,5 @@ enum class ProofReason(
     CHASTITY_CHECK(true, "Random check. Show her you're still locked in your cage.", false),
     CHECK_IN(true, "Where you are right now.", true),
     PERMISSION(false, "Where you are right now.", true, everydayOnly = true),
+    TASK(true, "Show her you did it.", false),
 }
