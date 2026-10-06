@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.10.0 (adds Rate me). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 29)
+> **Last updated:** 2026-10-06 (round 30)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -387,6 +387,7 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **Content:** Claude writes the mechanics and mild, non-graphic starter lines. Each phase is a situation in Her lines (9.8), so the user writes any explicit wording themselves. It stays on the phone
 - **Safety:** Quit for now always visible, discreet notifications, never in quiet hours or bedtime unless you start it yourself
 - **Mood rule:** the ending odds can't depend on mood (only begging may)
+- **What Claude will write (round 30):** short commands in plain words (pace, faster, slower, stop, hands off, edge, hold, finish or denied), countdowns, teasing, praise, bossiness and degradation. **Not:** graphic descriptions of bodies, sex acts or orgasm, or porn-style explicit dirty talk. The user writes those in Her lines if they want them
 - **Open points:**
   - When it runs: only when you tap "Start", or also at check-ins
   - How the ending is decided: fixed odds, a setting, or only by begging
@@ -462,3 +463,4 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **2026-10-06 (round 27, v0.10.0):** Built 9.10 Rate me: your measurements become percentiles from Veale et al. 2015, the photo must pass the on-device detector and gives a presentation score, and her taste setting decides which way the score runs. Score out of 10 with her verdict in 4 tiers (editable in Her lines). The photo is deleted straight after; only numbers are kept. Details in section 8
 - **2026-10-06 (round 28):** No code changes. User wants to start building the guided sessions (9.9) and asked whether Claude knows Virtual Succubus. Claude knows it only roughly; the user will describe what they want before anything is coded
 - **2026-10-06 (round 29):** No code changes. User asked whether Claude can write dirty dialogue. Answer: teasing and suggestive lines yes, graphic explicit lines no; the user writes those in Her lines
+- **2026-10-06 (round 30):** No code changes. User asked Claude to define "graphic explicit". Limits recorded in 9.9: commands, pacing, teasing and degradation yes; graphic body, sex act or orgasm descriptions no
