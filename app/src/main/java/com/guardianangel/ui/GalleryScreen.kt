@@ -2,6 +2,8 @@ package com.guardianangel.ui
 
 import android.app.Activity
 import android.view.WindowManager
+import android.widget.MediaController
+import android.widget.VideoView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +35,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import com.guardianangel.core.ProofFiles
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +56,7 @@ fun GalleryScreen() {
     var confirmDeleteAll by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Muted("Stored only inside this app. Not in your gallery, not backed up.")
+        Muted("Photos and ruin clips, stored only inside this app. Not in your gallery, not backed up.")
         if (files.isEmpty()) {
             Text("No photos yet.")
         } else {
@@ -73,7 +76,22 @@ fun GalleryScreen() {
     viewing?.let { file ->
         Dialog(onDismissRequest = { viewing = null }) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                PhotoThumb(file, 1600, Modifier.fillMaxWidth(), ContentScale.Fit)
+                if (ProofFiles.isVideo(file)) {
+                    AndroidView(
+                        factory = { ctx ->
+                            VideoView(ctx).apply {
+                                setMediaController(MediaController(ctx).also { it.setAnchorView(this) })
+                                setVideoPath(file.path)
+                                setOnPreparedListener { player -> player.isLooping = true }
+                                start()
+                            }
+                        },
+                        onRelease = { it.stopPlayback() },
+                        modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
+                    )
+                } else {
+                    PhotoThumb(file, 1600, Modifier.fillMaxWidth(), ContentScale.Fit)
+                }
                 TextButton(onClick = {
                     file.delete()
                     files = ProofFiles.list(context)
@@ -103,9 +121,10 @@ fun GalleryScreen() {
 @Composable
 fun PhotoThumb(file: File, maxDim: Int, modifier: Modifier = Modifier, scale: ContentScale = ContentScale.Crop) {
     val bitmap by produceState<ImageBitmap?>(null, file) {
-        value = withContext(Dispatchers.IO) { ProofFiles.load(file, maxDim)?.asImageBitmap() }
+        value = withContext(Dispatchers.IO) { ProofFiles.thumbnail(file, maxDim)?.asImageBitmap() }
     }
     Box(modifier, contentAlignment = Alignment.Center) {
         bitmap?.let { Image(it, contentDescription = "Proof photo", modifier = Modifier.fillMaxSize(), contentScale = scale) }
+        if (ProofFiles.isVideo(file)) Text("▶", style = MaterialTheme.typography.headlineMedium)
     }
 }

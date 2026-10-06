@@ -1,12 +1,30 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.10.0 (adds Rate me). Sections 0 to 0d cover what 0.6.0 to 0.10.0 changed
+> **Version under test:** 0.11.0 (adds Guided sessions). Sections 0 to 0e cover what 0.6.0 to 0.11.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
+## 0e. New in 0.11.0: Guided sessions
+- [ ] Settings > About shows **Version 0.11.0**
+- [ ] Settings has a **Guided sessions** card: toggle, Length (10m, steps of 5), Kink menu, three ending sliders with percentages, Beat sound, She watches (camera)
+- [ ] **Kink menu:** 13 kinks, each with a note and "Cage-safe", "Not in a cage" or "Locked only". CBT shows Soft / Hard when ticked
+- [ ] Turn it on (with her on): **Start a session** appears on home
+- [ ] **Setup screen** shows the length, ending shares and kinks. With sounding ticked in the menu, the sterile tick appears; without it, no sounding happens
+- [ ] **The beat:** the pulse and tick follow the "per minute" number. Faster and slower commands change it
+- [ ] **Edge:** "I'm at the edge" moves on to hands off
+- [ ] **CBT:** the counter stops at the count. "Too much" skips
+- [ ] **She watches:** prop the phone up facing you. Step out of view during a stroking command: within about 10 to 15 seconds she scolds you and adds an edge. **Tell me if she catches you when you're in view** (the detector may miss you while your hand covers you)
+- [ ] **Ruined only:** set Permission and Denied to 0. The session ends with "Hands off, now", REC shows, then "Did you ruin it?". The clip is in Photos with a ▶ and plays
+- [ ] **"I couldn't stop"** counts as a failure. "Ruined, as ordered" gives merit
+- [ ] **Permission** ends with "You may finish" and Done. **Denied** ends with hands off
+- [ ] **During a chastity lock:** no stroking commands until the end, never permission. A ruin starts with "Unlocked", ends with "Locked again", then "Show her the cage" opens the camera
+- [ ] **Stop** ends it with no penalty. **Quit for now** works. Back does nothing. Rotating the phone doesn't restart it
+- [ ] Screenshots are blocked, and the screen doesn't turn off during a session
+- [ ] **Her lines:** a new "Guided sessions" group, and editing a line changes what she says
+- [ ] Settings shows your last sessions, and **Clear session history** empties it
+
 ## 0d. New in 0.10.0: Rate me
-- [ ] Settings > About shows **Version 0.10.0**
 - [ ] Settings has a **Rate me** card, off, with "She likes bigger / smaller" and "cm / Inches"
 - [ ] Turn it on (with her on): **Rate me** appears on home
 - [ ] **Measurements:** Next stays greyed out until both numbers are filled in and sensible. Switching cm to Inches converts what you typed
@@ -76,7 +94,7 @@
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.10.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.11.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 

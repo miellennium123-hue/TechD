@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.10.0 (adds Rate me). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 32)
+> **Status:** v0.11.0 (adds Guided sessions and the kink menu). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 33)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -107,6 +107,10 @@ Two lockout scopes:
 - She rates you: your measurements against published data, plus how well you show her in a photo, then her verdict
 - Details in 9.10 and section 8 (v0.10.0)
 
+### 4.11 Guided sessions (v0.11.0)
+- She runs a JOI-style session to her beat, with a kink menu, the front camera watching, and her ending (permission, ruined or denied)
+- Details in 9.9 and section 8 (v0.11.0)
+
 ---
 
 ## 5. Settings
@@ -126,7 +130,7 @@ User wants **a list of individual settings**, each toggled on/off.
 
 *"Quit for now" overrides every level.*
 
-**Current settings (v0.10.0):** one toggle each, plus details.
+**Current settings (v0.11.0):** one toggle each, plus details.
 
 | Setting | Default | Details |
 |---|---|---|
@@ -150,6 +154,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Discreet notifications | On | On / Off |
 | Mood | Switching | Sweet / Strict / Switching. Dialogue, plus begging odds |
 | Her lines | Her built-in lines | Edit the sweet and strict lines for each situation. Reset one or all |
+| Guided sessions | Off | Length 10 min (5 to 30). Kink menu. Ending sliders (permission 20, ruined 40, denied 40). Beat sound on. She watches (camera) on |
 | Rate me | Off | Her taste: likes bigger / likes smaller. Units: cm / inches. Last 5 scores, clear history |
 | Merit points and levels | On | On / Off |
 
@@ -315,11 +320,34 @@ Choices made while building, where the spec left room:
 - **Flavor only:** no merit, no failures, no added lock time
 - **Scorecard:** score, length and girth with percentiles, presentation, your taste, and the source
 
+### v0.11.0 (round 33, builds 9.9 Guided sessions, part 1)
+- **Two releases (user agreed):** this one has sessions, the kink menu, the beat, endings, the ruin clip, chastity rules and "she sees you". v0.12.0 adds beat and stop checks from camera motion
+- **Start:** "Start a session" on home, only when you tap it, with her on and the toggle on. Never at check-ins. Quiet hours don't apply (you chose it)
+- **Setup screen:** length, ending shares, kinks that will run, a camera permission button, and for sounding a "sterile and ready, never force" tick (no tick, no sounding)
+- **Kink menu:** Edging, Stop and go, Speed changes, Teasing, Holds and stillness, Nipple play, Cage tease (locked only), Countdowns, Praise, Humiliation, Toys, CBT (soft or hard), Sounding. Default on: edging, stop and go, speed, teasing, countdowns, praise. Positions removed (user's choice)
+- **How a session is built (pure `core/Session`):** a short intro, then without a lock stroking to her beat is the base and her kink commands are mixed in; during a lock holding still is the base. Then the ending. Same seed, same session (tested)
+- **Beat:** an on-screen pulse, plus a tick sound (setting). Stroking 60 to 100 per minute (50 to 140 with Speed changes), bursts 150 to 200, slow 30 to 50, teasing 20 to 40
+- **Edging:** you tap "I'm at the edge" (up to 3 minutes), then hands off 15 to 30 seconds
+- **CBT:** counted to a slow beat with a counter. Soft 3 to 5 at 20 per minute, at most 2 per session. Hard 6 to 12 at 30 per minute, at most 4. Never two in a row. "Too much" skips with no penalty
+- **Sounding:** once per session, about a third of the way in: in (90 s), hold (1 to 3 min), out (60 s). No beat, no countdowns, never watched or punished, "Too much" any time. Not during a lock
+- **Countdowns:** 30% of commands get a 5 to 10 second countdown first. **Praise / Humiliation:** a remark on every third command
+- **Endings (sliders, user's choice):** relative weights 0 to 100. All 0 means denied. During a lock permission is never picked
+  - **Permission:** (an edge if Edging is on), 30 s fast, a 10 count, then "You may finish" and you tap Done
+  - **Ruined:** (during a lock: unlock first), 30 s, an edge, a 3 count, then "Hands off, now". She films 20 seconds. Then you report "Ruined, as ordered" or "I couldn't stop". During a lock: lock back up, then a cage photo (15 minutes, the usual chastity check)
+  - **Denied:** an edge (a hold during a lock), then hands off for 15 seconds
+- **Chastity (user's choice):** cage-safe commands only until the ending, and only ruined or denied
+- **She watches (camera, user's choice "see as much as possible"):** front camera, the NudeNet detector about every 1.5 seconds. Not seen for 10 seconds during a stroking command: she scolds you and adds an extra edge (user's choice). At most 5 per session. Not during a lock, sounding or the ending. If the detector can't run, she never punishes
+- **Ruin clip (user's choice):** 20 seconds of silent video (no microphone permission), saved to the private proof folder. Photos now shows clips with a play mark and plays them. If recording fails she takes your word
+- **Merit:** a finished session +5. "I couldn't stop" on a ruin is a failure (-5 and the usual failure settings). Stopping early costs nothing and isn't recorded
+- **Screen:** screenshots blocked, the screen stays on, Back does nothing (Stop and Quit for now are always there), rotating doesn't restart it
+- **History:** last 30 sessions (ending, outcome, times caught and skipped), in Settings with a clear button
+- **Lines:** 28 new situations in Her lines (group "Guided sessions"), written to the round 30 limits
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
 
-**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). 9.7 Open sites built in v0.8.0 (round 19). 9.8 Editable lines built in v0.9.0 (round 21). 9.9 is a concept only. 9.10 Rate me built in v0.10.0 (round 27).
+**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). 9.7 Open sites built in v0.8.0 (round 19). 9.8 Editable lines built in v0.9.0 (round 21). 9.9 Guided sessions part 1 built in v0.11.0 (round 33). 9.10 Rate me built in v0.10.0 (round 27).
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -376,8 +404,8 @@ Built as v0.9.0, the only feature in that release.
 - **Tidy up:** remove the unused `WAIT` line
 - **Decided in round 21:** Lines task sentences stay fixed (dialogue only). The hardcoded home screen line becomes a situation, "Before you switch her on". Situations you never edited follow future updates of her lines. See section 8, v0.9.0
 
-### 9.9 Guided sessions (concept round 23, being planned round 32, not built)
-A JOI-style "virtual succubus" idea. **Being planned:** the user answered the open points in round 32. Still to agree: the kink menu list, then build.
+### 9.9 Guided sessions (concept round 23, part 1 built v0.11.0, part 2 next)
+A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** (see section 8). **Part 2 (v0.12.0):** beat and stop checks from camera motion.
 - **What it is:** she guides a timed session in phases (slow, faster, stop, edge, hold), each a random length
 - **Beat:** a vibration or on-screen pulse that speeds up and slows down with her commands
 - **Commands:** "stop", "hands off" and "edge for me" interrupt at random
@@ -401,8 +429,8 @@ A JOI-style "virtual succubus" idea. **Being planned:** the user answered the op
   - **Endings:** three sliders (permission, ruined, denied), so "ruined only" is possible
   - **Start:** only when you tap Start. Never at check-ins
   - **Chastity:** allowed during a lock, but only ruined or denied endings (permission is skipped). Until the ending, the session only uses things you can do with the cage on
-- **Kink menu (round 32, asked):** toggles that add or remove kinds of commands from sessions. List to be agreed
-- **Still open:** the kink list; beat as sound, visual pulse or both
+- **Kink menu (decided round 33):** the round 32 list plus CBT (soft and hard) and sounding, without positions
+- **Beat:** sound and pulse both, the sound is a setting
 
 ### 9.10 Rate me (asked rounds 24 to 27, built v0.10.0)
 - **Asked:** a "cock rating" where she really rates you. She can't judge the body itself, so the build uses what's real: your measurements against published data and what the phone measures in the photo (see section 10 and section 8, v0.10.0)
@@ -412,7 +440,7 @@ A JOI-style "virtual succubus" idea. **Being planned:** the user answered the op
 
 ## 10. Open questions
 
-- **Guided sessions (round 22):** written up as concept 9.9 (round 23). Four open points listed there. Not planned until the user has tested v0.9.0
+- **Guided sessions:** part 1 built in v0.11.0. Part 2 (camera motion checks) next; it needs tuning with the user's feedback
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 
 ### Fixed issues
@@ -476,3 +504,4 @@ A JOI-style "virtual succubus" idea. **Being planned:** the user answered the op
 - **2026-10-06 (round 30):** No code changes. User asked Claude to define "graphic explicit". Limits recorded in 9.9: commands, pacing, teasing and degradation yes; graphic body, sex act or orgasm descriptions no
 - **2026-10-06 (round 31):** No code changes. User wants camera use in guided sessions and a ruined ending with proof. Proposed camera watching, beat and stop checks from motion, and a ruin flow with a hands-off check and private proof. Added to 9.9 with new open points
 - **2026-10-06 (round 32):** No code changes. User answered the guided session questions: full camera checks, reprimand plus an extra edge when caught, a ruin clip saved to the private gallery, three ending sliders, start only on tap, and in chastity only ruined or denied with cage-safe commands. Asked for a kink menu. Recorded in 9.9
+- **2026-10-06 (round 33, v0.11.0):** Built 9.9 Guided sessions, part 1: sessions to her beat, a kink menu (CBT soft and hard and sounding added, positions removed), three ending sliders, a filmed ruin with an honor report, cage-safe sessions during a lock, and the camera checking she can see you. Details in section 8
