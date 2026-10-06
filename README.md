@@ -6,15 +6,17 @@ Full spec: [`docs/DESIGN.md`](docs/DESIGN.md). Section 8 lists the decisions mad
 
 ## Get the APK
 
-1. Open the repo's **Actions** tab on GitHub, then the latest **Build APK** run
-2. Download the **guardian-angel-debug-apk** artifact and unzip it
-3. Copy `app-debug.apk` to your phone and open it (allow "Install unknown apps" for your file manager or browser)
+**[Download the latest version](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)** ([all releases](https://github.com/miellennium123-hue/TechD/releases))
 
-To build locally instead (needs the Android SDK and JDK 17):
+1. Open the link on your phone and download `guardian-angel.apk`
+2. Open it (allow "Install unknown apps" for your browser if asked)
+3. Updates install over the old version and keep your settings and photos. Settings > About > **Get the latest version** opens the same page
+
+Every merge into `main` publishes a new release automatically. To build locally instead (needs the Android SDK and JDK 17):
 
 ```sh
 ./gradlew assembleDebug        # APK lands in app/build/outputs/apk/debug/
-./gradlew testDebugUnitTest    # rules engine tests
+./gradlew testDebugUnitTest    # logic tests
 ```
 
 ## First-run setup

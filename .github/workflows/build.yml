@@ -1,9 +1,18 @@
 name: Build APK
 
+# Every push builds and tests the app. Pushes to main also publish a GitHub Release,
+# so the newest APK is always at: releases/latest/download/guardian-angel.apk
 on:
   push:
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -23,7 +32,33 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon testDebugUnitTest assembleDebug
 
+      - name: Name the APK
+        id: apk
+        run: |
+          version=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          cp app/build/outputs/apk/debug/app-debug.apk guardian-angel.apk
+
       - uses: actions/upload-artifact@v4
         with:
-          name: guardian-angel-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: guardian-angel-${{ steps.apk.outputs.version }}
+          path: guardian-angel.apk
+
+      - name: Publish release
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.apk.outputs.version }}
+        run: |
+          tag="v${VERSION}-build${GITHUB_RUN_NUMBER}"
+          {
+            echo "**Install:** download \`guardian-angel.apk\` below and open it on your phone. It installs over the previous version and keeps your data."
+            echo
+            echo "**Latest design changes:**"
+            grep -E '^- \*\*[0-9]{4}-[0-9]{2}-[0-9]{2}' docs/DESIGN.md | tail -n 3
+          } > notes.md
+          gh release create "$tag" guardian-angel.apk \
+            --target "$GITHUB_SHA" \
+            --title "Guardian Angel ${VERSION} (build ${GITHUB_RUN_NUMBER})" \
+            --notes-file notes.md \
+            --latest

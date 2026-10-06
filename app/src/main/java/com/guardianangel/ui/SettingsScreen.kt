@@ -1,6 +1,8 @@
 package com.guardianangel.ui
 
 import android.app.TimePickerDialog
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +16,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -189,8 +192,21 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
         OutlinedButton(onClick = {
             update { GuardianConfig(alwaysAllowed = AppLists.DEFAULT_ALLOWED) }
         }) { Text("Reset all settings to defaults") }
+
+        SectionCard("About") {
+            val version = remember {
+                runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
+            }
+            Text("Version $version")
+            OutlinedButton(onClick = {
+                runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(LATEST_RELEASE_URL))) }
+            }) { Text("Get the latest version") }
+            Muted("New versions install over this one and keep your settings and photos.")
+        }
     }
 }
+
+const val LATEST_RELEASE_URL = "https://github.com/miellennium123-hue/TechD/releases/latest"
 
 fun formatMinutes(minutes: Int): String = when {
     minutes % 60 == 0 -> "${minutes / 60}h"
