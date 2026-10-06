@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.2.2 released. Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 11)
+> **Last updated:** 2026-10-06 (round 12)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -175,7 +175,49 @@ Choices made while building, where the spec left room:
 - **Releases (round 10):** every merge into `main` publishes a GitHub Release with `guardian-angel.apk`. The stable link always points to the newest build. Settings > About shows the installed version and links there
 - **Signing (round 9):** every build is signed with one fixed key (`app/signing/guardian.keystore`) so new APKs install over old ones and keep settings and photos. Before v0.2.1 each CI build had a random key, so updating needed an uninstall
 
-## 9. Open questions
+## 9. Planned next (round 12, not built yet)
+
+Agreed in round 12. Build these next, one release at a time.
+
+### 9.1 Simpler settings
+- **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
+- Each setting becomes **one on/off toggle**
+- **Keep the details:** lockout scope, bedtime hours, chastity amounts, check-in frequency, Always-allowed list, photo prompts
+
+### 9.2 Lockouts and bedtime
+- When on, locked apps are **hard blocked**
+- **Way in:** a short wait, or an everyday (non-explicit) photo prompt from the prompt list
+- **Attempts never count as failures:** opening a blocked app costs no merit and adds no punishment
+
+### 9.3 Chastity
+- **Lock length:** two settings, **minimum and maximum**. She picks a random length in between (still capped by Longest lock)
+- **Early release:** "Beg to be released". She decides
+- **Denied begs:** about 1 in 3 denials add your add-time amount. Only if "She can add time" is on, capped by Longest lock
+- **Mood rule change:** strict mood is harsher about begging (denies more often, adds time more often), sweet mood is kinder. This is the only place mood affects outcomes; everywhere else it stays dialogue-only
+- More chastity features to be discussed later
+
+### 9.4 Rules & Tasks (new toggle)
+- **Source:** a starter list Claude writes, editable in Settings (add, edit, delete), like the photo prompts
+- **When:** at about 1 in 3 check-ins she issues one
+- **Rules:** obey for a set time. **App-enforced rules** where possible, e.g. "No social media for 2 hours" auto-locks those apps
+- **Tasks:** do once before a deadline
+- **Stillness tasks:** e.g. "Kneel for 5 minutes holding your phone still". The motion sensor fails you if you move
+- **Line writing:** type her sentence repeatedly. **Easy 5, Medium 15, Hard 30 lines**, longer sentences at higher difficulty. Pasting blocked. **Any typo restarts from line 1**. Difficulty is random, and failures make the next one harder
+- **Proof:** use phone-checked proof wherever possible (sensor, typing, app-enforced, photo checks). Missing a deadline is a failure
+
+### 9.5 Shows up (new toggle)
+- **Trigger:** at some check-ins she sends a "she wants you" notification. Tapping it brings her up full screen
+- **Ignored for 10 minutes:** everything locks until you open it and answer (phone, emergency calls and Quit for now still work)
+- **Answers:** multiple choice and exact typed phrases she checks. Works offline
+- **Questions:** a starter list Claude writes, editable in Settings. Non-explicit
+- **Wrong answers:** she asks again. Three wrong answers in one visit counts as a failure
+
+### 9.6 Dropped
+- **Porn and website popups:** dropped in round 12
+
+---
+
+## 10. Open questions
 
 None right now.
 
@@ -199,7 +241,7 @@ None right now.
 
 ---
 
-## 10. Changelog
+## 11. Changelog
 
 - **2026-10-06:** Doc created from first round of answers (personality, phone control, chastity, check-ins, safety, partner control)
 - **2026-10-06 (round 2):** Mood set in Settings, photo proof replaces tasks, visible chastity countdown with added time, no degradation limits, cosmetic points and levels
@@ -212,3 +254,4 @@ None right now.
 - **2026-10-06 (round 9):** Questions about the context limit and updating. Found that CI builds had random signing keys (updates wouldn't install over old versions); fixed with a fixed keystore in v0.2.1. One last uninstall needed
 - **2026-10-06 (round 10):** Merged all work into `main`. Added automatic GitHub Releases with a stable download link, an About section in Settings (version and update link), and a full workflow guide in `CLAUDE.md` for future sessions
 - **2026-10-06 (round 11):** No design changes. Added `docs/TESTING.md`, an on-device test checklist for v0.2.2. Releases now publish only when the version number changes
+- **2026-10-06 (round 12):** Planned the next version: one toggle per setting (no intensity levels), hard-block lockouts, chastity min/max length and begging, Rules & Tasks, and Shows up. Popups dropped. Written up in section 9 for the next chat; not built yet
