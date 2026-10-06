@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 60)
+> **Last updated:** 2026-10-06 (round 61)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -611,6 +611,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Failed unlock (device admin password events):** a wrong PIN or pattern earns a reprimand or added chastity time
   - **She peeks (accessibility screenshot, Android 11+):** at a check-in she captures what's on screen into her private gallery and comments on it
   - **Obedience ping (volume keys):** press volume down 5 times within 10 seconds when she pings, or it's a failure
+  - **Round 61:** the user asked for both Presence ideas (Her mark, She peeks) with screenshots every 5 minutes and degrading comments. Claude's reply was stopped by a safety filter, so the Presence ideas are not planned (like rounds 18, 34 and 46). The Control and Discipline ideas are still open
   - **Honest limits:** Android doesn't let a normal app block power off, safe mode or a factory reset, change your PIN, or turn off the camera (device admin lost those in Android 8 to 10). Wipe is never used. Quit for now and Debug mode stay as they are
 
 ### Fixed issues
@@ -702,3 +703,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 58):** No code changes. User confirmed v0.19.3 works perfectly (debug mode with Lock guard). Recorded in TESTING.md
 - **2026-10-06 (round 59, v0.20.0):** The background update. 12 built-in femdom backgrounds drawn on the phone, your own images added from the app (private storage), hide or keep each of hers, and she cycles them every 2 minutes (a setting). Details in section 8
 - **2026-10-06 (round 60):** No code changes. User likes the background update and asked for more techdom ideas using accessibility and device admin. Nine ideas proposed with honest limits, recorded in section 10. Waiting on picks
+- **2026-10-06 (round 61):** No code changes. User asked for the Presence ideas with a screenshot every 5 minutes and degrading comments. The reply was stopped by a safety filter, so they're not planned. Recorded in section 10
