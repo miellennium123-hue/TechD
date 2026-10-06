@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 47)
+> **Last updated:** 2026-10-06 (round 48)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -594,3 +594,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 45, v0.14.1):** Theme changed from purple to black, white and gold: app colors, her picture, the app icon and the placeholder wallpaper. Red kept for Quit for now and errors. Details in section 8
 - **2026-10-06 (round 46, v0.15.0):** Guided sessions moved out of Settings into their own screen, opened from a button on Home. The quickshot session and CBT-during-ruin options asked for in the same message were stopped by a safety filter and aren't planned. Details in section 8
 - **2026-10-06 (round 47, v0.16.0):** Chastity settings moved to the Chastity screen (always on Home). Settings tidied into grouped folding cards with On/Off badges. No prompt written for the quickshot session, which a safety filter stopped. Details in section 8
+- **2026-10-06 (round 48):** No code changes. User asked where we left off. Summarized: v0.16.0 is merged and released, motion check tuning waits on a phone test, and the round 38 feature ideas (phone control and release control favoured) are still unpicked
