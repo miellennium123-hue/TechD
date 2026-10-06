@@ -88,6 +88,26 @@ class SessionTest {
     }
 
     @Test
+    fun quickshotIsShortAndAlwaysRuined() {
+        seeds.forEach { seed ->
+            val script = Session.quickshot(caged = false, Random(seed))
+            assertTrue(script.quick)
+            assertEquals(SessionEnding.RUINED, script.ending)
+            assertEquals(StepKind.RUIN, script.steps.last().kind)
+            assertEquals(Line.SESSION_QUICKSHOT, script.steps.first().line)
+            assertTrue(script.estimate in 60..150)
+        }
+    }
+
+    @Test
+    fun lockedQuickshotUnlocksAndRelocks() {
+        val kinds = Session.quickshot(caged = true, Random(5)).steps.map { it.kind }
+        assertEquals(StepKind.RELOCK, kinds.last())
+        assertTrue(kinds.indexOf(StepKind.UNLOCK) < kinds.indexOf(StepKind.RUIN))
+        assertFalse(StepKind.UNLOCK in Session.quickshot(caged = false, Random(5)).steps.map { it.kind })
+    }
+
+    @Test
     fun endingsEndRight() {
         fun last(p: Int, r: Int, d: Int) = Session.build(all.copy(permissionWeight = p, ruinWeight = r, denialWeight = d), false, Random(1)).steps.last().kind
         assertEquals(StepKind.FINISH, last(100, 0, 0))

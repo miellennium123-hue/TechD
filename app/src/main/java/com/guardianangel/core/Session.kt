@@ -68,7 +68,8 @@ data class Step(
     val estimate: Int get() = if (kind.tap != null) minOf(seconds, kind.expected) else seconds
 }
 
-data class SessionScript(val ending: SessionEnding, val caged: Boolean, val steps: List<Step>) {
+/** [quick]: a quickshot (round 49), short and always ruined. */
+data class SessionScript(val ending: SessionEnding, val caged: Boolean, val steps: List<Step>, val quick: Boolean = false) {
     val estimate: Int get() = steps.sumOf { it.estimate }
 }
 
@@ -77,6 +78,8 @@ object Session {
     const val EDGE_MAX_SECONDS = 180
     const val TAP_MAX_SECONDS = 300
     const val RUIN_CLIP_SECONDS = 20
+    /** A quickshot's edge waits at most this long for your tap. */
+    const val QUICKSHOT_EDGE_SECONDS = 120
     /** Out of view this long during a stroking command and she catches you. */
     const val UNSEEN_SECONDS = 10
     /** At most this many reprimands per session, so it can't go on forever. */
@@ -169,6 +172,26 @@ object Session {
         }
         return SessionScript(ending, caged, steps + endingSteps)
     }
+
+    /**
+     * A quickshot (round 49): about two minutes, fast to her beat, always a ruin she films.
+     * Ignores the kink menu, the length and the ending sliders. During a lock: unlock first, cage back on after.
+     */
+    fun quickshot(caged: Boolean, random: Random): SessionScript = SessionScript(
+        SessionEnding.RUINED,
+        caged,
+        buildList {
+            add(Step(StepKind.INTRO, 4, line = Line.SESSION_QUICKSHOT))
+            if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
+            add(Step(StepKind.STROKE, 15, bpm = random.nextInt(130, 151)))
+            add(Step(StepKind.FASTER, 10, bpm = random.nextInt(170, 191)))
+            add(Step(StepKind.EDGE, QUICKSHOT_EDGE_SECONDS, bpm = 150))
+            add(Step(StepKind.COUNTDOWN, 3))
+            add(Step(StepKind.RUIN, RUIN_CLIP_SECONDS))
+            if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
+        },
+        quick = true,
+    )
 
     /**
      * What she inserts when she catches you: a reprimand ([why]: out of view, off beat or moved),

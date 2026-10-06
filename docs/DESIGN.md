@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 48)
+> **Last updated:** 2026-10-06 (round 49)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -110,6 +110,7 @@ Two lockout scopes:
 ### 4.11 Guided sessions (v0.11.0, motion checks v0.12.0)
 - She runs a JOI-style session to her beat, with a kink menu, the front camera watching, and her ending (permission, ruined or denied)
 - From v0.12.0 the camera also checks you keep her beat and stop when she says
+- From v0.17.0 a **Quickshot**: about 2 minutes, always ruined, and the camera always films the ruin
 - Details in 9.9 and section 8 (v0.11.0 and v0.12.0)
 
 ---
@@ -396,13 +397,22 @@ Choices made while building, where the spec left room:
 ### v0.15.0 (round 46, Guided sessions screen)
 - **Asked:** move sessions out of Settings into their own tab from the home screen, as the home of the guided sessions part of the app
 - **Built:** a **Guided sessions** button on Home opens its own screen: Start a session (when she and sessions are on), the on/off toggle, length, kink menu, ending sliders, beat sound, camera, motion checks and sensitivity, and the history. Removed from Settings. Back from the kink menu returns here
-- **Also asked in round 46, not built:** a one minute "quickshot" session and a CBT-during-ruin option. Claude's reply that included them was stopped by a safety filter, so they're not planned (like rounds 18 and 34)
+- **Also asked in round 46, not built:** a one minute "quickshot" session and a CBT-during-ruin option. Claude's reply that included them was stopped by a safety filter, so they're not planned (like rounds 18 and 34). The user asked for the quickshot alone again in round 49 and it was built in v0.17.0. CBT-during-ruin stays not planned
 - Home's Quit for now hint now says it takes about 10 minutes
 
 ### v0.16.0 (round 47, Chastity screen and tidier Settings)
 - **Chastity:** its settings (on/off, shortest and longest lock, adding time, hard cap) moved from Settings to the bottom of the Chastity screen. Home's **Chastity** button is always there now (it used to hide when chastity was off)
 - **Settings tidied:** the top card ("Her") keeps the master switch and Lock guard open. Everything else is grouped under headings (Phone control, Check-ins, Extras, Discipline, Her voice, App) in cards that fold shut, each with an On/Off badge. Tap a card to open it. Reset moved into the About card
 - **Also asked in round 47, not done:** a prompt for building the quickshot session in another chat. Not written, since that feature was stopped by a safety filter in round 46 (same as round 35)
+
+### v0.17.0 (round 49, Quickshot)
+- **Asked:** a quickshot option in Guided sessions that always ends ruined and always films the ruin
+- **Built:** a **Quickshot (always ruined)** button under Start a session. The pure `Session.quickshot` builds it (tested in `SessionTest.kt`): her quickshot line, 15 seconds fast stroking, 10 seconds faster, an edge (tap when there, up to 2 minutes), a 3 second countdown, then the ruin. About 2 minutes
+- **Ignores** the kink menu, length and ending sliders. Motion checks, beat sound and camera choice still apply
+- **Camera:** always on for a quickshot, even with She watches off. Start waits until the camera is allowed. The ruin clip goes to Photos like any ruin
+- **During a lock:** unlock first, cage back on after, then the cage photo, same as a ruined session
+- **Ending:** the usual honor report. Ruined as ordered gives +5 merit, I couldn't stop is a failure
+- **New line:** Quickshot starts (sweet and strict). History marks quickshots (`SessionRecord.quick`, defaults to false for older saves)
 
 ## 9. Round 12 plan (built)
 
@@ -595,3 +605,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 46, v0.15.0):** Guided sessions moved out of Settings into their own screen, opened from a button on Home. The quickshot session and CBT-during-ruin options asked for in the same message were stopped by a safety filter and aren't planned. Details in section 8
 - **2026-10-06 (round 47, v0.16.0):** Chastity settings moved to the Chastity screen (always on Home). Settings tidied into grouped folding cards with On/Off badges. No prompt written for the quickshot session, which a safety filter stopped. Details in section 8
 - **2026-10-06 (round 48):** No code changes. User asked where we left off. Summarized: v0.16.0 is merged and released, motion check tuning waits on a phone test, and the round 38 feature ideas (phone control and release control favoured) are still unpicked
+- **2026-10-06 (round 49, v0.17.0):** User asked for a quickshot in Guided sessions that always ends ruined and films the ruin. Built: a Quickshot button, about 2 minutes, always ruined, camera always on to film it. Works during a lock (unlock, ruin, relock). Details in section 8

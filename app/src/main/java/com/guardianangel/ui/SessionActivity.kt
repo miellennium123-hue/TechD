@@ -85,18 +85,23 @@ class SessionActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
         )
-        setContent { GuardianTheme { SessionScreen { finish() } } }
+        val quick = intent.getBooleanExtra(EXTRA_QUICK, false)
+        setContent { GuardianTheme { SessionScreen(quick) { finish() } } }
     }
 
     companion object {
-        fun intent(context: Context): Intent = Intent(context, SessionActivity::class.java)
+        private const val EXTRA_QUICK = "quick"
+
+        /** [quick]: a quickshot (round 49), always ruined and always filmed. */
+        fun intent(context: Context, quick: Boolean = false): Intent =
+            Intent(context, SessionActivity::class.java).putExtra(EXTRA_QUICK, quick)
     }
 }
 
 private enum class SessionPhase { SETUP, RUNNING, HONOR, DONE }
 
 @Composable
-private fun SessionScreen(onDone: () -> Unit) {
+private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
     val context = LocalContext.current
     val config by Guardian.config.flow.collectAsState()
     val settings = config.session
@@ -116,12 +121,23 @@ private fun SessionScreen(onDone: () -> Unit) {
     var clip by remember { mutableStateOf<File?>(null) }
     var clipFailed by remember { mutableStateOf(false) }
 
-    val watching = settings.camera && hasCamera
+    // A quickshot always films its ruin, whatever the camera setting.
+    val wantsCamera = settings.camera || quick
+    val watching = wantsCamera && hasCamera
 
     fun end(outcome: SessionOutcome) {
         val s = script ?: return
         val (line, proof) = Guardian.finishSession(
-            SessionRecord(System.currentTimeMillis(), settings.minutes, s.ending, caged, caught, skipped, outcome),
+            SessionRecord(
+                System.currentTimeMillis(),
+                if (s.quick) (s.estimate + 59) / 60 else settings.minutes,
+                s.ending,
+                caged,
+                caught,
+                skipped,
+                outcome,
+                quick = s.quick,
+            ),
         )
         finalLine = line
         relockProof = proof
@@ -154,14 +170,16 @@ private fun SessionScreen(onDone: () -> Unit) {
                     Button(onClick = onDone) { Text("Close") }
                 }
                 phase == SessionPhase.SETUP -> Setup(
+                    quick = quick,
+                    hasCamera = hasCamera,
                     caged = caged,
                     soundingReady = soundingReady,
                     onSoundingReady = { soundingReady = it },
-                    needsCamera = settings.camera && !hasCamera,
+                    needsCamera = wantsCamera && !hasCamera,
                     onAllowCamera = { permission.launch(Manifest.permission.CAMERA) },
                     modifier = Modifier.weight(1f),
                     onStart = {
-                        val built = Session.build(settings, caged, Random.Default, soundingReady)
+                        val built = if (quick) Session.quickshot(caged, Random.Default) else Session.build(settings, caged, Random.Default, soundingReady)
                         script = built
                         steps = built.steps
                         index = 0
@@ -244,6 +262,8 @@ private fun SessionScreen(onDone: () -> Unit) {
 
 @Composable
 private fun Setup(
+    quick: Boolean,
+    hasCamera: Boolean,
     caged: Boolean,
     soundingReady: Boolean,
     onSoundingReady: (Boolean) -> Unit,
@@ -256,6 +276,10 @@ private fun Setup(
     val s = config.session
     val kinks = Session.kinks(s, caged)
     val (p, r, d) = Session.endingShares(s, caged)
+    if (quick) {
+        QuickshotSetup(caged, hasCamera, needsCamera, onAllowCamera, modifier, onStart)
+        return
+    }
     Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Guided session", style = MaterialTheme.typography.headlineSmall)
         Text("About ${s.minutes} minutes. Endings: permission $p%, ruined $r%, denied $d%.")
@@ -286,6 +310,40 @@ private fun Setup(
             OutlinedButton(onClick = onAllowCamera) { Text("Allow camera") }
         }
         Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) { Text("Start") }
+    }
+}
+
+/** A quickshot's setup: no kink menu or endings, and Start waits for the camera, since she always films it. */
+@Composable
+private fun QuickshotSetup(
+    caged: Boolean,
+    hasCamera: Boolean,
+    needsCamera: Boolean,
+    onAllowCamera: () -> Unit,
+    modifier: Modifier,
+    onStart: () -> Unit,
+) {
+    val config by Guardian.config.flow.collectAsState()
+    val s = config.session
+    Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Quickshot", style = MaterialTheme.typography.headlineSmall)
+        Text("About 2 minutes, fast to her beat. It always ends ruined, and she films the ruin.")
+        if (caged) Muted("You're locked: she has you take the cage off first, and put it back on after.")
+        Muted(
+            "Prop the phone up so the camera sees you. The ruin clip goes to Photos, private to this app. " +
+                "Stop or Quit for now any time.",
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Camera: ${if (s.backCamera) "back" else "front"}", Modifier.weight(1f))
+            TextButton(onClick = {
+                Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) }
+            }) { Text("Switch") }
+        }
+        if (needsCamera) {
+            Muted("A quickshot needs the camera. She always films the ruin.")
+            OutlinedButton(onClick = onAllowCamera) { Text("Allow camera") }
+        }
+        Button(onClick = onStart, enabled = hasCamera, modifier = Modifier.fillMaxWidth()) { Text("Start") }
     }
 }
 

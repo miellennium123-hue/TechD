@@ -53,6 +53,7 @@ enum class Line(val group: String, val label: String, val note: String) {
     RATE_LOW("Rate me", "Score 1 to 3", "Her verdict when she rates you 1 to 3"),
     RATE_UNSEEN("Rate me", "Couldn't see it", "Added to her verdict when she rates you on your word alone"),
     SESSION_START("Guided sessions", "Session starts", "She starts a guided session"),
+    SESSION_QUICKSHOT("Guided sessions", "Quickshot starts", "She starts a quickshot: quick, and always ruined"),
     SESSION_STROKE("Guided sessions", "Stroke", "Stroke to her beat"),
     SESSION_FASTER("Guided sessions", "Faster", "Speed changes: a fast burst"),
     SESSION_SLOWER("Guided sessions", "Slower", "Speed changes: slow right down"),
@@ -95,6 +96,11 @@ object Voice {
             "Lie back and get comfortable, pet. I'm in charge now.",
             "Phone where I can see you, sweetheart. Let's begin.",
             "Ready for me? Good. Do exactly as I say.",
+        ),
+        Line.SESSION_QUICKSHOT to listOf(
+            "A quick one, pet? Fine. But I'm ruining it, and I'm filming it.",
+            "Hurry for me, sweetheart. You won't get to enjoy the end.",
+            "Fast and ruined. Camera on, I want to see it.",
         ),
         Line.SESSION_STROKE to listOf(
             "Stroke for me, pet. Nice and steady with my beat.",
@@ -454,6 +460,11 @@ object Voice {
             "Phone up. Eyes on me. We start now.",
             "You'll do exactly what I say. Begin.",
             "Get in position. I'm watching every second.",
+        ),
+        Line.SESSION_QUICKSHOT to listOf(
+            "Quick. And ruined. I'm recording.",
+            "You want it fast? You'll get it ruined.",
+            "No build up, no reward. Camera on. Go.",
         ),
         Line.SESSION_STROKE to listOf(
             "Stroke. Match my beat.",
