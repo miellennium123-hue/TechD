@@ -20,7 +20,17 @@ data class SessionSettings(
     val beatSound: Boolean = true,
     /** Front camera on: she checks she can see you, and films the ruin as proof. */
     val camera: Boolean = true,
+    /** With the camera: she checks you keep her beat and stop when she says (9.9 part 2). */
+    val motionChecks: Boolean = true,
+    val motionSensitivity: MotionSensitivity = MotionSensitivity.NORMAL,
 )
+
+/** How much movement counts. [threshold] is the change between frames (0 until 1); tune on a real phone. */
+enum class MotionSensitivity(val label: String, val threshold: Float) {
+    LOW("Low", 0.02f),
+    NORMAL("Normal", 0.012f),
+    HIGH("High", 0.007f),
+}
 
 /** One kink in the kink menu. [cageSafe] runs during a lock; [uncaged] runs without one. */
 enum class Kink(val label: String, val note: String, val cageSafe: Boolean, val uncaged: Boolean = true) {

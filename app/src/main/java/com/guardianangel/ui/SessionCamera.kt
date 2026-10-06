@@ -29,6 +29,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.guardianangel.core.ExplicitDetector
 import com.guardianangel.core.ExplicitScore
+import com.guardianangel.core.Motion
+import com.guardianangel.core.MotionTracker
 import com.guardianangel.core.ProofFiles
 import java.io.File
 import java.util.concurrent.Executors
@@ -37,7 +39,8 @@ enum class CameraMode { WATCH, RECORD }
 
 /**
  * The front camera during a session. WATCH runs the on-device detector about every 1.5 seconds and
- * reports whether she can see you (null when the detector can't run). RECORD films [recordSeconds]
+ * reports whether she can see you (null when the detector can't run), and feeds every frame to
+ * [motion] as a tiny brightness grid for the beat and stop checks. RECORD films [recordSeconds]
  * of silent video into the private proof folder and reports the file (null if it failed).
  * Frames are never saved, except the clip.
  */
@@ -48,6 +51,7 @@ fun SessionCamera(
     onSeen: (Boolean?) -> Unit,
     onClip: (File?) -> Unit,
     modifier: Modifier = Modifier,
+    motion: MotionTracker? = null,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -82,8 +86,16 @@ fun SessionCamera(
                             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                             .build()
                         var last = 0L
+                        var lastMotion = 0L
                         analysis.setAnalyzer(executor) { image ->
                             val now = System.currentTimeMillis()
+                            if (motion != null && now - lastMotion >= 30) {
+                                lastMotion = now
+                                runCatching {
+                                    val plane = image.planes[0]
+                                    motion.add(Motion.grid(plane.buffer, image.width, image.height, plane.rowStride, plane.pixelStride), now)
+                                }
+                            }
                             if (now - last >= 1_500) {
                                 last = now
                                 val result = runCatching {

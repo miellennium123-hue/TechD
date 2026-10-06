@@ -1,9 +1,23 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.11.0 (adds Guided sessions). Sections 0 to 0e cover what 0.6.0 to 0.11.0 changed
+> **Version under test:** 0.12.0 (adds motion checks to Guided sessions). Sections 0 to 0f cover what 0.6.0 to 0.12.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0f. New in 0.12.0: Motion checks in Guided sessions
+Phone on a stand, front camera facing you, decent light. Settings > Guided sessions: camera on, **She checks your motion** on, sensitivity Normal.
+- [ ] Settings > About shows **Version 0.12.0**
+- [ ] During a stroke command, the line under the beat shows **She sees about N per minute**. Is N close to your real pace?
+- [ ] Keep her beat for a whole command: you're never caught
+- [ ] Go clearly faster or slower than her beat (or stop) for about 10 seconds: she scolds you **off beat** and adds an edge
+- [ ] On **Stop** or **Hold still**: keep still and it shows **She sees you still**; you're never caught for breathing
+- [ ] On **Stop**: keep moving past 2 seconds: she scolds you for **not stopping** and adds an edge
+- [ ] Teasing, edging, CBT, sounding, countdowns and the ending are never motion-checked
+- [ ] During a lock: moving during a hold gets caught, with a hold (not an edge) added
+- [ ] Turn **She checks your motion** off: no "She sees" line and no motion catches
+- [ ] Caught while still? Try **Low**. Moving and not noticed? Try **High**. Note which setting worked for you
+- [ ] Caught at most 5 times per session in total
 
 ## 0e. New in 0.11.0: Guided sessions
 - [ ] Settings > About shows **Version 0.11.0**
@@ -94,7 +108,7 @@
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.11.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.12.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 

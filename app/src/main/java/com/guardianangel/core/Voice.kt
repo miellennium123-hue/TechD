@@ -67,6 +67,8 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_PRAISE("Guided sessions", "Praise remark", "Praise: a remark during a command"),
     SESSION_HUMILIATION("Guided sessions", "Humiliation remark", "Humiliation: a remark during a command"),
     SESSION_CAUGHT("Guided sessions", "Caught", "She caught you (out of view): a reprimand, then an extra edge"),
+    SESSION_OFF_BEAT("Guided sessions", "Off beat", "She caught you off her beat or stopping: a reprimand, then an extra edge"),
+    SESSION_MOVED("Guided sessions", "Didn't stop", "She caught you moving when she said stop: a reprimand, then an extra edge"),
     SESSION_UNLOCK("Guided sessions", "Unlock", "Ruined ending during a lock: take the cage off"),
     SESSION_FINISH("Guided sessions", "Permission", "Permission ending: you may finish"),
     SESSION_RUIN("Guided sessions", "Ruin", "Ruined ending: hands off at the edge. She films it"),
@@ -187,6 +189,16 @@ object Voice {
             "Where did you go, pet? I can't see you. Back to the edge for that.",
             "Tsk. Out of sight? That earns you another edge.",
             "Naughty. Stay where I can see you. Edge for me again.",
+        ),
+        Line.SESSION_OFF_BEAT to listOf(
+            "You lost my beat, pet. Follow it, and give me another edge for that.",
+            "Tsk, that's not my rhythm. One more edge, sweetheart.",
+            "Listen to my beat, not your own. Edge for me again.",
+        ),
+        Line.SESSION_MOVED to listOf(
+            "I said stop, pet. I saw that. Another edge for you.",
+            "Naughty. Hands off means hands off. Edge again.",
+            "You couldn't keep still for me? One more edge, then.",
         ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock for me, pet. Just this once.",
@@ -507,6 +519,16 @@ object Voice {
             "I can't see you. Another edge. Now.",
             "Out of sight? That's an edge you've earned.",
             "Hiding from me? Edge. Again.",
+        ),
+        Line.SESSION_OFF_BEAT to listOf(
+            "That's not my beat. Another edge.",
+            "Off rhythm. You follow me, not yourself. Edge.",
+            "Can't keep a simple beat? Edge. Again.",
+        ),
+        Line.SESSION_MOVED to listOf(
+            "I said stop. I saw that. Edge, now.",
+            "Hands off means still. Another edge.",
+            "You moved. Edge again, and this time obey.",
         ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock. Quickly. Tap when you're out.",
