@@ -14,6 +14,7 @@ import kotlin.random.Random
  * [still]: hands off, she expects no movement. [stroking]: she expects movement to her beat and to see you.
  * [watched]: being caught here earns a reprimand and an extra edge. Never during sounding or the ending.
  * [skippable]: shows "Too much", which moves on with no penalty.
+ * [beat]: with motion checks, she checks your rhythm matches her beat.
  */
 enum class StepKind(
     val line: Line,
@@ -22,13 +23,14 @@ enum class StepKind(
     val stroking: Boolean = false,
     val watched: Boolean = true,
     val skippable: Boolean = false,
+    val beat: Boolean = false,
     /** Expected length of a [tap] step, for the time estimate. */
     val expected: Int = 0,
 ) {
     INTRO(Line.SESSION_START, watched = false),
-    STROKE(Line.SESSION_STROKE, stroking = true),
-    FASTER(Line.SESSION_FASTER, stroking = true),
-    SLOWER(Line.SESSION_SLOWER, stroking = true),
+    STROKE(Line.SESSION_STROKE, stroking = true, beat = true),
+    FASTER(Line.SESSION_FASTER, stroking = true, beat = true),
+    SLOWER(Line.SESSION_SLOWER, stroking = true, beat = true),
     TEASE(Line.SESSION_TEASE, stroking = true),
     EDGE(Line.SESSION_EDGE, tap = "I'm at the edge", stroking = true, expected = 45),
     EDGE_HOLD(Line.SESSION_EDGE_HOLD, still = true),
@@ -168,13 +170,27 @@ object Session {
         return SessionScript(ending, caged, steps + endingSteps)
     }
 
-    /** What she inserts when she catches you: a reprimand, then an extra edge (a hold during a lock). */
-    fun caughtSteps(caged: Boolean): List<Step> =
+    /**
+     * What she inserts when she catches you: a reprimand ([why]: out of view, off beat or moved),
+     * then an extra edge (a hold during a lock).
+     */
+    fun caughtSteps(caged: Boolean, why: Line = Line.SESSION_CAUGHT): List<Step> =
         if (caged) {
-            listOf(Step(StepKind.CAUGHT, 5), Step(StepKind.HOLD, 30))
+            listOf(Step(StepKind.CAUGHT, 5, line = why), Step(StepKind.HOLD, 30))
         } else {
-            listOf(Step(StepKind.CAUGHT, 5), Step(StepKind.EDGE, EDGE_MAX_SECONDS, bpm = 130), Step(StepKind.EDGE_HOLD, 20))
+            listOf(Step(StepKind.CAUGHT, 5, line = why), Step(StepKind.EDGE, EDGE_MAX_SECONDS, bpm = 130), Step(StepKind.EDGE_HOLD, 20))
         }
+
+    /**
+     * What the camera checks during [step]: her beat on plain stroking commands, stillness on
+     * watched hands-off commands. Teasing, edging, sounding, CBT, countdowns and the ending aren't checked.
+     */
+    fun motionCheck(step: Step): MotionCheck = when {
+        !step.kind.watched -> MotionCheck.NONE
+        step.kind.beat && step.bpm > 0 -> MotionCheck.BEAT
+        step.kind.still -> MotionCheck.STILL
+        else -> MotionCheck.NONE
+    }
 
     fun endingSteps(ending: SessionEnding, caged: Boolean, kinks: Set<Kink>, random: Random): List<Step> = when (ending) {
         SessionEnding.PERMISSION -> buildList {

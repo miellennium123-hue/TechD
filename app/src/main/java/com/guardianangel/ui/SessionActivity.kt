@@ -56,12 +56,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.Line
+import com.guardianangel.core.MotionCheck
+import com.guardianangel.core.MotionJudge
+import com.guardianangel.core.MotionTracker
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.Session
 import com.guardianangel.core.SessionScript
 import com.guardianangel.core.Step
 import com.guardianangel.core.StepKind
 import com.guardianangel.data.Kink
+import com.guardianangel.data.MotionSensitivity
 import com.guardianangel.data.SessionEnding
 import com.guardianangel.data.SessionOutcome
 import com.guardianangel.data.SessionRecord
@@ -169,16 +174,18 @@ private fun SessionScreen(onDone: () -> Unit) {
                     caged = caged,
                     watching = watching,
                     beatSound = settings.beatSound,
-                    canCatch = watching && !caged && caught < Session.CAUGHT_LIMIT,
+                    canCatch = watching && caught < Session.CAUGHT_LIMIT,
+                    motionChecks = settings.motionChecks,
+                    sensitivity = settings.motionSensitivity,
                     modifier = Modifier.weight(1f),
                     onNext = { advance() },
                     onSkip = {
                         skipped++
                         advance()
                     },
-                    onCaught = {
+                    onCaught = { why ->
                         caught++
-                        steps = steps.take(index + 1) + Session.caughtSteps(caged) + steps.drop(index + 1)
+                        steps = steps.take(index + 1) + Session.caughtSteps(caged, why) + steps.drop(index + 1)
                         index++
                     },
                     onClip = { file ->
@@ -280,10 +287,12 @@ private fun Running(
     watching: Boolean,
     beatSound: Boolean,
     canCatch: Boolean,
+    motionChecks: Boolean,
+    sensitivity: MotionSensitivity,
     modifier: Modifier,
     onNext: () -> Unit,
     onSkip: () -> Unit,
-    onCaught: () -> Unit,
+    onCaught: (Line) -> Unit,
     onClip: (File?) -> Unit,
 ) {
     val step = steps[index]
@@ -293,6 +302,8 @@ private fun Running(
     var ticks by remember { mutableIntStateOf(0) }
     var line by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf<String?>(null) }
+    var sees by remember { mutableStateOf<String?>(null) }
+    val tracker = remember { MotionTracker() }
     val pulse = remember { Animatable(1f) }
     val tone = remember { runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 70) }.getOrNull() }
     DisposableEffect(Unit) { onDispose { tone?.release() } }
@@ -324,14 +335,39 @@ private fun Running(
         }
     }
 
-    // She catches you when she can't see you for a while during a stroking command.
+    // She catches you when she can't see you for a while during a stroking command (never during a lock).
     LaunchedEffect(index, steps, canCatch) {
-        if (!canCatch || !step.kind.stroking || !step.kind.watched) return@LaunchedEffect
+        if (!canCatch || caged || !step.kind.stroking || !step.kind.watched) return@LaunchedEffect
         while (true) {
             delay(1_000)
             val since = maxOf(lastSeenAt, startedAt)
             if (System.currentTimeMillis() - since > Session.UNSEEN_SECONDS * 1_000L) {
-                onCaught()
+                onCaught(Line.SESSION_CAUGHT)
+                return@LaunchedEffect
+            }
+        }
+    }
+
+    // Motion checks: her beat on stroking commands, stillness after "stop". No frames, no judging.
+    LaunchedEffect(index, steps, watching, motionChecks, canCatch, sensitivity) {
+        sees = null
+        val check = if (watching && motionChecks) Session.motionCheck(step) else MotionCheck.NONE
+        if (check == MotionCheck.NONE) return@LaunchedEffect
+        val start = System.currentTimeMillis()
+        val judge = MotionJudge(check, step.bpm, start)
+        while (true) {
+            delay(500)
+            val now = System.currentTimeMillis()
+            val reading = tracker.reading(start, now, sensitivity)
+            sees = when {
+                !reading.live -> null
+                check == MotionCheck.STILL -> if (reading.moving) "She sees you moving" else "She sees you still"
+                !reading.moving -> "She sees you stopped"
+                reading.rate != null -> "She sees about ${reading.rate} per minute"
+                else -> "She sees you moving"
+            }
+            if (judge.update(now, reading) && canCatch) {
+                onCaught(if (check == MotionCheck.BEAT) Line.SESSION_OFF_BEAT else Line.SESSION_MOVED)
                 return@LaunchedEffect
             }
         }
@@ -355,6 +391,7 @@ private fun Running(
                     onSeen = { seen -> if (seen != false) lastSeenAt = System.currentTimeMillis() },
                     onClip = onClip,
                     modifier = Modifier.fillMaxSize(),
+                    motion = if (motionChecks) tracker else null,
                 )
             }
             if (step.bpm > 0) {
@@ -377,6 +414,7 @@ private fun Running(
             else -> "${left}s"
         }
         Text(detail, style = MaterialTheme.typography.titleMedium)
+        sees?.let { Muted(it) }
         step.kind.tap?.let { label -> Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(label) } }
         if (step.kind.skippable) OutlinedButton(onClick = onSkip) { Text("Too much (skip, no penalty)") }
     }

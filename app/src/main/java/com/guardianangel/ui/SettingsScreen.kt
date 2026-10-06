@@ -44,6 +44,7 @@ import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.Mood
+import com.guardianangel.data.MotionSensitivity
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.PunishmentLength
 import com.guardianangel.data.RatingTaste
@@ -339,6 +340,19 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                     "She films a ruin as proof. Checked on your phone; only the ruin clip is saved, privately.",
                 config.session.camera,
             ) { v -> update { it.copy(session = it.session.copy(camera = v)) } }
+            SwitchRow(
+                "She checks your motion",
+                "With the camera on: she checks you keep her beat when stroking and stop when she says. " +
+                    "Off beat or moving too long: she scolds you and adds an edge. Only numbers are kept, never frames.",
+                config.session.motionChecks,
+            ) { v -> update { it.copy(session = it.session.copy(motionChecks = v)) } }
+            if (config.session.camera && config.session.motionChecks) {
+                Text("Motion sensitivity")
+                ChoiceChips(MotionSensitivity.entries, config.session.motionSensitivity, { it.label }) { level ->
+                    update { it.copy(session = it.session.copy(motionSensitivity = level)) }
+                }
+                Muted("Caught when still? Try Low. Moving and she doesn't notice? Try High.")
+            }
             if (state.sessions.isNotEmpty()) {
                 Muted("Last sessions: " + state.sessions.takeLast(5).joinToString(", ") { it.outcome.name.lowercase().replace('_', ' ') })
                 TextButton(onClick = { Guardian.clearSessions() }) { Text("Clear session history") }

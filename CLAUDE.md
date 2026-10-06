@@ -1,6 +1,6 @@
 # Guardian Angel
 
-Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5, 9.7, 9.8 and 9.10 built, 9.9 Guided sessions part 1 built, part 2 camera motion checks dropped), section 10 the open questions.
+Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5, 9.7, 9.8 and 9.10 built, 9.9 Guided sessions built in two parts, v0.11.0 and v0.12.0 camera motion checks), section 10 the open questions.
 
 ## Design doc rule (always)
 
@@ -26,7 +26,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 ## Building
 
 - The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt` and `core/Session.kt` has JVM unit tests in `app/src/test/`, which CI runs.
-- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
+- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/Motion.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
 - Maven Central sometimes rate-limits this environment (HTTP 429), so local JVM test runs may fail to resolve dependencies. Rely on CI.
 - Locally with an SDK: `./gradlew testDebugUnitTest assembleDebug`.
 - Every build is signed with `app/signing/guardian.keystore` so updates install over the old app. Never replace or regenerate it, or the user has to uninstall and loses their data.
@@ -56,7 +56,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `data/ShowsUp.kt`, `ui/ShowUpActivity.kt` | Shows up: questions, the pending summons, her full-screen visit |
 | `data/Sites.kt`, `core/SiteOpener.kt`, `ui/SiteActivity.kt` | Open sites: your site list, the visit, browser choice, her 10 second warning |
 | `core/Rating.kt`, `ui/RateActivity.kt` | Rate me: percentiles from published size data, presentation score from the photo, her scorecard (tested in `RatingTest.kt`). Photos are deleted after rating |
-| `data/Sessions.kt`, `core/Session.kt`, `ui/SessionActivity.kt`, `ui/SessionCamera.kt`, `ui/KinksScreen.kt` | Guided sessions: settings and kink menu, the pure session builder (tested in `SessionTest.kt`), the session screen, the watching camera and ruin clip |
+| `data/Sessions.kt`, `core/Session.kt`, `ui/SessionActivity.kt`, `ui/SessionCamera.kt`, `ui/KinksScreen.kt` | Guided sessions: settings and kink menu, the pure session builder (tested in `SessionTest.kt`), the session screen, the watching camera and ruin clip. `core/Motion.kt`: beat and stop checks from camera motion (tested in `MotionTest.kt`) |
 | `core/Voice.kt`, `ui/LinesScreen.kt` | Her built-in lines, your edits on top (tested in `LinesTest.kt`), the Her lines screens |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen |
 | `ui/` | Compose screens and the Block and Proof activities |
