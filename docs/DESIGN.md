@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.9.0 (adds Her lines). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 21)
+> **Last updated:** 2026-10-06 (round 22)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -360,6 +360,7 @@ Built as v0.9.0, the only feature in that release.
 
 ## 10. Open questions
 
+- **Guided sessions idea (round 22, not decided):** user asked about a JOI-style "virtual succubus" feature. Claude can build the mechanics (timed phases, a vibration or visual beat, stop and edge commands, her decision at the end, honor report) with mild, non-graphic starter lines. Explicit wording would be the user's own, through Her lines. Open: when it runs, how the ending is decided, how it works with chastity, and the beat
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 
 ### Fixed issues
@@ -411,3 +412,4 @@ Built as v0.9.0, the only feature in that release.
 - **2026-10-06 (round 19, v0.8.0):** Built 9.7 Open sites. User chose a 5 minute stay (1 to 30), almost every check-in (9 in 10, rolled first), failure on the first leave, and waiting for unlock when the phone is locked. Details in section 8
 - **2026-10-06 (round 20):** No design changes. User asked which feature from the stopped build to try next. Editable lines written up as 9.8 (planned, not built). The photo way in and showing their own media stay parked
 - **2026-10-06 (round 21, v0.9.0):** Built 9.8 Editable lines: Settings > Her lines lists every situation with a note, and you can add, edit and delete her sweet and strict lines, reset one or all. User chose dialogue only (not Lines task sentences), an editable home screen line, and untouched situations following updates. Unused `WAIT` line removed. Details in section 8
+- **2026-10-06 (round 22):** No design changes. User asked whether a JOI-style feature is possible. Answered: the mechanics yes, with non-graphic starter lines and their own explicit lines via Her lines. Recorded as an open question in section 10
