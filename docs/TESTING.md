@@ -1,9 +1,15 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.14.0 (Lock guard whenever she is on, 10 minute Quit for now). Sections 0 to 0h cover what 0.6.0 to 0.14.0 changed
+> **Version under test:** 0.14.1 (black, white and gold theme). Sections 0 to 0h cover what 0.6.0 to 0.14.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0i. New in 0.14.1: theme
+- [ ] Settings > About shows **Version 0.14.1**
+- [ ] Black backgrounds, gold buttons and switches, white text. No purple left anywhere
+- [ ] Her picture shows clearly on black (gold outlines). App icon is black and gold
+- [ ] Quit for now is still red and easy to spot
 
 ## 0h. New in 0.14.0: Lock guard without a lock
 - [ ] Settings > About shows **Version 0.14.0**
@@ -136,7 +142,7 @@ Phone on a stand, front camera facing you, decent light. Settings > Guided sessi
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.14.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.14.1**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
