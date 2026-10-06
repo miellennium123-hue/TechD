@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 50)
+> **Last updated:** 2026-10-06 (round 51)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -532,6 +532,19 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Decided in round 41:** built as Lock guard in v0.13.0 (section 8). Claude recommended keeping Quit for now instant; the user chose a slow Quit for now (about 3 minutes) and no emergency exit
   - **Honest limit:** Android can't make it unbreakable (safe mode, ADB, factory reset, Quit for now)
 
+- **Planned for the next update (round 51): app locks you can't just get out of.** Not built yet, no code written
+  - **The problem:** a lockout or bedtime block has three ways in. **Wait 60 seconds** (10 minutes of access), **Send a photo instead** (any everyday photo, 15 minutes), and **Ask her** (40% grant, 40% photo, 20% deny). The user says that's not really a lock
+  - **Already no way in today:** punishment lockouts, her app-enforced rules and the Shows up summons. Those stay as they are
+  - **The change:** take away the easy ways in, so a locked app stays locked
+  - **What stays (fixed rules):** Quit for now (about 10 minutes, ends everything), the phone dialer, and the Always-allowed list
+  - **To decide before building:**
+    1. **Lockouts have no end time today.** With no way in, social media (or everything) stays blocked for as long as lockouts are on. Is that what you want, or should she lock in timed blocks (for example, she picks how many hours)?
+    2. **Wait 60 seconds:** remove it, or make it much longer?
+    3. **Photo and Ask her:** remove both, or keep **Ask her** with much worse odds (mostly denied) and only harder photos?
+    4. **Bedtime:** same rules as lockouts, or no way in at all until morning?
+    5. **Earned access:** should merit buy time in (for example, spend merit for 10 minutes)? This ties in with the round 39 screen time allowance idea
+    6. **Lock guard:** switching lockouts off already takes the 30 minute slow screen. Keep that as the only way to loosen them?
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -611,3 +624,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 48):** No code changes. User asked where we left off. Summarized: v0.16.0 is merged and released, motion check tuning waits on a phone test, and the round 38 feature ideas (phone control and release control favoured) are still unpicked
 - **2026-10-06 (round 49, v0.17.0):** User asked for a quickshot in Guided sessions that always ends ruined and films the ruin. Built: a Quickshot button, about 2 minutes, always ruined, camera always on to film it. Works during a lock (unlock, ruin, relock). Details in section 8
 - **2026-10-06 (round 50, v0.17.1):** User couldn't see the quickshot. It was hidden unless she and Guided sessions were both on. Both Start buttons now always show, greyed out with the reason until they're usable. Details in section 8
+- **2026-10-06 (round 51):** No code changes. User wants app locks they can't get out of by waiting, sending a photo or asking her. Noted for the next update in section 10, with six questions to settle before building (lockouts have no end time today, so removing every way in would block apps for as long as lockouts are on)
