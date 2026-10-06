@@ -31,6 +31,10 @@ data class GuardianState(
     val ratings: List<RatingRecord> = emptyList(),
     /** Finished guided sessions, newest last. Quit for now keeps them. */
     val sessions: List<SessionRecord> = emptyList(),
+    /** Lock guard: the app version when her watch last started, to tell a restart from an update. */
+    val guardVersion: Int = 0,
+    /** Lock guard: she already punished her watch being off; cleared when it starts again. */
+    val tamperOffNoticed: Boolean = false,
 )
 
 /** One of her ratings. Sizes in cm. [presentation] is -1 when she rated without seeing it. */

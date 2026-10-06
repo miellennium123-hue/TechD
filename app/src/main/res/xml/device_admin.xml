@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lock guard: no policies. Being an active admin only means Android won't uninstall her until you remove it. -->
+<device-admin>
+    <uses-policies />
+</device-admin>

@@ -53,11 +53,10 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
         SpeechBubble(state.lastLine.ifBlank { offLine })
 
         SectionCard("Master switch") {
-            SwitchRow(
+            EnabledSwitch(
                 title = if (config.enabled) "She is watching" else "She is off",
-                subtitle = "You consent by turning her on. You can always turn her off.",
+                subtitle = "You consent by turning her on. Quit for now always gets you out.",
                 checked = config.enabled,
-                onChange = { Guardian.setEnabled(it) },
             )
         }
 

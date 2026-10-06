@@ -1,9 +1,23 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.12.1 (adds a camera switch to Guided sessions). Sections 0 to 0f cover what 0.6.0 to 0.12.1 changed
+> **Version under test:** 0.13.0 (adds Lock guard and the slow Quit for now). Sections 0 to 0g cover what 0.6.0 to 0.13.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0g. New in 0.13.0: Lock guard and the slow Quit for now
+Before any lock: if Lock guard's screen check doesn't work, switch her Accessibility off and on once (not during a lock, that's tampering).
+- [ ] Settings > About shows **Version 0.13.0**
+- [ ] **Quit for now** (any screen): hold 10 s (letting go resets), type the sentence (a typo starts over), wait 2:30 with her talking. Then "Quit for now" ends everything, no penalty
+- [ ] Leaving the Quit screen (home button, screen off) starts it over. "Never mind, I'll stay" closes it with nothing changed
+- [ ] Settings > **Lock guard** on. Start a chastity lock (or get a punishment)
+- [ ] Lock guard, chastity, punishments, Rules & Tasks and Shows up can't be switched off in Settings
+- [ ] The on/off switch asks for the 30 minute way. Finishing it is a failure, then she's off
+- [ ] Open her App info (long-press her icon): she sends you home and back to her. Same for Settings > Accessibility and the uninstall dialog
+- [ ] Permissions > **Device admin**: grant it. Uninstalling now asks to remove the admin first, and that screen is blocked during a lock
+- [ ] Restart the phone during a lock: when she's back, it's a failure with her Tampering line
+- [ ] After an app update during a lock: **no** tampering failure
+- [ ] Outside a lock, nothing above blocks you, and switching her off is instant
 
 ## 0f. New in 0.12.0: Motion checks in Guided sessions
 Phone on a stand, front camera facing you, decent light. Settings > Guided sessions: camera on, **She checks your motion** on, sensitivity Normal.
@@ -111,7 +125,7 @@ Phone on a stand, front camera facing you, decent light. Settings > Guided sessi
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.12.1**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.13.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
