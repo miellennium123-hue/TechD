@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.10.0 (adds Rate me). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 31)
+> **Last updated:** 2026-10-06 (round 32)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -376,8 +376,8 @@ Built as v0.9.0, the only feature in that release.
 - **Tidy up:** remove the unused `WAIT` line
 - **Decided in round 21:** Lines task sentences stay fixed (dialogue only). The hardcoded home screen line becomes a situation, "Before you switch her on". Situations you never edited follow future updates of her lines. See section 8, v0.9.0
 
-### 9.9 Guided sessions (concept, round 23, not planned)
-A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. The user tests the current app first; decide the open points below before planning a build.
+### 9.9 Guided sessions (concept round 23, being planned round 32, not built)
+A JOI-style "virtual succubus" idea. **Being planned:** the user answered the open points in round 32. Still to agree: the kink menu list, then build.
 - **What it is:** she guides a timed session in phases (slow, faster, stop, edge, hold), each a random length
 - **Beat:** a vibration or on-screen pulse that speeds up and slows down with her commands
 - **Commands:** "stop", "hands off" and "edge for me" interrupt at random
@@ -394,14 +394,15 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
   - **Obeying stops:** after "stop" or "hands off", motion has to drop within about 2 seconds and stay still
   - **Beat** then comes as sound and an on-screen pulse (vibration doesn't help with the phone on a stand)
 - **Ruined ending (round 31, asked):** a third ending next to permission and denial. She counts you to the edge, then "hands off, now". The camera checks the hands-off and the stillness that follows, then she asks for proof (photo or a short clip, private, checked on the phone). The phone can't verify the orgasm itself; the motion check and the proof are the real parts
-- **Open points:**
-  - Camera watching and motion checks: wanted, and what happens when she catches you (redo, extra edges, or a failure)
-  - Ruin proof: photo, short clip or both; kept in the private gallery or deleted
-  - Ending odds: permission, ruined, denied (settings)
-  - When it runs: only when you tap "Start", or also at check-ins
-  - How the ending is decided: fixed odds, a setting, or only by begging
-  - Chastity: blocked during a lock, or allowed and always ending in denial
-  - Beat: sound, visual pulse, or both
+- **Decided in round 32:**
+  - **Camera:** yes, she sees as much as possible: in view, beat and stop checks from motion
+  - **Caught** (off beat, didn't stop, out of view): a verbal reprimand plus an extra edge
+  - **Ruin proof:** she starts recording a short clip when she orders the ruin, and saves it to the app's private gallery
+  - **Endings:** three sliders (permission, ruined, denied), so "ruined only" is possible
+  - **Start:** only when you tap Start. Never at check-ins
+  - **Chastity:** allowed during a lock, but only ruined or denied endings (permission is skipped). Until the ending, the session only uses things you can do with the cage on
+- **Kink menu (round 32, asked):** toggles that add or remove kinds of commands from sessions. List to be agreed
+- **Still open:** the kink list; beat as sound, visual pulse or both
 
 ### 9.10 Rate me (asked rounds 24 to 27, built v0.10.0)
 - **Asked:** a "cock rating" where she really rates you. She can't judge the body itself, so the build uses what's real: your measurements against published data and what the phone measures in the photo (see section 10 and section 8, v0.10.0)
@@ -474,3 +475,4 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **2026-10-06 (round 29):** No code changes. User asked whether Claude can write dirty dialogue. Answer: teasing and suggestive lines yes, graphic explicit lines no; the user writes those in Her lines
 - **2026-10-06 (round 30):** No code changes. User asked Claude to define "graphic explicit". Limits recorded in 9.9: commands, pacing, teasing and degradation yes; graphic body, sex act or orgasm descriptions no
 - **2026-10-06 (round 31):** No code changes. User wants camera use in guided sessions and a ruined ending with proof. Proposed camera watching, beat and stop checks from motion, and a ruin flow with a hands-off check and private proof. Added to 9.9 with new open points
+- **2026-10-06 (round 32):** No code changes. User answered the guided session questions: full camera checks, reprimand plus an extra edge when caught, a ruin clip saved to the private gallery, three ending sliders, start only on tap, and in chastity only ruined or denied with cage-safe commands. Asked for a kink menu. Recorded in 9.9
