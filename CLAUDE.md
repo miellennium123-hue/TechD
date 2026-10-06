@@ -62,5 +62,6 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `data/Sessions.kt`, `core/Session.kt`, `ui/SessionsScreen.kt` (its own screen from Home), `ui/SessionActivity.kt`, `ui/SessionCamera.kt`, `ui/KinksScreen.kt` | Guided sessions: settings and kink menu, the pure session builder (tested in `SessionTest.kt`), the session screen, the watching camera and ruin clip. `core/Motion.kt`: beat and stop checks from camera motion (tested in `MotionTest.kt`) |
 | `core/Voice.kt`, `ui/LinesScreen.kt` | Her built-in lines, your edits on top (tested in `LinesTest.kt`), the Her lines screens |
 | `core/LockGuard.kt`, `ui/SlowExit.kt`, `receiver/GuardAdminReceiver.kt` | Lock guard and the slow Quit for now: guarding, what loosens her settings, guarded screens, tamper rules (tested in `LockGuardTest.kt`), the hold-type-wait screen (also `LoosenHost` and `EnabledSwitch` in `ui/Components.kt`), the optional device admin |
+| `core/MarkOverlay.kt` | Her mark: the collar badge over every app and the dark tint during her blocks (rules in `Rules.markShown` / `Rules.markTinted`, tested in `MarkTest.kt`) |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen, Lock guard's screen check |
 | `ui/` | Compose screens and the Block and Proof activities |

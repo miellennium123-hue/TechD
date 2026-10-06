@@ -1,9 +1,21 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.20.0 (the background update). Sections 0 to 0p cover what 0.6.0 to 0.20.0 changed
+> **Version under test:** 0.21.0 (her mark). Sections 0 to 0q cover what 0.6.0 to 0.21.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0q. New in 0.21.0: her mark
+- [ ] Settings > About shows **Version 0.21.0**
+- [ ] Settings > Phone control > **Her mark** on: her gold collar badge shows top right over other apps and the home screen
+- [ ] It's gone over her own screens (Home, Settings, block screen) and comes back when you leave
+- [ ] Pick each corner: the badge moves right away
+- [ ] Taps on whatever is under the badge still work
+- [ ] Start a block (or a short bedtime): the screen gets darker over other apps, not over her block or bedtime screen
+- [ ] Block ends: the tint goes within about 30 seconds
+- [ ] Quit for now during a block: tint and badge both go
+- [ ] Phone dialer works through the tint
+- [ ] With Lock guard on, switching Her mark or the tint off opens the 30 minute screen; moving the corner is instant
 
 ## 0p. New in 0.20.0: the background update
 Settings > Wallpaper: Wallpaper control on, Cycle backgrounds on, Every 2m.

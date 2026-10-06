@@ -43,6 +43,7 @@ import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.LockoutSettings
+import com.guardianangel.data.MarkCorner
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.PunishmentLength
@@ -193,6 +194,24 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 onClick = { WallpaperController.applyAsync(context) },
                 enabled = config.enabled && config.wallpaper.on,
             ) { Text("Apply now") }
+        }
+
+        FoldCard("Her mark", config.mark.on) {
+            SwitchRow(
+                "Her mark",
+                "Her small gold collar badge sits in a corner over every app while she's on (not over her own screens).",
+                config.mark.on,
+            ) { v -> update { it.copy(mark = it.mark.copy(on = v)) } }
+            ChoiceChips(MarkCorner.entries, config.mark.corner, { it.label }, config.mark.on) { v ->
+                update { it.copy(mark = it.mark.copy(corner = v)) }
+            }
+            SwitchRow(
+                "Dark tint during her blocks",
+                "While her app block, bedtime, a punishment, one of her rules or an ignored summons runs, the screen gets darker. " +
+                    "Not over her own screens.",
+                config.mark.tint,
+            ) { v -> update { it.copy(mark = it.mark.copy(tint = v)) } }
+            Muted("Taps go straight through both, so nothing under them is ever blocked. Shown by her watch (Accessibility).")
         }
 
         GroupHeader("Check-ins")

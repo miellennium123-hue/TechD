@@ -66,6 +66,8 @@ object LockGuard {
             off(before.bedtime.on, after.bedtime.on) ||
             off(before.bedtime.screen, after.bedtime.screen) ||
             off(before.wallpaper.on, after.wallpaper.on) ||
+            off(before.mark.on, after.mark.on) ||
+            off(before.mark.tint, after.mark.tint) ||
             off(before.chastity.on, after.chastity.on) ||
             off(before.photoProof.on, after.photoProof.on) ||
             off(before.tasksOn, after.tasksOn) ||
