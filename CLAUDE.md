@@ -1,6 +1,6 @@
 # Guardian Angel
 
-Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5, 9.7, 9.8 and 9.10 built, 9.9 Guided sessions part 1 built, part 2 camera motion checks next), section 10 the open questions.
+Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5, 9.7, 9.8 and 9.10 built, 9.9 Guided sessions part 1 built, part 2 camera motion checks dropped), section 10 the open questions.
 
 ## Design doc rule (always)
 
