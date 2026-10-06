@@ -179,6 +179,12 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        if (config.enabled && config.rating.on) {
+            OutlinedButton(onClick = { context.startActivity(RateActivity.intent(context)) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Rate me")
+            }
+        }
+
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (config.chastity.on && state.chastity == null) {
                 OutlinedButton(onClick = { navigate(Screen.CHASTITY) }, modifier = Modifier.weight(1f)) { Text("Chastity") }

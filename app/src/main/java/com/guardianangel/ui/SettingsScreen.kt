@@ -45,6 +45,7 @@ import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.PunishmentLength
+import com.guardianangel.data.RatingTaste
 import com.guardianangel.data.Sites
 import com.guardianangel.data.WallpaperMode
 import kotlin.math.roundToInt
@@ -278,6 +279,25 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
             if (!Permissions.accessibility(context)) {
                 Muted("She needs Accessibility (in Permissions) to open sites and see when you leave.")
+            }
+        }
+
+        SectionCard("Rate me") {
+            SwitchRow(
+                "Rate me",
+                "She scores your measurements against published data, and how well you show her in a photo. " +
+                    "The photo is checked on your phone and deleted straight after; only her scores are kept.",
+                config.rating.on,
+            ) { v -> update { it.copy(rating = it.rating.copy(on = v)) } }
+            ChoiceChips(RatingTaste.entries, config.rating.taste, { it.label }, config.rating.on) { v ->
+                update { it.copy(rating = it.rating.copy(taste = v)) }
+            }
+            ChoiceChips(listOf(false, true), config.rating.inches, { if (it) "Inches" else "cm" }, config.rating.on) { v ->
+                update { it.copy(rating = it.rating.copy(inches = v)) }
+            }
+            if (state.ratings.isNotEmpty()) {
+                Muted("Her last scores: " + state.ratings.takeLast(5).joinToString(", ") { "${it.score}/10" })
+                TextButton(onClick = { Guardian.clearRatings() }) { Text("Clear her scores") }
             }
         }
 

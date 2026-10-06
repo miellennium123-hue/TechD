@@ -204,8 +204,9 @@ private fun ProofHeader(subject: String, explicit: Boolean) {
     if (explicit) Muted("She'll check this one is explicit. The check runs on your phone; nothing is uploaded.")
 }
 
+/** The in-app camera, shared with Rate me. Saves to the cache folder; callers delete or move the file. */
 @Composable
-private fun ColumnScope.CameraCapture(onCaptured: (File) -> Unit) {
+internal fun ColumnScope.CameraCapture(onCaptured: (File) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var lens by remember { mutableIntStateOf(CameraSelector.LENS_FACING_BACK) }

@@ -13,6 +13,7 @@ import com.guardianangel.data.ProofPrompts
 import com.guardianangel.data.ProofReason
 import com.guardianangel.data.ProofRequest
 import com.guardianangel.data.Questions
+import com.guardianangel.data.RatingRecord
 import com.guardianangel.data.RuleEnforcement
 import com.guardianangel.data.SiteVisit
 import com.guardianangel.data.Sites
@@ -666,5 +667,29 @@ object Guardian {
 
     private fun clearVisit() {
         state.update { it.copy(visit = null) }
+    }
+
+    // ---- Rate me -----------------------------------------------------------------------------
+
+    /**
+     * She rates your measurements and what she saw in the photo. [signals] null means she rated on
+     * your word alone. Only her verdict line uses mood; the score never does. No merit, no locks.
+     */
+    fun rate(lengthCm: Double, girthCm: Double, signals: PhotoSignals?): Pair<RatingRecord, String> {
+        val record = Rating.rate(lengthCm, girthCm, config.value.rating.taste, signals, now())
+        state.update { it.copy(ratings = (it.ratings + record).takeLast(Rating.HISTORY)) }
+        val verdict = say(
+            when (Rating.tier(record.score)) {
+                RatingTier.TOP -> Line.RATE_TOP
+                RatingTier.GOOD -> Line.RATE_GOOD
+                RatingTier.MID -> Line.RATE_MID
+                RatingTier.LOW -> Line.RATE_LOW
+            },
+        )
+        return record to if (signals == null) "$verdict ${line(Line.RATE_UNSEEN)}" else verdict
+    }
+
+    fun clearRatings() {
+        state.update { it.copy(ratings = emptyList()) }
     }
 }

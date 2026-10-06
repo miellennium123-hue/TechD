@@ -17,6 +17,35 @@ object PhotoVerifier {
     /** Returns null if the photo passes. Call off the main thread. */
     fun verify(context: Context, file: File, explicit: Boolean): PhotoIssue? {
         val bitmap = ProofFiles.load(file, 640) ?: return PhotoIssue.UNREADABLE
+        val (gray, w, h) = grayscale(bitmap)
+        PhotoQuality.check(gray, w, h)?.let { return it }
+
+        if (explicit) {
+            // If the detector can't run, don't punish the user for it.
+            val isExplicit = ExplicitDetector.isExplicit(context, bitmap) ?: return null
+            if (!isExplicit) return PhotoIssue.NOT_EXPLICIT
+        }
+        return null
+    }
+
+    /**
+     * For Rate me: the quality checks, then what the detector sees. Returns the issue that rejects
+     * the photo, or what she measured. Never uploads anything. Call off the main thread.
+     */
+    fun analyze(context: Context, file: File): Pair<PhotoIssue?, PhotoSignals?> {
+        val bitmap = ProofFiles.load(file, 640) ?: return PhotoIssue.UNREADABLE to null
+        val (gray, w, h) = grayscale(bitmap)
+        PhotoQuality.check(gray, w, h)?.let { return it to null }
+        val stats = PhotoStats.of(gray, w, h)
+        // If the detector can't run, she still rates you, without the parts that need it.
+        val output = ExplicitDetector.output(context, bitmap)
+        val detection = output?.let { ExplicitScore.best(it, ExplicitScore.MALE_GENITALIA) ?: Detection(0f, 0f, 0f, 0f, 0f) }
+        val signals = Rating.signals(detection, bitmap.width, bitmap.height, stats)
+        return (if (Rating.unseen(signals)) PhotoIssue.NOT_EXPLICIT else null) to signals
+    }
+
+    /** A 256 pixel wide grayscale copy for the quality checks. */
+    private fun grayscale(bitmap: Bitmap): Triple<IntArray, Int, Int> {
         val w = 256
         val h = (w * bitmap.height.toFloat() / bitmap.width).roundToInt().coerceAtLeast(3)
         val small = Bitmap.createScaledBitmap(bitmap, w, h, true)
@@ -26,14 +55,7 @@ object PhotoVerifier {
             val c = pixels[i]
             (0.299 * Color.red(c) + 0.587 * Color.green(c) + 0.114 * Color.blue(c)).toInt()
         }
-        PhotoQuality.check(gray, w, h)?.let { return it }
-
-        if (explicit) {
-            // If the detector can't run, don't punish the user for it.
-            val isExplicit = ExplicitDetector.isExplicit(context, bitmap) ?: return null
-            if (!isExplicit) return PhotoIssue.NOT_EXPLICIT
-        }
-        return null
+        return Triple(gray, w, h)
     }
 }
 
@@ -55,7 +77,10 @@ object ExplicitDetector {
     }
 
     /** True or false, or null if the model couldn't run. */
-    fun isExplicit(context: Context, bitmap: Bitmap): Boolean? = runCatching {
+    fun isExplicit(context: Context, bitmap: Bitmap): Boolean? = output(context, bitmap)?.let { ExplicitScore.isExplicit(it) }
+
+    /** The raw model output (4 box rows, then one row per class), or null if the model couldn't run. */
+    fun output(context: Context, bitmap: Bitmap): Array<FloatArray>? = runCatching {
         val s = session(context) ?: return null
         // Pad to a square (bottom and right, black), then scale, matching NudeNet's preprocessing.
         val side = max(bitmap.width, bitmap.height)
@@ -79,8 +104,7 @@ object ExplicitDetector {
         OnnxTensor.createTensor(env, FloatBuffer.wrap(data), longArrayOf(1, 3, SIZE.toLong(), SIZE.toLong())).use { tensor ->
             s.run(mapOf(s.inputNames.first() to tensor)).use { result ->
                 @Suppress("UNCHECKED_CAST")
-                val output = (result[0].value as Array<Array<FloatArray>>)[0]
-                ExplicitScore.isExplicit(output)
+                (result[0].value as Array<Array<FloatArray>>)[0]
             }
         }
     }.getOrNull()

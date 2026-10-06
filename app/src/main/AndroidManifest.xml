@@ -72,6 +72,11 @@
             android:excludeFromRecents="true"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.RateActivity"
+            android:excludeFromRecents="true"
+            android:exported="false" />
+
         <service
             android:name=".service.GuardianAccessibilityService"
             android:exported="false"

@@ -27,6 +27,20 @@ data class GuardianState(
     val summons: Summons? = null,
     /** She is opening one of your sites, or has opened it and is timing your stay. */
     val visit: SiteVisit? = null,
+    /** Rate me history, newest last. Numbers only, never the photo. Quit for now keeps it. */
+    val ratings: List<RatingRecord> = emptyList(),
+)
+
+/** One of her ratings. Sizes in cm. [presentation] is -1 when she rated without seeing it. */
+@Serializable
+data class RatingRecord(
+    val at: Long,
+    val lengthCm: Double,
+    val girthCm: Double,
+    val lengthPercentile: Int,
+    val girthPercentile: Int,
+    val presentation: Int,
+    val score: Int,
 )
 
 @Serializable

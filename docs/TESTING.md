@@ -1,12 +1,28 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.9.0 (adds Her lines). Sections 0 to 0c cover what 0.6.0 to 0.9.0 changed
+> **Version under test:** 0.10.0 (adds Rate me). Sections 0 to 0d cover what 0.6.0 to 0.10.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
+## 0d. New in 0.10.0: Rate me
+- [ ] Settings > About shows **Version 0.10.0**
+- [ ] Settings has a **Rate me** card, off, with "She likes bigger / smaller" and "cm / Inches"
+- [ ] Turn it on (with her on): **Rate me** appears on home
+- [ ] **Measurements:** Next stays greyed out until both numbers are filled in and sensible. Switching cm to Inches converts what you typed
+- [ ] **Photo of something else** (a wall, your hand): rejected with "That's not what she asked for". After 3 rejections, "Rate me on my numbers (presentation 0)" appears
+- [ ] **A real photo:** she rates you. Scorecard shows a score out of 10, length and girth percentiles, and presentation out of 100
+- [ ] **Average numbers** (13.1 cm and 11.7 cm, about 5.2 in and 4.6 in) show around the 50th percentile
+- [ ] **Presentation reacts:** a centred, sharp, well-lit photo that fills a good part of the frame scores higher than a small, dark or off-centre one. **Tell me the presentation numbers you get**, so the scoring can be tuned
+- [ ] **Taste:** switch to "She likes smaller" with the same numbers. Percentiles stay the same, her score changes
+- [ ] **Photo deleted:** the rating photo never shows in Photos
+- [ ] Screenshots are blocked on the Rate me screen
+- [ ] **Her lines:** a new "Rate me" group (4 score tiers and "Couldn't see it"). Editing a tier changes her verdict
+- [ ] Settings shows "Her last scores", and **Clear her scores** empties it
+- [ ] Next time, your measurements are filled in already
+- [ ] **Quit for now** on the Rate me screen works and keeps your score history
+
 ## 0c. New in 0.9.0: Her lines
-- [ ] Settings > About shows **Version 0.9.0**
 - [ ] Settings > Presentation has a **Her lines** button. It opens a list of situations in groups (On and off, Asking and locks, Photo proof, and so on), each with a short note on when it's used
 - [ ] Open **Praise**: Sweet shows her 3 sweet lines, Strict her 3 strict lines
 - [ ] **Add** a line, **Edit** one, **Delete** one. The list in Settings now shows **Edited** next to Praise, and the Settings button says "(1 edited)"
@@ -60,7 +76,7 @@
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.9.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.10.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
