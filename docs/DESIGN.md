@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.9.0 (adds Her lines). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 22)
+> **Last updated:** 2026-10-06 (round 23)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -356,11 +356,28 @@ Built as v0.9.0, the only feature in that release.
 - **Tidy up:** remove the unused `WAIT` line
 - **Decided in round 21:** Lines task sentences stay fixed (dialogue only). The hardcoded home screen line becomes a situation, "Before you switch her on". Situations you never edited follow future updates of her lines. See section 8, v0.9.0
 
+### 9.9 Guided sessions (concept, round 23, not planned)
+A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. The user tests the current app first; decide the open points below before planning a build.
+- **What it is:** she guides a timed session in phases (slow, faster, stop, edge, hold), each a random length
+- **Beat:** a vibration or on-screen pulse that speeds up and slows down with her commands
+- **Commands:** "stop", "hands off" and "edge for me" interrupt at random
+- **Ending:** she decides at the end, permission or denial
+- **Honor report:** "I obeyed" (merit) or "I slipped" (a failure with the usual failure settings)
+- **Ties in with:** chastity, merit and failures. Bluetooth toys (4.8) could follow the beat later
+- **Content:** Claude writes the mechanics and mild, non-graphic starter lines. Each phase is a situation in Her lines (9.8), so the user writes any explicit wording themselves. It stays on the phone
+- **Safety:** Quit for now always visible, discreet notifications, never in quiet hours or bedtime unless you start it yourself
+- **Mood rule:** the ending odds can't depend on mood (only begging may)
+- **Open points:**
+  - When it runs: only when you tap "Start", or also at check-ins
+  - How the ending is decided: fixed odds, a setting, or only by begging
+  - Chastity: blocked during a lock, or allowed and always ending in denial
+  - Beat: vibration, visual pulse, or both
+
 ---
 
 ## 10. Open questions
 
-- **Guided sessions idea (round 22, not decided):** user asked about a JOI-style "virtual succubus" feature. Claude can build the mechanics (timed phases, a vibration or visual beat, stop and edge commands, her decision at the end, honor report) with mild, non-graphic starter lines. Explicit wording would be the user's own, through Her lines. Open: when it runs, how the ending is decided, how it works with chastity, and the beat
+- **Guided sessions (round 22):** written up as concept 9.9 (round 23). Four open points listed there. Not planned until the user has tested v0.9.0
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 
 ### Fixed issues
@@ -413,3 +430,4 @@ Built as v0.9.0, the only feature in that release.
 - **2026-10-06 (round 20):** No design changes. User asked which feature from the stopped build to try next. Editable lines written up as 9.8 (planned, not built). The photo way in and showing their own media stay parked
 - **2026-10-06 (round 21, v0.9.0):** Built 9.8 Editable lines: Settings > Her lines lists every situation with a note, and you can add, edit and delete her sweet and strict lines, reset one or all. User chose dialogue only (not Lines task sentences), an editable home screen line, and untouched situations following updates. Unused `WAIT` line removed. Details in section 8
 - **2026-10-06 (round 22):** No design changes. User asked whether a JOI-style feature is possible. Answered: the mechanics yes, with non-graphic starter lines and their own explicit lines via Her lines. Recorded as an open question in section 10
+- **2026-10-06 (round 23):** No code changes. Guided sessions (JOI-style) added as concept 9.9, not planned. The user is testing v0.9.0 first and will send feedback
