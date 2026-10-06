@@ -22,6 +22,9 @@ data class GuardianConfig(
     /** Rules & Tasks: at about 1 in 3 check-ins she issues one from [taskList]. */
     val tasksOn: Boolean = false,
     val taskList: List<TaskTemplate> = TaskTemplates.DEFAULTS,
+    /** Shows up: at some check-ins she wants you, and asks a question from [questions]. */
+    val showsUpOn: Boolean = false,
+    val questions: List<Question> = Questions.DEFAULTS,
     val checkInMinutes: Int = 120,
     val degradation: DegradationSettings = DegradationSettings(),
     val punishment: PunishmentSettings = PunishmentSettings(),

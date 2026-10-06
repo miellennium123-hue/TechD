@@ -71,6 +71,18 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        if (state.summons != null) {
+            SectionCard("She wants you") {
+                val lockIn = state.summons.lockAt - now
+                Text(
+                    if (lockIn > 0) "Answer within ${formatDuration(lockIn)}" else "Everything is locked until you answer.",
+                    color = MaterialTheme.colorScheme.tertiary,
+                    fontWeight = FontWeight.Bold,
+                )
+                Button(onClick = { context.startActivity(ShowUpActivity.intent(context)) }) { Text("Go to her") }
+            }
+        }
+
         state.task?.let { task ->
             SectionCard(if (task.kind == TaskKind.RULE) "Her rule" else "Her task") {
                 Text(task.text)

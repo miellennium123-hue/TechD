@@ -7,7 +7,7 @@ enum class Line {
     GREETING, PRAISE, GRANT, DENY, DEMAND_PROOF, WARNING, BLOCKED, BEDTIME, WAIT,
     FAIL_NEUTRAL, DEGRADE_MILD, DEGRADE_HARSH, CHASTITY_START, TIME_ADDED, CHECK_IN,
     RELEASED, TIMER_DONE, EARLY_DENIED, BEG_GRANTED, BEG_TIME_ADDED, PROOF_REJECTED, OFF, QUIT,
-    TASK_ISSUED, RULE_REPORT, MOVED, TYPO,
+    TASK_ISSUED, RULE_REPORT, MOVED, TYPO, SUMMON, IGNORED, WRONG_ANSWER,
 }
 
 /** Everything she says. Edit freely; every line needs a sweet and a strict version. */
@@ -135,6 +135,20 @@ object Voice {
             "Oops, a mistake. Back to line one, pet.",
             "Careful, sweetheart. From the top.",
             "Mm, that's wrong. Start again for me.",
+        ),
+        Line.SUMMON to listOf(
+            "Pet. I want you. Come to me now.",
+            "I'm here, pet. Come and see me.",
+            "Drop what you're doing, sweetheart. I want you.",
+        ),
+        Line.IGNORED to listOf(
+            "You kept me waiting, pet. Everything's locked until you come to me.",
+            "Ignoring me? Now nothing opens until you answer.",
+        ),
+        Line.WRONG_ANSWER to listOf(
+            "Wrong, pet. Try again for me.",
+            "Hmm, no. Think harder.",
+            "That's not right, sweetheart. Again.",
         ),
         Line.OFF to listOf(
             "Resting now. I'll be here when you want me.",
@@ -269,6 +283,20 @@ object Voice {
             "Wrong. Line one. Again.",
             "Sloppy. Start over.",
             "A mistake. From the beginning.",
+        ),
+        Line.SUMMON to listOf(
+            "Pet. Here. Now.",
+            "I want you. Don't make me wait.",
+            "Come to me. Immediately.",
+        ),
+        Line.IGNORED to listOf(
+            "You ignored me. Everything is locked until you answer.",
+            "Too slow. Nothing opens until you come to me.",
+        ),
+        Line.WRONG_ANSWER to listOf(
+            "Wrong. Again.",
+            "No. Answer properly.",
+            "Do you even listen? Try again.",
         ),
         Line.OFF to listOf(
             "Fine. I'm off duty. For now.",

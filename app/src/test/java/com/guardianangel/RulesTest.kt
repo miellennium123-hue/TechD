@@ -10,7 +10,11 @@ import com.guardianangel.core.Rules
 import com.guardianangel.core.Voice
 import com.guardianangel.data.ActiveTask
 import com.guardianangel.data.BedtimeSettings
+import com.guardianangel.data.Question
+import com.guardianangel.data.QuestionKind
+import com.guardianangel.data.Questions
 import com.guardianangel.data.RuleEnforcement
+import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
 import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
@@ -137,6 +141,32 @@ class RulesTest {
         // Honor rules don't lock anything.
         val honor = st.copy(task = rule.copy(enforce = RuleEnforcement.NONE))
         assertEquals(Decision.Allow, Rules.decide(instagram, c, honor, now, noon))
+    }
+
+    @Test
+    fun ignoredSummonsLocksEverythingButExemptApps() {
+        val summons = Summons(id = 1, createdAt = now, lockAt = now + 10 * 60_000L, question = Questions.FALLBACK)
+        val c = GuardianConfig(enabled = true, alwaysAllowed = setOf(bank))
+        val st = GuardianState(summons = summons, grants = listOf(Grant("com.example.game", now + 2 * HOUR)))
+        // Not locked during the first 10 minutes.
+        assertEquals(Decision.Allow, Rules.decide("com.example.game", c, st, now, noon))
+        val later = now + 11 * 60_000L
+        val d = Rules.decide("com.example.game", c, st, later, noon) as Decision.Block
+        assertEquals(RestrictionKind.SUMMONS, d.kind)
+        assertFalse(d.selfBypass)
+        assertEquals(Decision.Allow, Rules.decide(bank, c, st, later, noon))
+        assertEquals(Decision.Allow, Rules.decide("com.android.phone", c, st, later, noon))
+    }
+
+    @Test
+    fun answers() {
+        val choice = Question("Who?", QuestionKind.CHOICE, "My angel", listOf("Myself"))
+        assertTrue(Rules.isCorrect(choice, "My angel"))
+        assertFalse(Rules.isCorrect(choice, "Myself"))
+        val phrase = Question("Say it", QuestionKind.PHRASE, "I'm your good pet.")
+        assertTrue(Rules.isCorrect(phrase, "  i’m your  good pet. "))
+        assertFalse(Rules.isCorrect(phrase, "I'm your good pet"))
+        assertFalse(Rules.isCorrect(phrase, "I'm your pet."))
     }
 
     @Test

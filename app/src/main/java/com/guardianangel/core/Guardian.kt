@@ -13,8 +13,10 @@ import com.guardianangel.data.ProofPrompt
 import com.guardianangel.data.ProofPrompts
 import com.guardianangel.data.ProofReason
 import com.guardianangel.data.ProofRequest
+import com.guardianangel.data.Questions
 import com.guardianangel.data.RuleEnforcement
 import com.guardianangel.data.Store
+import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
 import java.io.File
 import java.util.Calendar
@@ -26,6 +28,7 @@ enum class Failure(val merit: Int) {
     MISSED_PROOF(8),
     MISSED_TASK(8),
     TASK_FAILED(5),
+    WRONG_ANSWERS(5),
 }
 
 sealed interface AskResult {
@@ -33,6 +36,13 @@ sealed interface AskResult {
     data class Granted(override val line: String) : AskResult
     data class ProofDemanded(override val line: String, val request: ProofRequest) : AskResult
     data class Denied(override val line: String, val until: Long) : AskResult
+}
+
+sealed interface AnswerResult {
+    val line: String
+    data class Done(override val line: String) : AnswerResult
+    data class Wrong(override val line: String, val triesLeft: Int) : AnswerResult
+    data class Failed(override val line: String) : AnswerResult
 }
 
 sealed interface ReleaseResult {
@@ -105,7 +115,7 @@ object Guardian {
         } else {
             val proofs = state.value.proofs
             config.update { it.copy(enabled = false) }
-            state.update { it.copy(proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null) }
+            state.update { it.copy(proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null) }
             Scheduler.cancelAll(appContext, proofs)
             Notifier.cancelAll(appContext)
             say(Line.OFF)
@@ -126,6 +136,7 @@ object Guardian {
                 checkInPending = false,
                 lastBegAt = 0,
                 task = null,
+                summons = null,
             )
         }
         Scheduler.cancelAll(appContext, proofs)
@@ -139,6 +150,7 @@ object Guardian {
         val after = config.update { transform(it).copy(enabled = it.enabled) }
         if (before.chastity.on && !after.chastity.on) endChastity()
         if (before.tasksOn && !after.tasksOn) clearTasks()
+        if (before.showsUpOn && !after.showsUpOn && state.value.summons != null) clearSummons()
         if (!after.enabled) return
         if (after.checkInMinutes != before.checkInMinutes) Scheduler.scheduleNextCheckIn(appContext)
         val wallpaperChanged = after.wallpaper.on &&
@@ -366,8 +378,11 @@ object Guardian {
         }
         val hasPending = st.proofs.any { it.reason.penalized }
         val wantsTask = c.tasksOn && st.task == null && !hasPending && random.nextDouble() < Rules.TASK_CHANCE
+        val wantsYou = c.showsUpOn && st.summons == null && random.nextDouble() < Rules.SUMMON_CHANCE
         if (wantsTask && issueTask()) {
             // This check-in is her task.
+        } else if (wantsYou && summon()) {
+            // This check-in is her showing up.
         } else if (!hasPending && random.nextDouble() < proofChance) {
             requestProof(if (lock != null) ProofReason.CHASTITY_CHECK else ProofReason.CHECK_IN, 30, notify = true)
         } else {
@@ -470,5 +485,48 @@ object Guardian {
         state.update { st -> st.copy(task = null, proofs = st.proofs - photoTasks.toSet()) }
         Scheduler.cancelTask(appContext)
         photoTasks.forEach { Scheduler.cancelProofDeadline(appContext, it) }
+    }
+
+    // ---- Shows up ----------------------------------------------------------------------------
+
+    /** She wants you: a notification that opens her full screen. Ignore it and everything locks. */
+    fun summon(): Boolean {
+        if (state.value.summons != null) return false
+        val t = now()
+        val question = config.value.questions.randomOrNull(random) ?: Questions.FALLBACK
+        val summons = Summons(id = t, createdAt = t, lockAt = t + Rules.SUMMON_LOCK_MINUTES * MINUTE, question = question)
+        state.update { it.copy(summons = summons) }
+        Scheduler.scheduleSummons(appContext, summons.lockAt)
+        Notifier.summon(appContext, say(Line.SUMMON))
+        return true
+    }
+
+    /** Ten minutes ignored: remind you that everything is now locked. */
+    fun onSummonsAlarm() {
+        val summons = state.value.summons ?: return
+        if (config.value.enabled && now() >= summons.lockAt - 1_000) Notifier.summon(appContext, say(Line.IGNORED))
+    }
+
+    /** Right: praise and merit. Wrong: she asks again, and the third wrong answer is a failure. */
+    fun answer(given: String): AnswerResult {
+        val summons = state.value.summons ?: return AnswerResult.Done(say(Line.PRAISE))
+        if (Rules.isCorrect(summons.question, given)) {
+            clearSummons()
+            addMerit(3)
+            return AnswerResult.Done(say(Line.PRAISE))
+        }
+        val wrong = summons.wrongAnswers + 1
+        if (wrong >= Rules.MAX_WRONG_ANSWERS) {
+            clearSummons()
+            return AnswerResult.Failed(fail(Failure.WRONG_ANSWERS))
+        }
+        state.update { st -> st.copy(summons = st.summons?.copy(wrongAnswers = wrong)) }
+        return AnswerResult.Wrong(say(Line.WRONG_ANSWER), Rules.MAX_WRONG_ANSWERS - wrong)
+    }
+
+    private fun clearSummons() {
+        state.update { it.copy(summons = null) }
+        Scheduler.cancelSummons(appContext)
+        Notifier.cancel(appContext, Notifier.ID_SUMMON)
     }
 }

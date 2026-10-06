@@ -47,6 +47,13 @@
             android:taskAffinity="com.guardianangel.block" />
 
         <activity
+            android:name=".ui.ShowUpActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.guardianangel.showup" />
+
+        <activity
             android:name=".ui.ProofActivity"
             android:excludeFromRecents="true"
             android:exported="false" />

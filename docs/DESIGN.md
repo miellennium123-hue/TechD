@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.4.0 (sections 9.1 to 9.4 built). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 13, v0.4.0)
+> **Status:** v0.5.0 (all of section 9 built). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 13, v0.5.0)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -206,11 +206,22 @@ Choices made while building, where the spec left room:
 - **Starter list:** 12 entries Claude wrote, editable in Settings > Rules & Tasks (add, edit, delete, reset)
 - **Off:** turning the toggle off, turning her off, or Quit for now clears any open task with no penalty
 
+### v0.5.0 (round 13, builds 9.5 Shows up)
+- **When:** at each check-in with the toggle on, 1 in 4 chance (if no task was issued that time). **"Try it now"** in Settings > Shows up summons her on demand
+- **Notification:** discreet mode says only "Please open the app." Tapping it opens her full screen with one question
+- **Ignored for 10 minutes:** everything except exempt apps (phone, emergency, Settings, launcher, keyboard, this app, Always-allowed) locks until you answer. Grants don't help. The block screen has an **Answer her** button. A reminder notification goes out when the lock starts
+- **Leaving is allowed:** "Later" closes her screen. The 10 minute clock keeps running
+- **Answers:** multiple choice (right answer shuffled in with the wrong ones) or a phrase shown on screen to type exactly. Case, spaces at the ends and curly apostrophes don't matter; words and punctuation do
+- **Wrong answers:** she asks the same question again. The third wrong answer in one visit is a failure (-5 merit, plus the usual failure settings) and ends the visit, which lifts the lock
+- **Right answer:** +3 merit, lock lifted
+- **Questions:** 8 non-explicit starters (5 multiple choice, 3 phrases), editable in Settings > Shows up > Her questions
+- **Off:** turning the toggle off, turning her off, or Quit for now clears a pending summons with no penalty
+
 ## 9. Planned next (round 12)
 
 Agreed in round 12. Build these next, one release at a time.
 
-**Build status:** 9.1 to 9.3 built in v0.3.0, 9.4 in v0.4.0. 9.5 not built yet.
+**Build status:** all built. 9.1 to 9.3 in v0.3.0, 9.4 in v0.4.0, 9.5 in v0.5.0.
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -238,7 +249,7 @@ Agreed in round 12. Build these next, one release at a time.
 - **Line writing:** type her sentence repeatedly. **Easy 5, Medium 15, Hard 30 lines**, longer sentences at higher difficulty. Pasting blocked. **Any typo restarts from line 1**. Difficulty is random, and failures make the next one harder
 - **Proof:** use phone-checked proof wherever possible (sensor, typing, app-enforced, photo checks). Missing a deadline is a failure
 
-### 9.5 Shows up (new toggle)
+### 9.5 Shows up (new toggle, built, v0.5.0)
 - **Trigger:** at some check-ins she sends a "she wants you" notification. Tapping it brings her up full screen
 - **Ignored for 10 minutes:** everything locks until you open it and answer (phone, emergency calls and Quit for now still work)
 - **Answers:** multiple choice and exact typed phrases she checks. Works offline
@@ -288,5 +299,6 @@ None right now.
 - **2026-10-06 (round 10):** Merged all work into `main`. Added automatic GitHub Releases with a stable download link, an About section in Settings (version and update link), and a full workflow guide in `CLAUDE.md` for future sessions
 - **2026-10-06 (round 11):** No design changes. Added `docs/TESTING.md`, an on-device test checklist for v0.2.2. Releases now publish only when the version number changes
 - **2026-10-06 (round 12):** Planned the next version: one toggle per setting (no intensity levels), hard-block lockouts, chastity min/max length and begging, Rules & Tasks, and Shows up. Popups dropped. Written up in section 9 for the next chat; not built yet
+- **2026-10-06 (round 13, v0.5.0):** Built 9.5 Shows up: she summons you at some check-ins, everything locks if you ignore her for 10 minutes, and she asks a multiple choice or typed-phrase question. Section 9 is now fully built
 - **2026-10-06 (round 13, v0.4.0):** Built 9.4 Rules & Tasks: app-enforced and honor rules, photo tasks, stillness with the motion sensor, and line writing. Decisions in section 8
 - **2026-10-06 (round 13):** Building section 9, one part at a time. v0.3.0 builds 9.1 to 9.3: intensity levels removed, lockouts and bedtime hard blocked with a wait or everyday photo as the way in, attempts never fail, chastity min/max lock length and mood-aware begging. Decisions in section 8

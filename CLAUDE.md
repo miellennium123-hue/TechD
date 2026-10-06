@@ -50,6 +50,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `core/Rules.kt` | Pure blocking and timer logic |
 | `core/PhotoCheck.kt`, `core/PhotoVerifier.kt` | Photo quality and explicit checks |
 | `data/Tasks.kt`, `core/TaskChecks.kt` | Rules & Tasks list, active task, lines and stillness checks (tested in `TaskChecksTest.kt`) |
+| `data/ShowsUp.kt`, `ui/ShowUpActivity.kt` | Shows up: questions, the pending summons, her full-screen visit |
 | `core/Voice.kt` | Her lines |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen |
 | `ui/` | Compose screens and the Block and Proof activities |

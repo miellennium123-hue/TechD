@@ -1,13 +1,13 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.4.0 (adds Rules & Tasks)
+> **Version under test:** 0.5.0 (adds Shows up)
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.4.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.5.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
@@ -64,6 +64,17 @@ Use **Ask her for a task** on the home screen to get one now. Quit for now clear
 - [ ] **Lines:** a typo sends you back to line 1. Pasting is ignored. Keyboard shows no suggestions. Finishing gives merit
 - [ ] Let a task's deadline pass: it counts as a failure, and the next lines task is harder
 - [ ] With the toggle on and check-ins every 30 min, a task arrives at roughly 1 in 3 check-ins
+
+## 7c. Shows up (Settings > Shows up on)
+Use **Try it now** in Settings to summon her.
+- [ ] A notification arrives. Discreet on: it only says "Please open the app." Tapping it opens her full screen
+- [ ] Multiple choice: the right answer gives merit and closes the visit
+- [ ] Phrase: typing it exactly is accepted, a missing word is wrong
+- [ ] Wrong answers show tries left. The third is a failure and ends the visit
+- [ ] Tap **Later** and wait 10 minutes: other apps get blocked with an **Answer her** button. Phone dialer and Always-allowed apps still open
+- [ ] Answering lifts the lock right away
+- [ ] Quit for now on her screen ends everything
+- [ ] Settings > Shows up > Her questions: add, edit, delete and reset work
 
 ## 8. Check-ins and notifications (set frequency to 30 min)
 - [ ] A check-in arrives within 30 minutes, even with the screen off

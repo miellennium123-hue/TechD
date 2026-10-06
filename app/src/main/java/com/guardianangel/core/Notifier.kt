@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.guardianangel.R
 import com.guardianangel.ui.MainActivity
+import com.guardianangel.ui.ShowUpActivity
 
 /** Discreet mode keeps every notification neutral, so nothing explicit shows on the lock screen. */
 object Notifier {
@@ -21,6 +22,7 @@ object Notifier {
     const val ID_CHECK_IN = 1
     const val ID_PROOF = 2
     const val ID_MESSAGE = 3
+    const val ID_SUMMON = 4
 
     fun createChannel(context: Context) {
         val channel = NotificationChannel(CHANNEL_ID, "Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -33,11 +35,21 @@ object Notifier {
     fun proof(context: Context, line: String) = post(context, ID_PROOF, line, "You have something to do.")
     fun message(context: Context, line: String) = post(context, ID_MESSAGE, line, "You have a new message.")
 
+    /** Tapping it brings her up full screen. */
+    fun summon(context: Context, line: String) =
+        post(context, ID_SUMMON, line, "Please open the app.", ShowUpActivity.intent(context))
+
     fun cancel(context: Context, id: Int) = NotificationManagerCompat.from(context).cancel(id)
     fun cancelAll(context: Context) = NotificationManagerCompat.from(context).cancelAll()
 
     @SuppressLint("MissingPermission")
-    private fun post(context: Context, id: Int, line: String, neutral: String) {
+    private fun post(
+        context: Context,
+        id: Int,
+        line: String,
+        neutral: String,
+        target: Intent = Intent(context, MainActivity::class.java),
+    ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
@@ -47,7 +59,7 @@ object Notifier {
         val open = PendingIntent.getActivity(
             context,
             id,
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            target.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val publicVersion = NotificationCompat.Builder(context, CHANNEL_ID)
