@@ -47,6 +47,7 @@ enum class Screen(val title: String) {
     SITES("Your sites"),
     LINES("Her lines"),
     LINE("Her lines"),
+    SESSIONS("Guided sessions"),
     KINKS("Kink menu"),
     SETUP("Permissions"),
 }
@@ -109,7 +110,8 @@ private fun MainContent(requested: MutableState<Screen?>) {
     val back = {
         screen = when (screen) {
             Screen.LINE -> Screen.LINES
-            Screen.ALLOWED, Screen.PROMPTS, Screen.TASKS, Screen.QUESTIONS, Screen.SITES, Screen.LINES, Screen.KINKS -> Screen.SETTINGS
+            Screen.KINKS -> Screen.SESSIONS
+            Screen.ALLOWED, Screen.PROMPTS, Screen.TASKS, Screen.QUESTIONS, Screen.SITES, Screen.LINES -> Screen.SETTINGS
             else -> Screen.HOME
         }
     }
@@ -134,7 +136,7 @@ private fun MainContent(requested: MutableState<Screen?>) {
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (screen) {
                 Screen.HOME -> HomeScreen(config, state) { screen = it }
-                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS }, { screen = Screen.QUESTIONS }, { screen = Screen.SITES }, { screen = Screen.LINES }, { screen = Screen.KINKS })
+                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS }, { screen = Screen.QUESTIONS }, { screen = Screen.SITES }, { screen = Screen.LINES })
                 Screen.CHASTITY -> ChastityScreen(config, state)
                 Screen.GALLERY -> GalleryScreen()
                 Screen.ALLOWED -> AllowedAppsScreen(config)
@@ -149,6 +151,7 @@ private fun MainContent(requested: MutableState<Screen?>) {
                     screen = Screen.LINE
                 }
                 Screen.LINE -> LineScreen(config, line)
+                Screen.SESSIONS -> SessionsScreen(config, state) { screen = Screen.KINKS }
                 Screen.KINKS -> KinksScreen(config)
             }
         }

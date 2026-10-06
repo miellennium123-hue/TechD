@@ -1,9 +1,16 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.14.1 (black, white and gold theme). Sections 0 to 0h cover what 0.6.0 to 0.14.1 changed
+> **Version under test:** 0.15.0 (Guided sessions screen). Sections 0 to 0j cover what 0.6.0 to 0.15.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0j. New in 0.15.0: Guided sessions screen
+- [ ] Settings > About shows **Version 0.15.0**
+- [ ] Home has a **Guided sessions** button. It opens a screen with Start, the toggle and every session setting
+- [ ] Settings no longer has a Guided sessions section
+- [ ] Kink menu opens from the new screen, and Back returns to it
+- [ ] Your old session settings are kept
 
 ## 0i. New in 0.14.1: theme
 - [ ] Settings > About shows **Version 0.14.1**
@@ -142,7 +149,7 @@ Phone on a stand, front camera facing you, decent light. Settings > Guided sessi
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.14.1**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.15.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 

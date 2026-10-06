@@ -178,10 +178,8 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
-        if (config.enabled && config.session.on) {
-            Button(onClick = { context.startActivity(SessionActivity.intent(context)) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Start a session")
-            }
+        OutlinedButton(onClick = { navigate(Screen.SESSIONS) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Guided sessions")
         }
 
         if (config.enabled && config.rating.on) {
@@ -200,6 +198,6 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             OutlinedButton(onClick = { navigate(Screen.SETTINGS) }, modifier = Modifier.weight(1f)) { Text("Settings") }
             OutlinedButton(onClick = { navigate(Screen.SETUP) }, modifier = Modifier.weight(1f)) { Text("Permissions") }
         }
-        Muted("\"Quit for now\" (top right) instantly ends every lock, timer and restriction and switches her off.")
+        Muted("\"Quit for now\" (top right) ends every lock, timer and restriction and switches her off. It takes about 10 minutes.")
     }
 }
