@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.2.2 released. Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 10)
+> **Last updated:** 2026-10-06 (round 11)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -211,3 +211,4 @@ None right now.
 - **2026-10-06 (round 8):** First test feedback: permission proof didn't say what to photograph, and photos weren't verified. Decided on an editable prompt list (with Explicit flag) and on-device photo checks. Built in v0.2
 - **2026-10-06 (round 9):** Questions about the context limit and updating. Found that CI builds had random signing keys (updates wouldn't install over old versions); fixed with a fixed keystore in v0.2.1. One last uninstall needed
 - **2026-10-06 (round 10):** Merged all work into `main`. Added automatic GitHub Releases with a stable download link, an About section in Settings (version and update link), and a full workflow guide in `CLAUDE.md` for future sessions
+- **2026-10-06 (round 11):** No design changes. Added `docs/TESTING.md`, an on-device test checklist for v0.2.2. Releases now publish only when the version number changes

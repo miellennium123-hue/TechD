@@ -12,12 +12,16 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 ## Workflow
 
 1. Work on the session's feature branch, cut from the latest `main`.
-2. Bump `versionCode` and `versionName` in `app/build.gradle.kts` for every user-facing change.
+2. Bump `versionCode` and `versionName` in `app/build.gradle.kts` for every user-facing change. A release is only published when the version is new, so doc-only changes don't need a bump.
 3. Push, then wait for the **Build APK** workflow to pass (`.github/workflows/build.yml`). Check it with the GitHub MCP `actions_list` tool, or poll `https://api.github.com/repos/miellennium123-hue/TechD/actions/runs?branch=<branch>`.
 4. Open a pull request into `main` and merge it once CI is green. The user asked for changes to be merged so new versions get published (round 10).
 5. Merging to `main` publishes a GitHub Release automatically. Give the user the stable download link:
    - **Direct APK:** https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk
    - **Releases page:** https://github.com/miellennium123-hue/TechD/releases/latest
+
+## Testing with the user
+
+- `docs/TESTING.md` is the on-device test checklist. Update it when features change, and record results the user reports.
 
 ## Building
 

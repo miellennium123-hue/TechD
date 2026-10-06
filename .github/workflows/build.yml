@@ -50,6 +50,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.apk.outputs.version }}
         run: |
+          # One release per version: doc-only merges (no version bump) don't publish again.
+          if gh release list --limit 100 --json tagName --jq '.[].tagName' | grep -q "^v${VERSION}-build"; then
+            echo "Version ${VERSION} is already released, skipping."
+            exit 0
+          fi
           tag="v${VERSION}-build${GITHUB_RUN_NUMBER}"
           {
             echo "**Install:** download \`guardian-angel.apk\` below and open it on your phone. It installs over the previous version and keeps your data."
