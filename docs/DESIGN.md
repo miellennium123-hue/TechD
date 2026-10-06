@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.21.0 (Her mark and She peeks). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 60)
+> **Last updated:** 2026-10-06 (round 62)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -631,6 +631,18 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
     6. **Lock guard:** the user asked what this means. Explained in round 52, waiting on their pick
   - **Decided in round 53:** option C for Lock guard, and yes to Claude's three proposals: she starts blocks at check-ins (default 1h to 4h), 15 merit buys 10 minutes in one app (lockouts only), and the freeze only applies while Lock guard is on
 
+- **Accessibility and admin ideas (round 62, proposed, nothing picked yet):** the user says v0.21.0 works and asked for more features that use Accessibility or device admin
+  - **Phone down, pet:** she orders the phone down for a while (say 20 to 60 minutes). Unlocking during it locks the screen again right away (Accessibility lock screen action, Android 9+), and each try is noted. Calls still go through
+  - **Doomscroll limit:** she counts scrolling in social apps. After her limit she closes the app (sends you home) and comments. Merit buys more
+  - **Say please:** before a guarded app opens, you type her phrase ("Please, Mistress, may I open Instagram?"). Typos start it again
+  - **Watched words:** she reads what you type in other apps (never password fields) and reacts to words from a list you set. Needs reading typed text, a big privacy step
+  - **Search and site watch:** she reads the browser's address bar and blocks or comments on sites and searches from your list
+  - **Unlock counter and daily report:** she counts unlocks and time in each app (no admin needed), then grades your day in a nightly report
+  - **Who's messaging you?** she reacts when notifications arrive from apps you pick (sender name only, never the message)
+  - **Wrong PIN alarm (device admin):** failed unlock attempts are noticed and logged
+  - **Not proposed:** changing messages you send to other people, wiping the phone, or anything that blocks calls or Quit for now
+  - **Claude's top 3:** Phone down, pet; Doomscroll limit; Say please. They reuse what she already does (lock screen, block screen, lines task) and read the least
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -721,3 +733,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 59, v0.20.0):** The background update. 12 built-in femdom backgrounds drawn on the phone, your own images added from the app (private storage), hide or keep each of hers, and she cycles them every 2 minutes (a setting). Details in section 8
 - **2026-10-06 (round 60, v0.21.0):** Her mark. Her small gold collar badge sits in a corner over every app while she's on, and the screen gets a dark tint during her blocks (app block, bedtime, punishment, her rules, an ignored summons), not over her own screens. Taps go through both. New Her mark card in Settings, guarded by Lock guard. Details in section 8
 - **2026-10-06 (round 61, v0.21.0):** Added to the same update: She peeks. About every 5 minutes her watch captures your screen into her private gallery and she comments on what you were doing (home, social, videos, games, messages, browser, other), as a silent notification. Never with the screen off or locked, the keyboard up, her own screens, the phone or Always-allowed apps. Android 11 or later. Details in section 8
+- **2026-10-06 (round 62):** No code changes. User says v0.21.0 (Her mark and She peeks) seems to work, recorded in TESTING.md. Asked for more Accessibility and device admin features. Proposed eight ideas in section 10, waiting on the user's picks

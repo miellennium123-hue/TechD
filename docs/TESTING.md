@@ -335,6 +335,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-06 | 0.21.0 | Her mark and She peeks | User: "Seems to work" |
 | 2026-10-06 | 0.6.0 | General use | User: "Looks like it works." No specific checklist items reported yet |
 | 2026-10-06 | 0.19.3 | Debug mode with Lock guard | User: "Works perfectly" |
 | 2026-10-06 | 0.19.0 | Bedtime screen | User couldn't reach her app to change bedtime hours (Lock guard off): the screen hid it. Fixed in 0.19.1 |
