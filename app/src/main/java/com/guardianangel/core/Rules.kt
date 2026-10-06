@@ -200,6 +200,29 @@ object Rules {
         config.enabled && config.bedtime.screen && isBedtime(config.bedtime, minuteOfDay) &&
             (launcher || (decision is Decision.Block && decision.kind == RestrictionKind.BEDTIME))
 
+    /**
+     * Her mark (round 60): her collar badge shows over every app while she's on. Not over her own
+     * screens ([ownApp]), which already show her, so it never sits on Quit for now.
+     */
+    fun markShown(config: GuardianConfig, ownApp: Boolean = false): Boolean = config.enabled && config.mark.on && !ownApp
+
+    /**
+     * One of her blocks is running: her timed block, bedtime, a punishment, one of her enforced rules,
+     * or a summons you ignored long enough to lock everything.
+     */
+    fun herBlockRunning(config: GuardianConfig, state: GuardianState, now: Long, minuteOfDay: Int): Boolean =
+        config.enabled && (
+            blockRunning(config, state, now) ||
+                isBedtime(config.bedtime, minuteOfDay) ||
+                state.punishmentUntil > now ||
+                state.task?.let { it.enforced && it.ruleUntil > now } == true ||
+                state.summons?.let { now >= it.lockAt } == true
+            )
+
+    /** Her mark's dark tint (round 60): during her blocks, except over her own screens ([ownApp]). */
+    fun markTinted(config: GuardianConfig, state: GuardianState, now: Long, minuteOfDay: Int, ownApp: Boolean): Boolean =
+        markShown(config) && config.mark.tint && !ownApp && herBlockRunning(config, state, now, minuteOfDay)
+
     /** Her timed app block is running (round 53). */
     fun blockRunning(config: GuardianConfig, state: GuardianState, now: Long): Boolean =
         config.enabled && config.lockouts.on && state.lockoutUntil > now

@@ -25,8 +25,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 ## Building
 
-- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt` and `core/Session.kt` has JVM unit tests in `app/src/test/`, which CI runs.
-- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/Motion.kt`, `core/LockGuard.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
+- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/Peek.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt` and `core/Session.kt` has JVM unit tests in `app/src/test/`, which CI runs.
+- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/Motion.kt`, `core/LockGuard.kt`, `core/Peek.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
 - Maven Central sometimes rate-limits this environment (HTTP 429), so local JVM test runs may fail to resolve dependencies. Rely on CI.
 - Locally with an SDK: `./gradlew testDebugUnitTest assembleDebug`.
 - Every build is signed with `app/signing/guardian.keystore` so updates install over the old app. Never replace or regenerate it, or the user has to uninstall and loses their data.
@@ -39,7 +39,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 - There are no intensity levels (removed in v0.3.0). Each setting is an on/off toggle plus its details.
 - **Quit for now** must stay reachable on every screen, never be penalized, always finish, and never be removable or made longer by any setting or future partner sync. By the user's choice (rounds 41 and 43) it is slow on purpose: about 10 minutes (hold, type, wait) in `ui/SlowExit.kt`, timings in `core/LockGuard.kt`.
 - **Debug mode** (round 56) adds an instant shut down next to Quit for now. Lock guard still works in it (round 57). It may only change while she's off (`LockGuard.canSetDebug`), never through `updateConfig` or partner sync.
-- Proof photos stay in private app storage and never leave the phone. Photo checks run on device (`core/PhotoVerifier.kt`, NudeNet model in `assets/models/`, AGPL-3.0).
+- Proof photos and her peeks (screenshots) stay in private app storage and never leave the phone. Photo checks run on device (`core/PhotoVerifier.kt`, NudeNet model in `assets/models/`, AGPL-3.0).
 - Check-ins decide what to do in the pure `Rules.checkInAction`: no deadlines when she can't notify, silent during quiet hours and bedtime, and nothing set at a check-in may be due inside quiet time (`Rules.reachesQuiet`).
 - The **Changelog** in `docs/DESIGN.md` is oldest first. The release workflow uses its last 3 entries as release notes, so always append at the bottom.
 - Writing style in docs and replies: plain language, short bullets, bold cues, no em dashes.
@@ -62,5 +62,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `data/Sessions.kt`, `core/Session.kt`, `ui/SessionsScreen.kt` (its own screen from Home), `ui/SessionActivity.kt`, `ui/SessionCamera.kt`, `ui/KinksScreen.kt` | Guided sessions: settings and kink menu, the pure session builder (tested in `SessionTest.kt`), the session screen, the watching camera and ruin clip. `core/Motion.kt`: beat and stop checks from camera motion (tested in `MotionTest.kt`) |
 | `core/Voice.kt`, `ui/LinesScreen.kt` | Her built-in lines, your edits on top (tested in `LinesTest.kt`), the Her lines screens |
 | `core/LockGuard.kt`, `ui/SlowExit.kt`, `receiver/GuardAdminReceiver.kt` | Lock guard and the slow Quit for now: guarding, what loosens her settings, guarded screens, tamper rules (tested in `LockGuardTest.kt`), the hold-type-wait screen (also `LoosenHost` and `EnabledSwitch` in `ui/Components.kt`), the optional device admin |
+| `core/MarkOverlay.kt` | Her mark: the collar badge over every app and the dark tint during her blocks (rules in `Rules.markShown` / `Rules.markTinted`, tested in `MarkTest.kt`) |
+| `core/Peek.kt`, `core/ScreenPeek.kt` | She peeks: when she may look, what you were doing, keeping 100 (tested in `PeekTest.kt`), and the screenshot itself (Android 11+) |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen, Lock guard's screen check |
 | `ui/` | Compose screens and the Block and Proof activities |

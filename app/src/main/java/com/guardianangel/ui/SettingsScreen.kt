@@ -36,6 +36,8 @@ import com.guardianangel.core.Permissions
 import com.guardianangel.core.Rules
 import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.Voice
+import com.guardianangel.core.Peek
+import com.guardianangel.core.ScreenPeek
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.data.Backgrounds
@@ -43,6 +45,7 @@ import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.LockoutSettings
+import com.guardianangel.data.MarkCorner
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.PunishmentLength
@@ -193,6 +196,41 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 onClick = { WallpaperController.applyAsync(context) },
                 enabled = config.enabled && config.wallpaper.on,
             ) { Text("Apply now") }
+        }
+
+        FoldCard("Her mark", config.mark.on) {
+            SwitchRow(
+                "Her mark",
+                "Her small gold collar badge sits in a corner over every app while she's on (not over her own screens).",
+                config.mark.on,
+            ) { v -> update { it.copy(mark = it.mark.copy(on = v)) } }
+            ChoiceChips(MarkCorner.entries, config.mark.corner, { it.label }, config.mark.on) { v ->
+                update { it.copy(mark = it.mark.copy(corner = v)) }
+            }
+            SwitchRow(
+                "Dark tint during her blocks",
+                "While her app block, bedtime, a punishment, one of her rules or an ignored summons runs, the screen gets darker. " +
+                    "Not over her own screens.",
+                config.mark.tint,
+            ) { v -> update { it.copy(mark = it.mark.copy(tint = v)) } }
+            Muted("Taps go straight through both, so nothing under them is ever blocked. Shown by her watch (Accessibility).")
+        }
+
+        FoldCard("She peeks", config.peek.on) {
+            val supported = ScreenPeek.supported()
+            SwitchRow(
+                "She peeks",
+                "About every ${Peek.EVERY_MINUTES} minutes she captures your screen into her private gallery and comments on what you were doing.",
+                config.peek.on,
+            ) { v -> if (supported || !v) update { it.copy(peek = it.peek.copy(on = v)) } }
+            if (!supported) {
+                Text("Needs Android 11 or later.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            Muted(
+                "Never with the screen off or locked, never while the keyboard is up, and never at the phone, " +
+                    "her own screens or your Always-allowed apps (put banking apps there). Screenshots stay in this app only, " +
+                    "she keeps the newest ${Peek.KEEP}. If nothing shows up after updating, switch her watch off and on in Accessibility.",
+            )
         }
 
         GroupHeader("Check-ins")

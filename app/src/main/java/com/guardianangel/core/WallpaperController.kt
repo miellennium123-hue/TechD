@@ -146,7 +146,7 @@ object WallpaperController {
         while (paint.measureText(text) > width && paint.textSize > max * 0.4f) paint.textSize *= 0.94f
     }
 
-    private fun drawMotif(canvas: Canvas, motif: Motif, cx: Float, cy: Float, s: Float, accent: Int, cutout: Int) {
+    internal fun drawMotif(canvas: Canvas, motif: Motif, cx: Float, cy: Float, s: Float, accent: Int, cutout: Int) {
         val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = s * 0.07f

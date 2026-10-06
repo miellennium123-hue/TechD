@@ -1,9 +1,31 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.20.0 (the background update). Sections 0 to 0p cover what 0.6.0 to 0.20.0 changed
+> **Version under test:** 0.21.0 (her mark and she peeks). Sections 0 to 0q cover what 0.6.0 to 0.21.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0q. New in 0.21.0: her mark
+- [ ] Settings > About shows **Version 0.21.0**
+- [ ] Settings > Phone control > **Her mark** on: her gold collar badge shows top right over other apps and the home screen
+- [ ] It's gone over her own screens (Home, Settings, block screen) and comes back when you leave
+- [ ] Pick each corner: the badge moves right away
+- [ ] Taps on whatever is under the badge still work
+- [ ] Start a block (or a short bedtime): the screen gets darker over other apps, not over her block or bedtime screen
+- [ ] Block ends: the tint goes within about 30 seconds
+- [ ] Quit for now during a block: tint and badge both go
+- [ ] Phone dialer works through the tint
+- [ ] With Lock guard on, switching Her mark or the tint off opens the 30 minute screen; moving the corner is instant
+
+**She peeks (Android 11 or later)**
+- [ ] Settings > Phone control > **She peeks** on, then open any ordinary app and wait about 5 minutes
+- [ ] A silent notification with her comment arrives, naming the app (Discreet off to see the words)
+- [ ] Gallery shows the screenshot with a **Peek** tag; opening it shows the app, time and her line
+- [ ] Her comment fits what you were in (home screen, Instagram, YouTube, a game, WhatsApp, Chrome)
+- [ ] No peek while the keyboard is up, in an Always-allowed app, in the phone app, or with the screen off
+- [ ] If no peeks ever come: switch her watch off and on in Accessibility (Lock guard off first), then wait 5 minutes
+- [ ] Delete one peek in the gallery; Delete all clears them
+- [ ] Android 10 or older: the card says it needs Android 11 and won't switch on
 
 ## 0p. New in 0.20.0: the background update
 Settings > Wallpaper: Wallpaper control on, Cycle backgrounds on, Every 2m.

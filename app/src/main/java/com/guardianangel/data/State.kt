@@ -36,10 +36,22 @@ data class GuardianState(
     val ratings: List<RatingRecord> = emptyList(),
     /** Finished guided sessions, newest last. Quit for now keeps them. */
     val sessions: List<SessionRecord> = emptyList(),
+    /** She peeks (round 60): her peeks, newest last, and when she last looked. Quit for now keeps them. */
+    val peeks: List<PeekRecord> = emptyList(),
+    val lastPeekAt: Long = 0,
     /** Lock guard: the app version when her watch last started, to tell a restart from an update. */
     val guardVersion: Int = 0,
     /** Lock guard: she already punished her watch being off; cleared when it starts again. */
     val tamperOffNoticed: Boolean = false,
+)
+
+/** One of her peeks: the screenshot's file name in her private gallery, the app, and what she said. */
+@Serializable
+data class PeekRecord(
+    val at: Long,
+    val file: String,
+    val app: String,
+    val line: String,
 )
 
 /** One of her ratings. Sizes in cm. [presentation] is -1 when she rated without seeing it. */

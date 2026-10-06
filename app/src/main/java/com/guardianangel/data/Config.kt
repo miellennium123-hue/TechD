@@ -17,6 +17,10 @@ data class GuardianConfig(
     /** Quiet hours: she lets you sleep. Doesn't lock anything; that's what Bedtime is for. */
     val quietHours: QuietHoursSettings = QuietHoursSettings(),
     val wallpaper: WallpaperSettings = WallpaperSettings(),
+    /** Her mark (round 60): a small collar badge over every app, and a dark tint during her blocks. */
+    val mark: MarkSettings = MarkSettings(),
+    /** She peeks (round 60): about every 5 minutes she captures your screen into her private gallery. */
+    val peek: PeekSettings = PeekSettings(),
     val chastity: ChastitySettings = ChastitySettings(),
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
     /** What she can ask you to photograph when it isn't about chastity. */
@@ -132,6 +136,31 @@ data class WallpaperSettings(
     val builtIns: Boolean = true,
     val hiddenBuiltIns: Set<String> = emptySet(),
 )
+
+/**
+ * Her mark (round 60). [on]: her collar badge sits in a corner over every app while she's on.
+ * [tint]: during her blocks (timed block, bedtime, punishment, her rules, an ignored summons) the
+ * screen gets a dark tint. Neither ever takes a touch, so Quit for now always works through them.
+ */
+@Serializable
+data class MarkSettings(
+    val on: Boolean = false,
+    val tint: Boolean = true,
+    val corner: MarkCorner = MarkCorner.TOP_RIGHT,
+)
+
+/** She peeks (round 60). Needs Android 11 or later. See core/Peek. */
+@Serializable
+data class PeekSettings(
+    val on: Boolean = false,
+)
+
+enum class MarkCorner(val label: String, val top: Boolean, val left: Boolean) {
+    TOP_LEFT("Top left", true, true),
+    TOP_RIGHT("Top right", true, false),
+    BOTTOM_LEFT("Bottom left", false, true),
+    BOTTOM_RIGHT("Bottom right", false, false),
+}
 
 @Serializable
 data class ChastitySettings(

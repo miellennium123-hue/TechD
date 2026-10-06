@@ -37,7 +37,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import com.guardianangel.core.Guardian
 import com.guardianangel.core.ProofFiles
+import androidx.compose.runtime.collectAsState
+import java.text.DateFormat
+import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -54,9 +58,11 @@ fun GalleryScreen() {
     var files by remember { mutableStateOf(ProofFiles.list(context)) }
     var viewing by remember { mutableStateOf<File?>(null) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
+    val state by Guardian.state.flow.collectAsState()
+    val peeks = remember(state.peeks) { state.peeks.associateBy { it.file } }
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Muted("Photos and ruin clips, stored only inside this app. Not in your gallery, not backed up.")
+        Muted("Photos, ruin clips and her peeks at your screen, stored only inside this app. Not in your gallery, not backed up.")
         if (files.isEmpty()) {
             Text("No photos yet.")
         } else {
@@ -67,7 +73,12 @@ fun GalleryScreen() {
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 items(files, key = { it.name }) { file ->
-                    PhotoThumb(file, 300, Modifier.aspectRatio(1f).clickable { viewing = file })
+                    Box(Modifier.aspectRatio(1f).clickable { viewing = file }) {
+                        PhotoThumb(file, 300, Modifier.fillMaxSize())
+                        if (file.name in peeks) {
+                            Text("Peek", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.BottomStart).padding(4.dp))
+                        }
+                    }
                 }
             }
         }
@@ -92,8 +103,14 @@ fun GalleryScreen() {
                 } else {
                     PhotoThumb(file, 1600, Modifier.fillMaxWidth(), ContentScale.Fit)
                 }
+                peeks[file.name]?.let { peek ->
+                    val time = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(peek.at))
+                    Text("She peeked at ${peek.app}, $time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text("\"${peek.line}\"", style = MaterialTheme.typography.bodyMedium)
+                }
                 TextButton(onClick = {
                     file.delete()
+                    Guardian.forgetPeeks(setOf(file.name))
                     files = ProofFiles.list(context)
                     viewing = null
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
@@ -109,6 +126,7 @@ fun GalleryScreen() {
             confirmButton = {
                 TextButton(onClick = {
                     ProofFiles.deleteAll(context)
+                    Guardian.forgetPeeks(null)
                     files = emptyList()
                     confirmDeleteAll = false
                 }) { Text("Delete all") }

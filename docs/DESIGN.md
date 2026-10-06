@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 59)
+> **Status:** v0.21.0 (Her mark and She peeks). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 60)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -116,6 +116,15 @@ Two lockout scopes:
 - From v0.12.0 the camera also checks you keep her beat and stop when she says
 - From v0.17.0 a **Quickshot**: about 2 minutes, always ruined, and the camera always films the ruin
 - Details in 9.9 and section 8 (v0.11.0 and v0.12.0)
+
+### 4.12 Her mark (v0.21.0)
+- Her small gold **collar badge** sits in a corner over every app while she's on
+- During her blocks the whole screen gets a **dark tint**
+- Details in section 8 (v0.21.0)
+
+### 4.13 She peeks (v0.21.0)
+- About every 5 minutes she captures your screen into her **private gallery** and comments on what you were doing
+- Needs Android 11 or later. Details in section 8 (v0.21.0)
 
 ---
 
@@ -466,6 +475,27 @@ Choices made while building, where the spec left room:
 - **Battery:** setting a full-screen wallpaper every 2 minutes uses a little more battery. A longer interval helps
 - **Tests:** `BackgroundsTest.kt` (pool order, hiding, never empty, wrap, due, older saves)
 
+### v0.21.0 (round 60, her mark)
+- **Asked:** her mark, a small always-on badge or collar icon over every app, and a dark tint on the screen during her blocks
+- **Badge:** a black disc with a gold ring and her gold collar (the same collar as the backgrounds), about 30dp, in a corner you pick (Top right by default, clear of the status and navigation bars). Shows whenever she and Her mark are on (`Rules.markShown`), over every app and the home screen. Not over her own screens, which already show her, so it never covers Quit for now
+- **Tint:** about 45% black over the whole screen while one of her blocks runs: her timed app block, bedtime, a punishment, one of her app-enforced rules, or a summons you ignored long enough to lock everything (`Rules.herBlockRunning`). Not over her own screens (block, bedtime, Quit for now), so those stay clear (`Rules.markTinted`)
+- **How:** Accessibility overlays drawn by her watch (`core/MarkOverlay.kt`), so no extra permission. Neither ever takes a touch or focus: everything under them works, the phone and Quit for now included. Changes show right away when her settings or state change; blocks and bedtimes that start or end on the clock show within about 30 seconds
+- **Setting:** new **Her mark** card in Settings > Phone control (`GuardianConfig.mark`): **Her mark** switch (off by default), the corner, and **Dark tint during her blocks** (on). Older saves load with it off
+- **Lock guard:** switching Her mark or the tint off loosens her control, so it takes the 30 minute screen. Moving the corner is instant
+- **Honest limits:** only while her watch (Accessibility) is on. Android may hide overlays on a few system screens (some lock screens and permission dialogs)
+- **Tests:** `MarkTest.kt` (badge, tint for each block, own screens, Lock guard, older saves)
+
+**She peeks (same update, asked in round 61):**
+- **Asked:** every 5 minutes she captures your screen into her private gallery and comments on what you were doing. Android 11 or later
+- **Capture:** her watch takes an Accessibility screenshot (`AccessibilityService.takeScreenshot`, Android 11+, no extra permission; `canTakeScreenshot` in the service config) about every 5 minutes (`Peek.EVERY_MINUTES`), checked on her 30 second tick. Downscaled to 1280px, JPEG, saved as `peek_<time>.jpg` in the private proof folder (`core/ScreenPeek.kt`). Never leaves the phone
+- **When she won't look (`Peek.mayLook`):** screen off or locked, the keyboard up (so no passwords), her own screens, the phone, system screens and your **Always-allowed** apps (put banking apps there). If she can't look, she tries again on the next tick. The home screen counts
+- **Her comment:** she sorts what you were in (`Peek.kind`): home screen, social media, videos, games, messages, browser, anything else. Each has new lines in both moods (group **She peeks** in Her lines, editable). Her comment becomes her last line on Home and a **silent** notification (one at a time, replaced each peek, none in quiet time; Discreet hides the words as usual). Tapping it opens the gallery
+- **Gallery:** peeks show with a **Peek** tag; opening one shows the app, the time and what she said. She keeps the newest 100 (`Peek.KEEP`) and deletes older screenshots. Deleting in the gallery forgets them. Quit for now keeps them, like photos
+- **Setting:** **She peeks** card in Settings > Phone control (`GuardianConfig.peek`, off by default). On Android 10 or older it says it needs Android 11 and can't be switched on. With Lock guard on, switching it off takes the 30 minute screen
+- **Never:** a failure, merit, or a block. Mood only changes her words
+- **After updating:** Android may need her watch switched off and on in Accessibility before screenshots work (with Lock guard on, that counts as tampering, so do it with Lock guard off)
+- **Tests:** `PeekTest.kt` (due, when she won't look, kinds, lines in both moods, keeping 100, Lock guard, older saves)
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -689,3 +719,5 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 57, v0.19.3):** User wants Lock guard to keep working in debug mode, with debug mode only adding the shut down button. Debug mode no longer skips Lock guard. Details in section 8
 - **2026-10-06 (round 58):** No code changes. User confirmed v0.19.3 works perfectly (debug mode with Lock guard). Recorded in TESTING.md
 - **2026-10-06 (round 59, v0.20.0):** The background update. 12 built-in femdom backgrounds drawn on the phone, your own images added from the app (private storage), hide or keep each of hers, and she cycles them every 2 minutes (a setting). Details in section 8
+- **2026-10-06 (round 60, v0.21.0):** Her mark. Her small gold collar badge sits in a corner over every app while she's on, and the screen gets a dark tint during her blocks (app block, bedtime, punishment, her rules, an ignored summons), not over her own screens. Taps go through both. New Her mark card in Settings, guarded by Lock guard. Details in section 8
+- **2026-10-06 (round 61, v0.21.0):** Added to the same update: She peeks. About every 5 minutes her watch captures your screen into her private gallery and she comments on what you were doing (home, social, videos, games, messages, browser, other), as a silent notification. Never with the screen off or locked, the keyboard up, her own screens, the phone or Always-allowed apps. Android 11 or later. Details in section 8

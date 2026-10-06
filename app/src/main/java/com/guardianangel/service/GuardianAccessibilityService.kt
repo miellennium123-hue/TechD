@@ -8,20 +8,27 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
+import android.net.Uri
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
 import com.guardianangel.core.Decision
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Line
 import com.guardianangel.core.LockGuard
+import com.guardianangel.core.MarkOverlay
 import com.guardianangel.core.ProtectedApps
 import com.guardianangel.core.Rules
+import com.guardianangel.core.ScreenPeek
 import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.ui.BedtimeActivity
 import com.guardianangel.ui.BlockActivity
 import com.guardianangel.ui.MainActivity
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 
 /**
  * Watches which app is in front and sends her block screen when it's off limits.
@@ -41,6 +48,10 @@ class GuardianAccessibilityService : AccessibilityService() {
     private var lastGuardCheckAt = 0L
     private var guardEvents = false
     private val myName: String by lazy { applicationInfo.loadLabel(packageManager).toString() }
+    private val scope = MainScope()
+    private var mark: MarkOverlay? = null
+    private var peek: ScreenPeek? = null
+    private var browsers: Set<String> = emptySet()
 
     /** Re-checks every 30 seconds so expiring grants and starting bedtimes take effect mid-app. */
     private val tick = object : Runnable {
@@ -50,6 +61,8 @@ class GuardianAccessibilityService : AccessibilityService() {
             startVisitTick() // in case a check-in started a visit since the last event
             WallpaperController.enforce(this@GuardianAccessibilityService)
             updateGuardEvents()
+            updateMark()
+            peekIfDue()
             handler.postDelayed(this, 30_000)
         }
     }
@@ -103,6 +116,22 @@ class GuardianAccessibilityService : AccessibilityService() {
         }
         ContextCompat.registerReceiver(this, screen, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         startVisitTick()
+        // Her mark follows every change to her settings and state right away (blocks starting,
+        // Quit for now); the 30 second tick catches blocks and bedtimes that start or end on time.
+        mark = MarkOverlay(this)
+        peek = ScreenPeek(this)
+        scope.launch { Guardian.config.flow.combine(Guardian.state.flow) { _, _ -> }.collect { updateMark() } }
+    }
+
+    /** Her mark: the collar badge, and the dark tint during her blocks except over her own screens. */
+    private fun updateMark() {
+        mark?.update(ownApp = currentPackage == packageName)
+    }
+
+    /** She peeks (round 60): about every 5 minutes, at whatever you're in. Rules in core/Peek. */
+    private fun peekIfDue() {
+        val pkg = currentPackage
+        peek?.maybePeek(pkg, pkg != null && pkg in launchers, browsers, protectedPackages)
     }
 
     private fun startVisitTick() {
@@ -136,6 +165,11 @@ class GuardianAccessibilityService : AccessibilityService() {
     private fun refreshPackages() {
         protectedPackages = ProtectedApps.discover(this)
         launchers = ProtectedApps.launchers(this)
+        browsers = runCatching {
+            @Suppress("DEPRECATION")
+            packageManager.queryIntentActivities(Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com")), 0)
+                .map { it.activityInfo.packageName }.toSet()
+        }.getOrDefault(emptySet())
     }
 
     /** Screen content changes are only needed while Lock guard is guarding, so they're off otherwise. */
@@ -183,6 +217,7 @@ class GuardianAccessibilityService : AccessibilityService() {
             onVisitApp(pkg)
         }
         evaluate(pkg)
+        updateMark()
         WallpaperController.enforce(this)
     }
 
@@ -193,6 +228,8 @@ class GuardianAccessibilityService : AccessibilityService() {
      */
     private fun isForegroundApp(pkg: String, className: CharSequence?): Boolean {
         if (pkg in launchers) return true
+        // Her own mark's overlay windows aren't one of her screens.
+        if (pkg == packageName) return isActivity(pkg, className)
         val system = pkg in protectedPackages || pkg in AppLists.NEVER_BLOCK
         return !system || isActivity(pkg, className)
     }
@@ -223,6 +260,8 @@ class GuardianAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         handler.removeCallbacks(tick)
         handler.removeCallbacks(visitTick)
+        scope.cancel()
+        mark?.hide()
         runCatching { unregisterReceiver(screen) }
         super.onDestroy()
     }
