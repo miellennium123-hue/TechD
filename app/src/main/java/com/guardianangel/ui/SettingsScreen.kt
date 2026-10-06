@@ -332,8 +332,8 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             HorizontalDivider()
             SwitchRow(
                 "Debug mode",
-                "An instant \"Debug: shut down\" button next to Quit for now on every screen, and Lock guard is skipped. " +
-                    "Can only be switched while she's off.",
+                "An instant \"Debug: shut down\" button next to Quit for now on every screen. It ends everything and switches her off. " +
+                    "Lock guard still works as usual. Can only be switched while she's off.",
                 config.debugMode,
             ) { v -> Guardian.setDebugMode(v) }
             if (config.enabled) Muted("She's on, so debug mode stays ${if (config.debugMode) "on" else "off"} until you switch her off.")

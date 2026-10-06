@@ -123,8 +123,9 @@ class LockGuardTest {
     }
 
     @Test
-    fun debugModeSkipsLockGuardAndOnlyChangesWhileSheIsOff() {
-        assertFalse(LockGuard.guarding(on.copy(debugMode = true)))
+    fun debugModeKeepsLockGuardAndOnlyChangesWhileSheIsOff() {
+        // Round 57: Lock guard still works in debug mode.
+        assertTrue(LockGuard.guarding(on.copy(debugMode = true)))
         assertTrue(LockGuard.canSetDebug(on.copy(enabled = false)))
         assertFalse(LockGuard.canSetDebug(on))
         assertFalse(LockGuard.canSetDebug(on.copy(debugMode = true)))
