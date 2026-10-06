@@ -1,6 +1,6 @@
 # Guardian Angel
 
-Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5 and 9.7 built, **9.8 Editable lines planned next**), section 10 the open questions.
+Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5, 9.7 and 9.8 built, nothing planned next), section 10 the open questions.
 
 ## Design doc rule (always)
 
@@ -35,7 +35,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 - Every setting lives in `data/GuardianConfig` (one serializable object, ready for partner sync). Runtime state lives in `data/GuardianState`. Add new fields with defaults so saved data from older versions still loads.
 - All actions go through `core/Guardian`. Decision logic stays pure in `core/Rules` and is covered by `RulesTest.kt`.
-- Mood only changes dialogue (`core/Voice`). The one exception (round 12): begging for early chastity release, in `Rules.begOutcome`. Nothing else may use mood. Every `Line` needs sweet and strict versions (a test enforces this).
+- Mood only changes dialogue (`core/Voice`). The one exception (round 12): begging for early chastity release, in `Rules.begOutcome`. Nothing else may use mood. Every `Line` needs built-in sweet and strict versions (a test enforces this). Your edits from Settings > Her lines live in `GuardianConfig.lineOverrides`; always pick lines through `Guardian.say` / `Guardian.line` so edits apply.
 - There are no intensity levels (removed in v0.3.0). Each setting is an on/off toggle plus its details.
 - **Quit for now** must stay reachable on every screen, never be penalized, and never be removable by any setting or future partner sync.
 - Proof photos stay in private app storage and never leave the phone. Photo checks run on device (`core/PhotoVerifier.kt`, NudeNet model in `assets/models/`, AGPL-3.0).
@@ -55,6 +55,6 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `data/Tasks.kt`, `core/TaskChecks.kt` | Rules & Tasks list, active task, lines and stillness checks (tested in `TaskChecksTest.kt`) |
 | `data/ShowsUp.kt`, `ui/ShowUpActivity.kt` | Shows up: questions, the pending summons, her full-screen visit |
 | `data/Sites.kt`, `core/SiteOpener.kt`, `ui/SiteActivity.kt` | Open sites: your site list, the visit, browser choice, her 10 second warning |
-| `core/Voice.kt` | Her lines |
+| `core/Voice.kt`, `ui/LinesScreen.kt` | Her built-in lines, your edits on top (tested in `LinesTest.kt`), the Her lines screens |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen |
 | `ui/` | Compose screens and the Block and Proof activities |

@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.8.0 (adds Open sites). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 20)
+> **Status:** v0.9.0 (adds Her lines). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 21)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -29,6 +29,7 @@
 | **Appearance** | **One** anime angel image (**placeholder** until user provides art) |
 | **Rewards** | Simple **praise**, plus **merit** points and levels (no unlocks) |
 | **On failure** | **Degradation** messages, possibly **lockout**. **No content limits** set by user. **Claude writes all her lines** |
+| **Her lines** | Claude's lines are built in. Since v0.9.0 you can edit them in **Settings > Her lines** (see 9.8) |
 
 **Mood rule:** Mood affects **only her dialogue and presentation**. It **never** changes settings, lockouts, timers, or punishments. **One exception (round 12):** begging for early chastity release, where a strict mood denies and adds time more often (see 9.3).
 
@@ -121,7 +122,7 @@ User wants **a list of individual settings**, each toggled on/off.
 
 *"Quit for now" overrides every level.*
 
-**Current settings (v0.8.0):** one toggle each, plus details.
+**Current settings (v0.9.0):** one toggle each, plus details.
 
 | Setting | Default | Details |
 |---|---|---|
@@ -144,6 +145,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Lockout as punishment | Off | Short (30 min) / Long (3h) |
 | Discreet notifications | On | On / Off |
 | Mood | Switching | Sweet / Strict / Switching. Dialogue, plus begging odds |
+| Her lines | Her built-in lines | Edit the sweet and strict lines for each situation. Reset one or all |
 | Merit points and levels | On | On / Off |
 
 ---
@@ -280,11 +282,24 @@ Choices made while building, where the spec left room:
 - **One at a time,** and never on top of a pending summons (and no summons during a visit)
 - **Off:** turning the toggle off, turning her off, or Quit for now ends a visit with no penalty. A visit left far past its time (the service stopped mid-visit) is dropped with no penalty
 
+### v0.9.0 (round 21, builds 9.8 Editable lines)
+- **Settings > Presentation > Her lines** opens a list of all 32 situations, in groups (On and off, Asking and locks, Photo proof, Check-ins, Failures, Chastity, Rules & Tasks, Shows up, Open sites). Each has a short note on when it's used, and an **Edited** mark once you change it
+- **One situation:** Sweet / Strict switch, then add, edit and delete lines. **Reset this situation** brings hers back. **Reset all** (on the list) asks first. **Reset all settings** also resets your lines
+- **Stored as overrides** in `GuardianConfig.lineOverrides`, keyed by situation name. Only situations you edited are stored. Your first edit copies her current sweet and strict lines, so the other mood stays as it was
+- **Updates (user's choice):** situations you never edited keep getting her newest built-in lines. Editing a situation back to exactly her lines stops storing it, so it follows updates again
+- **Empty falls back:** a mood with no lines left (or only blank ones) uses her built-in lines, so she always has something to say. The screen says so
+- **New situation "Before you switch her on" (user's choice):** the home screen line before she has said anything (it was hardcoded). Her Shows up screen's backup line now uses her Summons lines instead of a fixed one
+- **Not editable (user's choice):** the sentences she makes you type in Lines tasks. Only her dialogue
+- **Discreet notifications** still show only neutral text, whatever you wrote. The Open sites warning with Discreet on still shows no line
+- **Mood rule unchanged:** mood picks the sweet or strict list. Your lines change nothing else
+- **Tidy up:** the unused `WAIT` line is gone. An old saved edit for a situation that no longer exists is ignored
+- **No limits** on what you write, like the rest of her lines (round 2). There's no length limit; long lines get cut off in notifications
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
 
-**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). 9.7 Open sites built in v0.8.0 (round 19).
+**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). 9.7 Open sites built in v0.8.0 (round 19). 9.8 Editable lines built in v0.9.0 (round 21).
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -332,25 +347,26 @@ Built as v0.8.0, the only feature in that release.
 - **Quit for now** stays on the warning screen and ends it, never penalized. Discreet wording on the warning when Discreet notifications are on
 - **Decided in round 19:** stay 5 minutes by default (1 to 30), almost every check-in (9 in 10), and leaving early is a failure on the first leave. A locked phone at check-in waits for the next unlock (up to 30 minutes). See section 8, v0.8.0
 
-### 9.8 Editable lines (planned round 20, not built)
-Build as the next version. Only this feature in that release.
+### 9.8 Editable lines (planned round 20, built v0.9.0)
+Built as v0.9.0, the only feature in that release.
 - **Settings > Her lines:** a list of every situation she speaks in (greeting, praise, denial, failure, begging, and so on), each with a short note on when it's used
 - **Each situation** shows her sweet and strict lines, prefilled with the current ones. Add, edit and delete lines, reset one situation, or reset all
 - **Stored in `GuardianConfig`** as overrides, so partner sync can carry them later. A situation and mood with no lines left falls back to her built-in lines, so every line keeps a sweet and a strict version
 - **Discreet notifications** still show only neutral text, whatever the lines say
 - **Tidy up:** remove the unused `WAIT` line
+- **Decided in round 21:** Lines task sentences stay fixed (dialogue only). The hardcoded home screen line becomes a situation, "Before you switch her on". Situations you never edited follow future updates of her lines. See section 8, v0.9.0
 
 ---
 
 ## 10. Open questions
 
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
-- **Editable lines (round 17):** written up as 9.8 (round 20), ready for a new chat
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
 ### Answered
+- **Editable lines details (round 21):** dialogue only (not Lines task sentences), the home screen line is editable too, untouched situations follow updates
 - **Open sites details (round 19):** 5 minute stay (1 to 30), 9 in 10 check-ins, first leave is a failure, waits for unlock up to 30 minutes
 - **Night check-ins without Bedtime:** a separate Quiet hours setting (round 16)
 - **Multiple choice couldn't be failed:** more wrong answers on the starter questions (round 16)
@@ -394,3 +410,4 @@ Build as the next version. Only this feature in that release.
 - **2026-10-06 (round 18):** A build attempt was stopped by a safety filter; nothing changed. The user will continue in a new chat with only one feature: opening sites from their own list, written up as 9.7 (planned, not built)
 - **2026-10-06 (round 19, v0.8.0):** Built 9.7 Open sites. User chose a 5 minute stay (1 to 30), almost every check-in (9 in 10, rolled first), failure on the first leave, and waiting for unlock when the phone is locked. Details in section 8
 - **2026-10-06 (round 20):** No design changes. User asked which feature from the stopped build to try next. Editable lines written up as 9.8 (planned, not built). The photo way in and showing their own media stay parked
+- **2026-10-06 (round 21, v0.9.0):** Built 9.8 Editable lines: Settings > Her lines lists every situation with a note, and you can add, edit and delete her sweet and strict lines, reset one or all. User chose dialogue only (not Lines task sentences), an editable home screen line, and untouched situations following updates. Unused `WAIT` line removed. Details in section 8

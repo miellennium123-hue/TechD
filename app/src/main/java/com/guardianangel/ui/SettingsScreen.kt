@@ -30,10 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.Line
 import com.guardianangel.core.Notifier
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.Rules
 import com.guardianangel.core.SiteOpener
+import com.guardianangel.core.Voice
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.data.ChastitySettings
@@ -49,7 +51,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit, openSites: () -> Unit) {
+fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit, openSites: () -> Unit, openLines: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
     val state by Guardian.state.flow.collectAsState()
@@ -302,6 +304,9 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             Text("Mood")
             ChoiceChips(Mood.entries, config.mood, { it.label }) { v -> update { it.copy(mood = v) } }
             Muted("Mood only changes what she says. One exception: in a strict mood she's harsher when you beg to be released early.")
+            val edited = Line.entries.count { Voice.isEdited(it, config.lineOverrides) }
+            OutlinedButton(onClick = openLines) { Text(if (edited > 0) "Her lines ($edited edited)" else "Her lines") }
+            Muted("Edit what she says in each situation, in both moods.")
             SwitchRow("Merit points and levels", null, config.meritOn) { v -> update { it.copy(meritOn = v) } }
         }
 
@@ -325,7 +330,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             title = { Text("Reset all settings?") },
             text = {
                 Text(
-                    "Every setting goes back to its default, including your photo prompts, rules and tasks, questions and sites. " +
+                    "Every setting goes back to its default, including your photo prompts, rules and tasks, questions, sites and her lines. " +
                         "Your merit, photos and any running lock are kept.",
                 )
             },

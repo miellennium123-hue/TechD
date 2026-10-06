@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.AnswerResult
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.Line
 import com.guardianangel.core.Rules
 import com.guardianangel.data.QuestionKind
 import com.guardianangel.ui.theme.GuardianTheme
@@ -87,7 +88,8 @@ private fun ShowUpScreen(onDone: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AngelImage(Modifier.size(180.dp))
-            SpeechBubble(line ?: state.lastLine.ifBlank { "Pet. I want you." })
+            val summonLine = remember { Guardian.line(Line.SUMMON) }
+            SpeechBubble(line ?: state.lastLine.ifBlank { summonLine })
             if (summons == null) {
                 Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Done") }
             } else {
