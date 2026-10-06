@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.12.1 (Guided sessions: motion checks, and a front or back camera switch). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 37)
+> **Last updated:** 2026-10-06 (round 38)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -465,6 +465,14 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Motion check tuning (round 36):** the thresholds in v0.12.0 are first guesses. Waiting on the user's test on a real phone: which sensitivity works, and whether the rate shown matches their real pace
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 
+- **Feature ideas (round 38, proposed, nothing picked yet):** the user likes the app strict and asked for more femdom and techdom ideas
+  - **Discipline:** punishment ladder (repeat failures escalate), demerit debt (no asking permission while in debt), lockdown hours (everything blocked except calls and Quit for now), kneeling or posture timer with the motion sensor
+  - **Routine:** morning and evening reports (photo plus questions, missing one is a failure), her wake-up alarm (dismissed only by a proof photo), attention pings (answer within 60 seconds), daily confession box
+  - **Phone control:** daily screen time allowance she spends down and merit buys back, uninstall guard during a lock (Quit for now still always works), location rules (home by a time she sets)
+  - **Release control:** denial calendar and streak, she sets the next release date, edge homework (a daily guided session quota)
+  - **Presence:** her lines spoken aloud (on-device text to speech), a written contract you sign and renew weekly, her record book of every failure
+  - **Rules that stay:** Quit for now on every screen, never block calls or emergency use, quiet hours respected
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -531,3 +539,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 35):** No code changes. User asked for a prompt to continue the camera motion checks in a new chat. Claude didn't write one for that part, since it was stopped by a safety filter, and gave a general handoff prompt instead
 - **2026-10-06 (round 36, v0.12.0):** Built 9.9 part 2, motion checks in guided sessions: the camera checks you keep her beat on stroking commands and stop on hands-off commands. Off beat 8 seconds or moving 1.5 seconds after stop: she scolds you and adds an edge. New Motion sensitivity setting and two new lines. Details in section 8
 - **2026-10-06 (round 37, v0.12.1):** User asked for the right camera or a switch. Added a front or back camera switch to guided sessions (setup screen and during the session), remembered between sessions. Switching resets the motion check. Details in section 8
+- **2026-10-06 (round 38):** No code changes. User asked for more femdom and techdom features (they like it strict). Proposed ideas grouped as discipline, routine, phone control, release control and presence, recorded in section 10. Nothing picked yet
