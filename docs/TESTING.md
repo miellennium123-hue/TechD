@@ -1,13 +1,16 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.12.0 (adds motion checks to Guided sessions). Sections 0 to 0f cover what 0.6.0 to 0.12.0 changed
+> **Version under test:** 0.12.1 (adds a camera switch to Guided sessions). Sections 0 to 0f cover what 0.6.0 to 0.12.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
 ## 0f. New in 0.12.0: Motion checks in Guided sessions
 Phone on a stand, front camera facing you, decent light. Settings > Guided sessions: camera on, **She checks your motion** on, sensitivity Normal.
-- [ ] Settings > About shows **Version 0.12.0**
+- [ ] Settings > About shows **Version 0.12.1**
+- [ ] Session setup shows **Camera: front**. Tap **Switch** and it shows back. Start: the preview is the camera you picked
+- [ ] During a session, **Use back camera** / **Use front camera** swaps the camera, and the swap itself doesn't get you caught
+- [ ] Your camera choice is remembered next session
 - [ ] During a stroke command, the line under the beat shows **She sees about N per minute**. Is N close to your real pace?
 - [ ] Keep her beat for a whole command: you're never caught
 - [ ] Go clearly faster or slower than her beat (or stop) for about 10 seconds: she scolds you **off beat** and adds an edge
@@ -108,7 +111,7 @@ Phone on a stand, front camera facing you, decent light. Settings > Guided sessi
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.12.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.12.1**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 

@@ -197,6 +197,15 @@ class MotionTracker(private val keepMs: Long = 12_000) {
         while (samples.isNotEmpty() && timeMs - samples.first().timeMs > keepMs) samples.removeFirst()
     }
 
+    /** Forget everything, for a new camera: the jump between cameras isn't movement. */
+    @Synchronized
+    fun reset() {
+        previous = null
+        samples.clear()
+        lastX = Float.NaN
+        lastY = Float.NaN
+    }
+
     @Synchronized
     fun reading(sinceMs: Long, nowMs: Long, sensitivity: MotionSensitivity): MotionReading {
         val recent = samples.filter { nowMs - it.timeMs <= 600 }

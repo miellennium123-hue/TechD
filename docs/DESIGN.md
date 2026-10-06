@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.12.0 (adds motion checks to Guided sessions: her beat and her stops). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 36)
+> **Status:** v0.12.1 (Guided sessions: motion checks, and a front or back camera switch). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 37)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -358,6 +358,13 @@ Choices made while building, where the spec left room:
 - **Settings:** "She checks your motion" (on by default, needs the camera setting) and Motion sensitivity (Normal by default)
 - **Known limits:** going half speed can sometimes read as on beat if each stroke looks like two movements; strong flicker or the phone being bumped can read as movement
 
+### v0.12.1 (round 37, camera switch)
+- **Asked:** make sure she opens the correct camera, or add a button to switch between front and back
+- **Built:** the session camera is front by default and remembers your choice (`SessionSettings.backCamera`). Switch it on the setup screen ("Camera: front, Switch") or during a session ("Use back camera" / "Use front camera" under the beat). Not shown while she films a ruin
+- **Fallback:** if the phone doesn't have the camera you picked, she uses the other one
+- **Switching resets the motion check**, so the jump between cameras never counts as movement
+- Proof photos already had their own switch; unchanged
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -523,3 +530,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 34):** No code changes. v0.11.0 released. Building part 2 of guided sessions (camera motion checks, v0.12.0) was stopped by a safety filter, so it's dropped. Part 1 is unchanged
 - **2026-10-06 (round 35):** No code changes. User asked for a prompt to continue the camera motion checks in a new chat. Claude didn't write one for that part, since it was stopped by a safety filter, and gave a general handoff prompt instead
 - **2026-10-06 (round 36, v0.12.0):** Built 9.9 part 2, motion checks in guided sessions: the camera checks you keep her beat on stroking commands and stop on hands-off commands. Off beat 8 seconds or moving 1.5 seconds after stop: she scolds you and adds an edge. New Motion sensitivity setting and two new lines. Details in section 8
+- **2026-10-06 (round 37, v0.12.1):** User asked for the right camera or a switch. Added a front or back camera switch to guided sessions (setup screen and during the session), remembered between sessions. Switching resets the motion check. Details in section 8

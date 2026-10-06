@@ -177,6 +177,8 @@ private fun SessionScreen(onDone: () -> Unit) {
                     canCatch = watching && caught < Session.CAUGHT_LIMIT,
                     motionChecks = settings.motionChecks,
                     sensitivity = settings.motionSensitivity,
+                    backCamera = settings.backCamera,
+                    onSwitchCamera = { Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) } },
                     modifier = Modifier.weight(1f),
                     onNext = { advance() },
                     onSkip = {
@@ -260,7 +262,7 @@ private fun Setup(
         if (caged) Muted("You're locked, so only cage-safe commands until the end, and no permission.")
         Text("Kinks: " + kinks.joinToString(", ") { it.label }.ifEmpty { "none (just her basics)" })
         Muted(
-            "Prop the phone up facing you, so the front camera sees you. She checks it on the phone; nothing is " +
+            "Prop the phone up so the camera sees you (front by default, switch below). She checks it on the phone; nothing is " +
                 "saved except a ruin clip, which goes to Photos, private to this app. Stop or Quit for now any time.",
         )
         if (Kink.CBT in kinks) Muted("CBT (${s.cbt.label.lowercase()}): stop if it ever hurts sharply. \"Too much\" skips with no penalty.")
@@ -270,6 +272,14 @@ private fun Setup(
                 Text("My sound and lube are sterile and ready. I'll never force it.")
             }
             if (!soundingReady) Muted("Without this tick, she leaves sounding out.")
+        }
+        if (s.camera) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Camera: ${if (s.backCamera) "back" else "front"}", Modifier.weight(1f))
+                TextButton(onClick = {
+                    Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) }
+                }) { Text("Switch") }
+            }
         }
         if (needsCamera) {
             Muted("She needs the camera to watch you and film a ruin.")
@@ -289,6 +299,8 @@ private fun Running(
     canCatch: Boolean,
     motionChecks: Boolean,
     sensitivity: MotionSensitivity,
+    backCamera: Boolean,
+    onSwitchCamera: () -> Unit,
     modifier: Modifier,
     onNext: () -> Unit,
     onSkip: () -> Unit,
@@ -304,6 +316,7 @@ private fun Running(
     var comment by remember { mutableStateOf<String?>(null) }
     var sees by remember { mutableStateOf<String?>(null) }
     val tracker = remember { MotionTracker() }
+    LaunchedEffect(backCamera) { tracker.reset() }
     val pulse = remember { Animatable(1f) }
     val tone = remember { runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 70) }.getOrNull() }
     DisposableEffect(Unit) { onDispose { tone?.release() } }
@@ -392,6 +405,7 @@ private fun Running(
                     onClip = onClip,
                     modifier = Modifier.fillMaxSize(),
                     motion = if (motionChecks) tracker else null,
+                    back = backCamera,
                 )
             }
             if (step.bpm > 0) {
@@ -415,6 +429,9 @@ private fun Running(
         }
         Text(detail, style = MaterialTheme.typography.titleMedium)
         sees?.let { Muted(it) }
+        if (watching && step.kind != StepKind.RUIN) {
+            TextButton(onClick = onSwitchCamera) { Text(if (backCamera) "Use front camera" else "Use back camera") }
+        }
         step.kind.tap?.let { label -> Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(label) } }
         if (step.kind.skippable) OutlinedButton(onClick = onSkip) { Text("Too much (skip, no penalty)") }
     }
