@@ -6,7 +6,6 @@ import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
-import com.guardianangel.data.Intensity
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.ProofPrompts
@@ -21,8 +20,6 @@ import kotlin.random.Random
 
 enum class Failure(val merit: Int) {
     MISSED_PROOF(8),
-    FORBIDDEN_ATTEMPT(5),
-    EARLY_RELEASE_ATTEMPT(5),
 }
 
 sealed interface AskResult {
@@ -35,8 +32,7 @@ sealed interface AskResult {
 sealed interface ReleaseResult {
     val line: String
     data class Released(override val line: String) : ReleaseResult
-    data class Wait(override val line: String, val until: Long) : ReleaseResult
-    data class Denied(override val line: String) : ReleaseResult
+    data class Denied(override val line: String, val timeAdded: Boolean) : ReleaseResult
 }
 
 /** The angel herself: every action that changes config or state goes through here. */
@@ -66,23 +62,30 @@ object Guardian {
 
     // ---- Voice -------------------------------------------------------------------------------
 
-    /** Picks a line in her current mood and remembers it. Mood never feeds back into rules. */
-    fun say(line: Line): String {
+    /** Picks a line in her current mood and remembers it. */
+    fun say(line: Line): String =
+        state.update { st ->
+            val next = withMood(st)
+            next.copy(lastLine = Voice.pick(line, next.currentMood, random))
+        }.lastLine
+
+    /** Her mood right now (Sweet or Strict). Only dialogue and begging use it. */
+    fun mood(): Mood = state.update { withMood(it) }.currentMood
+
+    private fun withMood(st: GuardianState): GuardianState {
         val c = config.value
         val t = now()
-        return state.update { st ->
-            val (mood, until) = when (c.mood) {
-                Mood.SWEET, Mood.STRICT -> c.mood to 0L
-                Mood.SWITCHING ->
-                    if (st.moodUntil > t && st.currentMood != Mood.SWITCHING) {
-                        st.currentMood to st.moodUntil
-                    } else {
-                        val next = if (random.nextBoolean()) Mood.SWEET else Mood.STRICT
-                        next to t + random.nextLong(30, 121) * MINUTE
-                    }
-            }
-            st.copy(currentMood = mood, moodUntil = until, lastLine = Voice.pick(line, mood, random))
-        }.lastLine
+        val (mood, until) = when (c.mood) {
+            Mood.SWEET, Mood.STRICT -> c.mood to 0L
+            Mood.SWITCHING ->
+                if (st.moodUntil > t && st.currentMood != Mood.SWITCHING) {
+                    st.currentMood to st.moodUntil
+                } else {
+                    val next = if (random.nextBoolean()) Mood.SWEET else Mood.STRICT
+                    next to t + random.nextLong(30, 121) * MINUTE
+                }
+        }
+        return st.copy(currentMood = mood, moodUntil = until)
     }
 
     // ---- Master controls ---------------------------------------------------------------------
@@ -115,7 +118,7 @@ object Guardian {
                 punishmentUntil = 0,
                 askCooldownUntil = emptyMap(),
                 checkInPending = false,
-                releaseRequestedAt = 0,
+                lastBegAt = 0,
             )
         }
         Scheduler.cancelAll(appContext, proofs)
@@ -163,23 +166,15 @@ object Guardian {
         return line
     }
 
-    /** Absolute-level attempts count as failures, at most once per cooldown so it can't spiral. */
-    fun penalizeAttempt(failure: Failure = Failure.FORBIDDEN_ATTEMPT): String? {
-        val t = now()
-        if (t - state.value.lastPenaltyAt < Rules.PENALTY_COOLDOWN_MINUTES * MINUTE) return null
-        state.update { it.copy(lastPenaltyAt = t) }
-        return fail(failure)
-    }
-
     // ---- App access --------------------------------------------------------------------------
 
     fun decide(pkg: String, protectedPackages: Set<String> = emptySet()): Decision =
         Rules.decide(pkg, config.value, state.value, now(), minuteOfDay(), protectedPackages)
 
-    fun grant(pkg: String, minutes: Int, level: Intensity) {
+    fun grant(pkg: String, minutes: Int) {
         val t = now()
         state.update { st ->
-            st.copy(grants = st.grants.filter { it.until > t && it.packageName != pkg } + Grant(pkg, t + minutes * MINUTE, level))
+            st.copy(grants = st.grants.filter { it.until > t && it.packageName != pkg } + Grant(pkg, t + minutes * MINUTE))
         }
     }
 
@@ -187,13 +182,13 @@ object Guardian {
         val t = now()
         val cooldown = state.value.askCooldownUntil[pkg] ?: 0
         if (cooldown > t) return AskResult.Denied(say(Line.DENY), cooldown)
-        return when (Rules.askOutcome(config.value.askPermission.intensity, random.nextDouble())) {
+        return when (Rules.askOutcome(random.nextDouble())) {
             AskOutcome.GRANT -> {
-                grant(pkg, Rules.GRANT_MINUTES, Intensity.ABSOLUTE)
+                grant(pkg, Rules.GRANT_MINUTES)
                 AskResult.Granted(say(Line.GRANT))
             }
             AskOutcome.PROOF -> {
-                val request = requestProof(ProofReason.PERMISSION, 10, pkg, Intensity.ABSOLUTE)
+                val request = requestProof(ProofReason.PERMISSION, 10, pkg)
                 AskResult.ProofDemanded(say(Line.DEMAND_PROOF), request)
             }
             AskOutcome.DENY -> {
@@ -212,12 +207,12 @@ object Guardian {
         reason: ProofReason,
         dueMinutes: Int,
         pkg: String? = null,
-        grantLevel: Intensity? = null,
         notify: Boolean = false,
     ): ProofRequest {
         val t = now()
         val prompt = if (reason.usesPromptList) {
-            config.value.proofPrompts.randomOrNull(random) ?: ProofPrompts.FALLBACK
+            val prompts = config.value.proofPrompts.filter { !reason.everydayOnly || !it.explicit }
+            prompts.randomOrNull(random) ?: ProofPrompts.FALLBACK
         } else {
             null
         }
@@ -227,7 +222,6 @@ object Guardian {
             createdAt = t,
             dueAt = t + dueMinutes * MINUTE,
             packageName = pkg,
-            grantLevel = grantLevel,
             prompt = prompt?.text.orEmpty(),
             explicit = prompt?.explicit == true,
         )
@@ -267,7 +261,7 @@ object Guardian {
         Scheduler.cancelProofDeadline(appContext, request)
         Notifier.cancel(appContext, Notifier.ID_PROOF)
         if (verified && request.reason.penalized && t <= request.dueAt) addMerit(5)
-        request.packageName?.let { grant(it, Rules.GRANT_MINUTES, request.grantLevel ?: Intensity.FIRM) }
+        request.packageName?.let { grant(it, Rules.GRANT_MINUTES) }
         return say(if (verified) Line.PRAISE else Line.WARNING)
     }
 
@@ -282,9 +276,9 @@ object Guardian {
     fun startChastity(): String {
         val c = config.value
         val t = now()
-        val minutes = Rules.lockMinutes(c.chastity.intensity, c.chastity.maxHours, random)
+        val minutes = Rules.lockMinutes(c.chastity.minLockMinutes, c.chastity.maxLockMinutes, c.chastity.maxHours, random)
         val lock = ChastityLock(startedAt = t, endsAt = t + minutes * MINUTE)
-        state.update { it.copy(chastity = lock, releaseRequestedAt = 0) }
+        state.update { it.copy(chastity = lock, lastBegAt = 0) }
         Scheduler.scheduleChastityEnd(appContext, lock.endsAt)
         requestProof(ProofReason.CHASTITY_LOCK, 15)
         return say(Line.CHASTITY_START)
@@ -316,31 +310,17 @@ object Guardian {
             endChastity()
             return ReleaseResult.Released(say(Line.RELEASED))
         }
-        return when (config.value.chastity.intensity) {
-            Intensity.GENTLE -> {
-                endChastity()
-                ReleaseResult.Released(say(Line.WARNING))
-            }
-            Intensity.FIRM -> {
-                val requested = state.value.releaseRequestedAt
-                val waitMs = Rules.EARLY_RELEASE_WAIT_MINUTES * MINUTE
-                when {
-                    requested == 0L -> {
-                        state.update { it.copy(releaseRequestedAt = t) }
-                        ReleaseResult.Wait(say(Line.WAIT), t + waitMs)
-                    }
-                    t >= requested + waitMs -> {
-                        endChastity()
-                        ReleaseResult.Released(say(Line.WARNING))
-                    }
-                    else -> ReleaseResult.Wait(say(Line.WAIT), requested + waitMs)
-                }
-            }
-            Intensity.STRICT -> ReleaseResult.Denied(say(Line.EARLY_DENIED))
-            Intensity.ABSOLUTE -> ReleaseResult.Denied(
-                penalizeAttempt(Failure.EARLY_RELEASE_ATTEMPT) ?: say(Line.EARLY_DENIED),
-            )
+        if (t < state.value.lastBegAt + Rules.BEG_COOLDOWN_MINUTES * MINUTE) {
+            return ReleaseResult.Denied(say(Line.EARLY_DENIED), timeAdded = false)
         }
+        val outcome = Rules.begOutcome(mood(), random.nextDouble(), random.nextDouble())
+        if (outcome.released) {
+            endChastity()
+            return ReleaseResult.Released(say(Line.BEG_GRANTED))
+        }
+        state.update { it.copy(lastBegAt = t) }
+        val added = outcome.addTime && addChastityTime(announce = false)
+        return ReleaseResult.Denied(say(if (added) Line.BEG_TIME_ADDED else Line.EARLY_DENIED), added)
     }
 
     fun endChastity() {
@@ -348,7 +328,7 @@ object Guardian {
         val chastityProofs = st.proofs.filter {
             it.reason == ProofReason.CHASTITY_LOCK || it.reason == ProofReason.CHASTITY_CHECK
         }
-        state.update { s -> s.copy(chastity = null, releaseRequestedAt = 0, proofs = s.proofs - chastityProofs.toSet()) }
+        state.update { s -> s.copy(chastity = null, lastBegAt = 0, proofs = s.proofs - chastityProofs.toSet()) }
         Scheduler.cancelChastityEnd(appContext)
         chastityProofs.forEach { Scheduler.cancelProofDeadline(appContext, it) }
     }
@@ -379,8 +359,7 @@ object Guardian {
             state.update { it.copy(checkInPending = true) }
             Notifier.checkIn(appContext, say(Line.CHECK_IN))
         }
-        val whim = lock != null && c.chastity.canAddTime && c.chastity.intensity >= Intensity.STRICT
-        if (whim && random.nextDouble() < 0.1) addChastityTime()
+        if (lock != null && c.chastity.canAddTime && random.nextDouble() < 0.1) addChastityTime()
         Scheduler.scheduleNextCheckIn(appContext)
     }
 

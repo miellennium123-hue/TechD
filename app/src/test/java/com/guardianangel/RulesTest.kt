@@ -1,6 +1,7 @@
 package com.guardianangel
 
 import com.guardianangel.core.AskOutcome
+import com.guardianangel.core.BegOutcome
 import com.guardianangel.core.Decision
 import com.guardianangel.core.HOUR
 import com.guardianangel.core.Line
@@ -11,7 +12,6 @@ import com.guardianangel.data.BedtimeSettings
 import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
-import com.guardianangel.data.Intensity
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.LockoutSettings
 import com.guardianangel.data.AskPermissionSettings
@@ -28,8 +28,8 @@ class RulesTest {
     private val instagram = "com.instagram.android"
     private val bank = "com.example.bank"
 
-    private fun config(scope: LockoutScope = LockoutScope.SOCIAL_MEDIA, intensity: Intensity = Intensity.STRICT) =
-        GuardianConfig(enabled = true, lockouts = LockoutSettings(on = true, scope = scope, intensity = intensity))
+    private fun config(scope: LockoutScope = LockoutScope.SOCIAL_MEDIA) =
+        GuardianConfig(enabled = true, lockouts = LockoutSettings(on = true, scope = scope))
 
     @Test
     fun disabledNeverBlocks() {
@@ -55,19 +55,26 @@ class RulesTest {
     }
 
     @Test
-    fun grantOnlyCoversItsLevel() {
-        val gentleGrant = GuardianState(grants = listOf(Grant(instagram, now + HOUR, Intensity.GENTLE)))
-        assertTrue(Rules.decide(instagram, config(intensity = Intensity.STRICT), gentleGrant, now, noon) is Decision.Block)
-        assertEquals(Decision.Allow, Rules.decide(instagram, config(intensity = Intensity.GENTLE), gentleGrant, now, noon))
+    fun lockoutIsHardBlockWithWayIn() {
+        val d = Rules.decide(instagram, config(), GuardianState(), now, noon) as Decision.Block
+        assertEquals(RestrictionKind.LOCKOUT, d.kind)
+        assertTrue(d.selfBypass)
+        assertFalse(d.askAllowed)
+    }
 
-        val expired = GuardianState(grants = listOf(Grant(instagram, now - 1, Intensity.ABSOLUTE)))
+    @Test
+    fun grantLetsYouIn() {
+        val granted = GuardianState(grants = listOf(Grant(instagram, now + HOUR)))
+        assertEquals(Decision.Allow, Rules.decide(instagram, config(), granted, now, noon))
+
+        val expired = GuardianState(grants = listOf(Grant(instagram, now - 1)))
         assertTrue(Rules.decide(instagram, config(), expired, now, noon) is Decision.Block)
     }
 
     @Test
     fun punishmentOverridesGrantsAndAsking() {
         val c = config().copy(askPermission = AskPermissionSettings(on = true))
-        val st = GuardianState(punishmentUntil = now + HOUR, grants = listOf(Grant(instagram, now + HOUR, Intensity.ABSOLUTE)))
+        val st = GuardianState(punishmentUntil = now + HOUR, grants = listOf(Grant(instagram, now + HOUR)))
         val d = Rules.decide(instagram, c, st, now, noon) as Decision.Block
         assertEquals(RestrictionKind.PUNISHMENT, d.kind)
         assertFalse(d.askAllowed)
@@ -79,7 +86,7 @@ class RulesTest {
         val d = Rules.decide(instagram, c, GuardianState(), now, noon) as Decision.Block
         assertEquals(RestrictionKind.PERMISSION, d.kind)
         assertTrue(d.askAllowed)
-        assertFalse(d.countsAsFailure)
+        assertFalse(d.selfBypass)
     }
 
     @Test
@@ -94,7 +101,7 @@ class RulesTest {
 
     @Test
     fun bedtimeBlocksEverythingNotAllowed() {
-        val c = GuardianConfig(enabled = true, bedtime = BedtimeSettings(on = true, intensity = Intensity.FIRM))
+        val c = GuardianConfig(enabled = true, bedtime = BedtimeSettings(on = true))
         val d = Rules.decide("com.example.game", c, GuardianState(), now, 0) as Decision.Block
         assertEquals(RestrictionKind.BEDTIME, d.kind)
         assertTrue(d.selfBypass)
@@ -102,30 +109,62 @@ class RulesTest {
     }
 
     @Test
-    fun absoluteAttemptsCountAsFailures() {
-        val d = Rules.decide(instagram, config(intensity = Intensity.ABSOLUTE), GuardianState(), now, noon) as Decision.Block
-        assertTrue(d.countsAsFailure)
+    fun bedtimeWinsOverLockoutOnTheBlockScreen() {
+        val c = config(LockoutScope.EVERYTHING).copy(bedtime = BedtimeSettings(on = true))
+        val d = Rules.decide("com.example.game", c, GuardianState(), now, 0) as Decision.Block
+        assertEquals(RestrictionKind.BEDTIME, d.kind)
     }
 
     @Test
     fun askOutcomes() {
-        assertEquals(AskOutcome.GRANT, Rules.askOutcome(Intensity.GENTLE, 0.99))
-        assertEquals(AskOutcome.PROOF, Rules.askOutcome(Intensity.FIRM, 0.9))
-        assertEquals(AskOutcome.DENY, Rules.askOutcome(Intensity.STRICT, 0.9))
-        assertEquals(AskOutcome.GRANT, Rules.askOutcome(Intensity.ABSOLUTE, 0.05))
+        assertEquals(AskOutcome.GRANT, Rules.askOutcome(0.1))
+        assertEquals(AskOutcome.PROOF, Rules.askOutcome(0.5))
+        assertEquals(AskOutcome.DENY, Rules.askOutcome(0.9))
     }
 
     @Test
-    fun lockLengthNeverExceedsCap() {
+    fun strictMoodIsHarsherAboutBegging() {
+        // A roll that sweet mood releases on, strict mood denies.
+        assertEquals(BegOutcome(released = true, addTime = false), Rules.begOutcome(Mood.SWEET, 0.2, 0.0))
+        assertFalse(Rules.begOutcome(Mood.STRICT, 0.2, 0.0).released)
+        // A time roll that strict mood adds time on, sweet mood doesn't.
+        assertTrue(Rules.begOutcome(Mood.STRICT, 0.9, 0.4).addTime)
+        assertFalse(Rules.begOutcome(Mood.SWEET, 0.9, 0.4).addTime)
+        // Released begs never add time.
+        assertFalse(Rules.begOutcome(Mood.STRICT, 0.0, 0.0).addTime)
+    }
+
+    @Test
+    fun aboutOneInThreeDenialsAddTime() {
+        val random = Random(7)
+        var denials = 0
+        var added = 0
+        repeat(20_000) {
+            val mood = if (random.nextBoolean()) Mood.SWEET else Mood.STRICT
+            val o = Rules.begOutcome(mood, random.nextDouble(), random.nextDouble())
+            if (!o.released) {
+                denials++
+                if (o.addTime) added++
+            }
+        }
+        val share = added.toDouble() / denials
+        assertTrue("share $share", share in 0.28..0.42)
+    }
+
+    @Test
+    fun lockLengthStaysBetweenMinMaxAndCap() {
         val random = Random(42)
         repeat(500) {
-            val minutes = Rules.lockMinutes(Intensity.ABSOLUTE, 6, random)
-            assertTrue(minutes in 15..360)
+            val minutes = Rules.lockMinutes(60, 240, 24, random)
+            assertTrue(minutes in 60..240)
             assertEquals(0, minutes % 15)
         }
         repeat(500) {
-            assertTrue(Rules.lockMinutes(Intensity.GENTLE, 24, random) in 60..240)
+            val minutes = Rules.lockMinutes(600, 1200, 6, random)
+            assertTrue(minutes in 15..360)
         }
+        // Swapped min and max still works.
+        repeat(100) { assertTrue(Rules.lockMinutes(240, 60, 24, random) in 60..240) }
     }
 
     @Test

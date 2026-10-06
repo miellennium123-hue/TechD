@@ -1,13 +1,14 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.2.2
+> **Version under test:** 0.3.0 (no more intensity levels)
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
 ## 1. Install and setup (start here)
-- [ ] Uninstall the old version, install from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.2.2**
+- [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
+- [ ] Settings > About shows **Version 0.3.0**, and your old settings are still there
+- [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
 ## 2. Safety (most important)
@@ -17,12 +18,11 @@
 - [ ] Android Settings, your launcher and your keyboard are never blocked
 
 ## 3. App lockouts (Social media scope)
-- [ ] **Gentle:** X shows a warning with "Continue anyway", which lets you in
-- [ ] **Firm:** "Wait 60 seconds" counts down, then "Open now" works
-- [ ] **Firm:** "Send photo proof instead" names what to photograph
-- [ ] **Strict:** no way in (unless Ask permission is on)
-- [ ] **Absolute:** opening X drops merit and shows a failure line (at most once per 15 min)
-- [ ] Access lasts about 10 minutes, then she blocks again within about 30 seconds
+- [ ] Opening X shows the block screen with **Wait 60 seconds** and **Send a photo instead**
+- [ ] The wait counts down, then **Open now** lets you in
+- [ ] The photo screen names an **everyday** prompt, never one marked Explicit
+- [ ] Opening a blocked app several times never drops merit or shows a failure line
+- [ ] Access lasts about 10 minutes (wait) or 15 minutes (photo), then she blocks again within about 30 seconds
 
 ## 4. Everything scope and Always-allowed
 - [ ] Any normal app is blocked
@@ -30,9 +30,9 @@
 - [ ] Adding your banking app to Always-allowed lets it open
 
 ## 5. Ask permission
-- [ ] "Ask her" sometimes grants, sometimes denies, sometimes asks for a photo (depends on intensity)
+- [ ] "Ask her" sometimes grants, sometimes denies, sometimes asks for a photo
 - [ ] A deny shows "Ask again in 5:00" and counts down
-- [ ] A photo request says **"Photograph: ..."** with a specific subject
+- [ ] A photo request says **"Photograph: ..."** with a specific, non-explicit subject
 - [ ] Sending the photo opens the app
 
 ## 6. Photo checks
@@ -44,10 +44,13 @@
 - [ ] After 3 rejections, "Send anyway" appears and works
 - [ ] Settings > Photos: thumbnails show the right way up, delete works
 
-## 7. Chastity (set Longest lock to 1h for a quick test)
-- [ ] "Lock me up" sets a timer and asks for cage proof within 15 minutes
+## 7. Chastity (set Shortest lock 30m, Longest picked lock 1h for a quick test)
+- [ ] The Chastity screen says she picks between your shortest and longest lock
+- [ ] "Lock me up" sets a timer in that range and asks for cage proof within 15 minutes
 - [ ] Countdown shows on home and the Chastity screen
-- [ ] **Gentle:** "Unlock early" works. **Firm:** asks you to wait 10 minutes first. **Strict:** denied
+- [ ] **Beg to be released:** sometimes she lets you out, usually not. Mood set to Strict should feel harsher than Sweet
+- [ ] After a denial, "You may beg again in 10:00" counts down
+- [ ] With "She can add time" on: some denials add your amount. Hard cap is never passed
 - [ ] With "She can add time" on: missing a proof deadline adds time and drops merit
 - [ ] When the timer ends, you get a notification and "Release me" gives merit
 

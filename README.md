@@ -37,7 +37,8 @@ Open **Permissions** in the app and grant:
 - **Quit for now** sits on every screen (top right, block screen, camera screen). It clears every lock, timer, proof request and punishment, and switches her off. Never penalized
 - **Never blocked:** phone and emergency calls, system Settings, your launcher and keyboard, this app, and your Always-allowed list
 - You can also turn off the Accessibility service in Android Settings at any time
-- Mood only changes her words. It never changes rules, timers or punishments
+- Mood only changes her words, with one exception: in a strict mood she's harsher when you beg for early chastity release
+- Opening a blocked app never counts as a failure
 
 ## Customizing
 
@@ -52,7 +53,7 @@ Open **Permissions** in the app and grant:
 |---|---|
 | `data/Config.kt` | Every setting in one serializable object (ready for partner sync later) |
 | `data/State.kt` | What she's doing right now: locks, proofs, grants, merit |
-| `core/Rules.kt` | Pure decision logic: what's blocked, ask outcomes, timer lengths, levels |
+| `core/Rules.kt` | Pure decision logic: what's blocked, ask and beg outcomes, timer lengths, levels |
 | `core/Guardian.kt` | All actions: enable, quit, ask, proof, chastity, failures, check-ins |
 | `core/Voice.kt` | Her lines |
 | `service/GuardianAccessibilityService.kt` | Detects the foreground app and shows the block screen |

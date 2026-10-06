@@ -31,13 +31,11 @@ data class GuardianConfig(
 data class LockoutSettings(
     val on: Boolean = false,
     val scope: LockoutScope = LockoutScope.SOCIAL_MEDIA,
-    val intensity: Intensity = Intensity.FIRM,
 )
 
 @Serializable
 data class AskPermissionSettings(
     val on: Boolean = false,
-    val intensity: Intensity = Intensity.FIRM,
 )
 
 @Serializable
@@ -45,7 +43,6 @@ data class BedtimeSettings(
     val on: Boolean = false,
     val startMinute: Int = 23 * 60,
     val endMinute: Int = 7 * 60,
-    val intensity: Intensity = Intensity.FIRM,
 )
 
 @Serializable
@@ -57,7 +54,9 @@ data class WallpaperSettings(
 @Serializable
 data class ChastitySettings(
     val on: Boolean = false,
-    val intensity: Intensity = Intensity.FIRM,
+    /** She picks a lock length between these two. */
+    val minLockMinutes: Int = 60,
+    val maxLockMinutes: Int = 240,
     val canAddTime: Boolean = false,
     val addMinutes: Int = 60,
     /** Hard cap on a lock's total length, including any time she adds. */
@@ -87,7 +86,7 @@ object ProofPrompts {
         ProofPrompt("Nothing covered below the waist. Show me.", explicit = true),
     )
 
-    /** Used if the list is ever emptied. */
+    /** Used if the list is ever emptied, or has no everyday prompts. */
     val FALLBACK = ProofPrompt("Where you are right now.")
 }
 
@@ -102,13 +101,6 @@ data class PunishmentSettings(
     val on: Boolean = false,
     val length: PunishmentLength = PunishmentLength.SHORT,
 )
-
-enum class Intensity(val label: String, val blurb: String) {
-    GENTLE("Gentle", "Reminders and warnings only"),
-    FIRM("Firm", "Bypass needs a delay or photo proof"),
-    STRICT("Strict", "Blocked until the timer ends"),
-    ABSOLUTE("Absolute", "Blocked, and every attempt counts as a failure"),
-}
 
 enum class LockoutScope(val label: String) {
     SOCIAL_MEDIA("Social media"),
@@ -135,7 +127,10 @@ enum class PunishmentLength(val label: String, val minutes: Int) {
     LONG("Long (3 hours)", 180),
 }
 
-/** Mood only changes her dialogue. It never touches rules, timers or punishments. */
+/**
+ * Mood changes her dialogue. The one exception: begging for early chastity release,
+ * where strict mood denies and adds time more often (see Rules.begOutcome).
+ */
 enum class Mood(val label: String) {
     SWEET("Sweet"),
     STRICT("Strict"),

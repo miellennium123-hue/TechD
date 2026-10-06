@@ -34,7 +34,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 - Every setting lives in `data/GuardianConfig` (one serializable object, ready for partner sync). Runtime state lives in `data/GuardianState`. Add new fields with defaults so saved data from older versions still loads.
 - All actions go through `core/Guardian`. Decision logic stays pure in `core/Rules` and is covered by `RulesTest.kt`.
-- Mood only changes dialogue (`core/Voice`). It must never affect rules, timers or punishments. Every `Line` needs sweet and strict versions (a test enforces this).
+- Mood only changes dialogue (`core/Voice`). The one exception (round 12): begging for early chastity release, in `Rules.begOutcome`. Nothing else may use mood. Every `Line` needs sweet and strict versions (a test enforces this).
+- There are no intensity levels (removed in v0.3.0). Each setting is an on/off toggle plus its details.
 - **Quit for now** must stay reachable on every screen, never be penalized, and never be removable by any setting or future partner sync.
 - Proof photos stay in private app storage and never leave the phone. Photo checks run on device (`core/PhotoVerifier.kt`, NudeNet model in `assets/models/`, AGPL-3.0).
 - Writing style in docs and replies: plain language, short bullets, bold cues, no em dashes.
