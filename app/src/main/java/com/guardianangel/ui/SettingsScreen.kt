@@ -38,7 +38,6 @@ import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.Voice
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
-import com.guardianangel.data.ChastitySettings
 import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.LockoutScope
@@ -66,7 +65,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        SectionCard("Guardian Angel") {
+        SectionCard("Her") {
             EnabledSwitch("Enabled", "Master on/off. Quit for now is always available too.", config.enabled)
             SwitchRow(
                 "Lock guard",
@@ -78,7 +77,8 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             if (config.lockGuard) Muted("Also make her device admin in Permissions, so uninstalling her takes extra steps.")
         }
 
-        SectionCard("App lockouts") {
+        GroupHeader("Phone control")
+        FoldCard("App lockouts", config.lockouts.on) {
             SwitchRow("App lockouts", null, config.lockouts.on) { v ->
                 update { it.copy(lockouts = it.lockouts.copy(on = v)) }
             }
@@ -105,7 +105,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
-        SectionCard("Bedtime") {
+        FoldCard("Bedtime", config.bedtime.on) {
             SwitchRow("Bedtime", "Hard blocks everything not always-allowed in this window, with the same way in as lockouts.", config.bedtime.on) { v ->
                 update { it.copy(bedtime = it.bedtime.copy(on = v)) }
             }
@@ -119,7 +119,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
-        SectionCard("Quiet hours") {
+        FoldCard("Quiet hours", config.quietHours.on) {
             SwitchRow(
                 "Quiet hours",
                 "She lets you sleep. Check-ins in this window are silent, and she never sets a task, photo or summons " +
@@ -143,7 +143,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
-        SectionCard("Wallpaper") {
+        FoldCard("Wallpaper", config.wallpaper.on) {
             SwitchRow("Wallpaper control", "She sets your wallpaper to her images.", config.wallpaper.on) { v ->
                 update { it.copy(wallpaper = it.wallpaper.copy(on = v)) }
             }
@@ -157,53 +157,8 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             ) { Text("Apply now") }
         }
 
-        SectionCard("Chastity") {
-            SwitchRow("Chastity mode", "Turn off for days without the cage.", config.chastity.on) { v ->
-                update { it.copy(chastity = it.chastity.copy(on = v)) }
-            }
-            Muted("She picks a lock length between these two.")
-            Stepper(
-                "Shortest lock",
-                formatMinutes(config.chastity.minLockMinutes),
-                onMinus = { update { it.copy(chastity = it.chastity.withMinLock(Rules.stepLockMinutes(it.chastity.minLockMinutes, up = false))) } },
-                onPlus = { update { it.copy(chastity = it.chastity.withMinLock(Rules.stepLockMinutes(it.chastity.minLockMinutes, up = true))) } },
-            )
-            Stepper(
-                "Longest picked lock",
-                formatMinutes(config.chastity.maxLockMinutes),
-                onMinus = { update { it.copy(chastity = it.chastity.withMaxLock(Rules.stepLockMinutes(it.chastity.maxLockMinutes, up = false))) } },
-                onPlus = { update { it.copy(chastity = it.chastity.withMaxLock(Rules.stepLockMinutes(it.chastity.maxLockMinutes, up = true))) } },
-            )
-            SwitchRow(
-                "She can add time",
-                "For failures, missed proof, denied begging, or at her whim.",
-                config.chastity.canAddTime,
-            ) { v ->
-                update { it.copy(chastity = it.chastity.copy(canAddTime = v)) }
-            }
-            Stepper(
-                "Amount per addition",
-                formatMinutes(config.chastity.addMinutes),
-                onMinus = { update { it.copy(chastity = it.chastity.copy(addMinutes = (it.chastity.addMinutes - 15).coerceAtLeast(15))) } },
-                onPlus = { update { it.copy(chastity = it.chastity.copy(addMinutes = (it.chastity.addMinutes + 15).coerceAtMost(24 * 60))) } },
-                enabled = config.chastity.canAddTime,
-            )
-            Stepper(
-                "Hard cap (incl. added time)",
-                "${config.chastity.maxHours}h",
-                onMinus = { update { it.copy(chastity = it.chastity.copy(maxHours = Rules.stepCapHours(it.chastity.maxHours, up = false))) } },
-                onPlus = { update { it.copy(chastity = it.chastity.copy(maxHours = Rules.stepCapHours(it.chastity.maxHours, up = true))) } },
-            )
-            if (config.chastity.maxLockMinutes > config.chastity.maxHours * 60) {
-                Text(
-                    "The hard cap is shorter than your longest picked lock, so locks stop at ${config.chastity.maxHours}h.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-        }
-
-        SectionCard("Photo proof and check-ins") {
+        GroupHeader("Check-ins")
+        FoldCard("Photo proof and check-ins", config.photoProof.on) {
             SwitchRow("Photo proof requests", "She asks for photos at check-ins.", config.photoProof.on) { v ->
                 update { it.copy(photoProof = it.photoProof.copy(on = v)) }
             }
@@ -226,7 +181,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             )
         }
 
-        SectionCard("Rules & Tasks") {
+        FoldCard("Rules & Tasks", config.tasksOn) {
             SwitchRow(
                 "Rules & Tasks",
                 "At about 1 in 3 check-ins she gives you a rule or task: app-enforced rules, photo tasks, stillness or lines.",
@@ -235,7 +190,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             OutlinedButton(onClick = openTasks) { Text("Her list (${config.taskList.size})") }
         }
 
-        SectionCard("Shows up") {
+        FoldCard("Shows up", config.showsUpOn) {
             SwitchRow(
                 "Shows up",
                 "At some check-ins she wants you. Ignore her for ${Rules.SUMMON_LOCK_MINUTES} minutes and everything locks until you answer " +
@@ -257,7 +212,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
-        SectionCard("Open sites") {
+        FoldCard("Open sites", config.sitesOn) {
             SwitchRow(
                 "Open sites",
                 "At almost every check-in she warns you for ${Rules.SITE_WARNING_SECONDS} seconds, then opens one of your sites " +
@@ -288,7 +243,9 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
-        SectionCard("Rate me") {
+        GroupHeader("Extras")
+        Muted("Chastity and Guided sessions have their own screens on Home.")
+        FoldCard("Rate me", config.rating.on) {
             SwitchRow(
                 "Rate me",
                 "She scores your measurements against published data, and how well you show her in a photo. " +
@@ -307,7 +264,8 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
-        SectionCard("Discipline") {
+        GroupHeader("Discipline")
+        FoldCard("When you fail", config.degradation.on || config.punishment.on) {
             SwitchRow("Degradation on failure", null, config.degradation.on) { v ->
                 update { it.copy(degradation = it.degradation.copy(on = v)) }
             }
@@ -323,7 +281,8 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             }
         }
 
-        SectionCard("Presentation") {
+        GroupHeader("Her voice")
+        FoldCard("Mood, lines and merit", null) {
             SwitchRow("Discreet notifications", "Neutral wording, nothing explicit on the lock screen.", config.discreetNotifications) { v ->
                 update { it.copy(discreetNotifications = v) }
             }
@@ -336,8 +295,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             SwitchRow("Merit points and levels", null, config.meritOn) { v -> update { it.copy(meritOn = v) } }
         }
 
-        OutlinedButton(onClick = { confirmReset = true }) { Text("Reset all settings to defaults") }
-
+        GroupHeader("App")
         SectionCard("About") {
             val version = remember {
                 runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
@@ -347,6 +305,7 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(LATEST_RELEASE_URL))) }
             }) { Text("Get the latest version") }
             Muted("New versions install over this one and keep your settings and photos.")
+            TextButton(onClick = { confirmReset = true }) { Text("Reset all settings to defaults", color = MaterialTheme.colorScheme.error) }
         }
     }
 
@@ -369,20 +328,6 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Cancel") } },
         )
     }
-}
-
-private const val LOCK_MIN = 30
-private const val LOCK_LIMIT = 7 * 24 * 60
-
-/** Keeps shortest <= longest: moving one past the other drags it along. */
-private fun ChastitySettings.withMinLock(minutes: Int): ChastitySettings {
-    val m = minutes.coerceIn(LOCK_MIN, LOCK_LIMIT)
-    return copy(minLockMinutes = m, maxLockMinutes = maxOf(maxLockMinutes, m))
-}
-
-private fun ChastitySettings.withMaxLock(minutes: Int): ChastitySettings {
-    val m = minutes.coerceIn(LOCK_MIN, LOCK_LIMIT)
-    return copy(maxLockMinutes = m, minLockMinutes = minOf(minLockMinutes, m))
 }
 
 const val LATEST_RELEASE_URL = "https://github.com/miellennium123-hue/TechD/releases/latest"
