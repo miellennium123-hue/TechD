@@ -6,7 +6,7 @@ import kotlin.random.Random
 enum class Line {
     GREETING, PRAISE, GRANT, DENY, DEMAND_PROOF, WARNING, BLOCKED, BEDTIME, WAIT,
     FAIL_NEUTRAL, DEGRADE_MILD, DEGRADE_HARSH, CHASTITY_START, TIME_ADDED, CHECK_IN,
-    RELEASED, TIMER_DONE, EARLY_DENIED, OFF, QUIT,
+    RELEASED, TIMER_DONE, EARLY_DENIED, PROOF_REJECTED, OFF, QUIT,
 }
 
 /** Everything she says. Edit freely; every line needs a sweet and a strict version. */
@@ -100,6 +100,11 @@ object Voice {
             "Already? No, pet. Not yet.",
             "So eager. The answer is still no.",
             "Patience, pet. I'll say when.",
+        ),
+        Line.PROOF_REJECTED to listOf(
+            "Hmm, that's not what I asked for, pet. Try again.",
+            "Nice try. Take it properly this time.",
+            "I can't see what I wanted. Again, pet.",
         ),
         Line.OFF to listOf(
             "Resting now. I'll be here when you want me.",
@@ -200,6 +205,11 @@ object Voice {
             "No. You stay locked.",
             "Begging won't work.",
             "Not a chance.",
+        ),
+        Line.PROOF_REJECTED to listOf(
+            "Rejected. Do it properly.",
+            "That's not what I asked for. Again.",
+            "Did you think I wouldn't check? Retake it.",
         ),
         Line.OFF to listOf(
             "Fine. I'm off duty. For now.",

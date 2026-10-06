@@ -30,7 +30,7 @@ import com.guardianangel.data.WallpaperMode
 import kotlin.math.roundToInt
 
 @Composable
-fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit) {
+fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
 
@@ -143,6 +143,10 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit) {
             }
             ChoiceChips(ProofFrequency.entries, config.photoProof.frequency, { it.label }, config.photoProof.on) { v ->
                 update { it.copy(photoProof = it.photoProof.copy(frequency = v)) }
+            }
+            Muted("Outside chastity, she picks what to photograph from your prompt list. This list is also used when you ask permission or bypass a lockout.")
+            OutlinedButton(onClick = openPrompts) {
+                Text("What she can ask for (${config.proofPrompts.size})")
             }
             Text("Check in at least every ${formatMinutes(config.checkInMinutes)}")
             Slider(

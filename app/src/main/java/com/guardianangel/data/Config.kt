@@ -17,6 +17,8 @@ data class GuardianConfig(
     val wallpaper: WallpaperSettings = WallpaperSettings(),
     val chastity: ChastitySettings = ChastitySettings(),
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
+    /** What she can ask you to photograph when it isn't about chastity. */
+    val proofPrompts: List<ProofPrompt> = ProofPrompts.DEFAULTS,
     val checkInMinutes: Int = 120,
     val degradation: DegradationSettings = DegradationSettings(),
     val punishment: PunishmentSettings = PunishmentSettings(),
@@ -67,6 +69,27 @@ data class PhotoProofSettings(
     val on: Boolean = false,
     val frequency: ProofFrequency = ProofFrequency.OCCASIONAL,
 )
+
+/** One thing she can demand a photo of. Explicit prompts are checked with the on-device nudity detector. */
+@Serializable
+data class ProofPrompt(
+    val text: String,
+    val explicit: Boolean = false,
+)
+
+object ProofPrompts {
+    val DEFAULTS: List<ProofPrompt> = listOf(
+        ProofPrompt("Where you are right now."),
+        ProofPrompt("You kneeling. Show me your knees on the floor."),
+        ProofPrompt("Your hands, palms up, so I know they're behaving."),
+        ProofPrompt("Your face, eyes down."),
+        ProofPrompt("Today's date written on your hand."),
+        ProofPrompt("Nothing covered below the waist. Show me.", explicit = true),
+    )
+
+    /** Used if the list is ever emptied. */
+    val FALLBACK = ProofPrompt("Where you are right now.")
+}
 
 @Serializable
 data class DegradationSettings(

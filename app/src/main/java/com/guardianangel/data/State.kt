@@ -38,7 +38,14 @@ data class ProofRequest(
     /** Set when the proof unlocks an app. */
     val packageName: String? = null,
     val grantLevel: Intensity? = null,
-)
+    /** What to photograph. Blank means the reason's built-in prompt. */
+    val prompt: String = "",
+    /** Explicit requests must pass the on-device nudity detector. */
+    val explicit: Boolean = false,
+    val failedChecks: Int = 0,
+) {
+    val subject: String get() = prompt.ifBlank { reason.prompt }
+}
 
 /** Temporary permission to open an app. Only covers restrictions up to [level]. */
 @Serializable
@@ -48,9 +55,9 @@ data class Grant(
     val level: Intensity,
 )
 
-enum class ProofReason(val penalized: Boolean, val prompt: String) {
-    CHASTITY_LOCK(true, "Show her you're locked in."),
-    CHASTITY_CHECK(true, "Random check. Show her you're still locked."),
-    CHECK_IN(true, "Show her what you're doing right now."),
-    PERMISSION(false, "Earn it. Send her a photo."),
+enum class ProofReason(val penalized: Boolean, val prompt: String, val usesPromptList: Boolean) {
+    CHASTITY_LOCK(true, "Show her you're locked in your cage.", false),
+    CHASTITY_CHECK(true, "Random check. Show her you're still locked in your cage.", false),
+    CHECK_IN(true, "Where you are right now.", true),
+    PERMISSION(false, "Where you are right now.", true),
 }

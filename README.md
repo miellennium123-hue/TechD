@@ -41,6 +41,7 @@ Open **Permissions** in the app and grant:
 
 - **Her picture:** put `angel.png` (or `.jpg`/`.webp`) in `app/src/main/assets/` and rebuild
 - **Wallpapers:** put images in `app/src/main/assets/wallpapers/`. She picks one at random
+- **Photo prompts:** Settings > Photo proof > "What she can ask for". Mark a prompt **Explicit** and she checks the photo with an on-device nudity detector
 - **Her lines:** all dialogue is in `app/src/main/java/com/guardianangel/core/Voice.kt`, sweet and strict versions per situation
 
 ## Code map
@@ -54,6 +55,13 @@ Open **Permissions** in the app and grant:
 | `core/Voice.kt` | Her lines |
 | `service/GuardianAccessibilityService.kt` | Detects the foreground app and shows the block screen |
 | `ui/` | Compose screens: home, settings, chastity, photos, block screen, camera |
+
+## Photo checks
+
+- **Every photo:** rejected if too dark, blank or very blurry
+- **Explicit prompts:** must also pass [NudeNet](https://github.com/notAI-tech/nudenet) (bundled at `app/src/main/assets/models/`), run offline with ONNX Runtime. It detects exposed body parts. It can't recognize a chastity cage, so chastity photos get the basic checks only
+- **False rejections:** after 3 failed checks, "Send anyway" appears (accepted, no merit)
+- **License note:** the NudeNet model is AGPL-3.0. Fine for personal use. If you ever distribute the app, the AGPL applies
 
 ## Not built yet (later phases)
 

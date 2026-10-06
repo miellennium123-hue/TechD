@@ -71,7 +71,8 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
 
         state.proofs.filter { it.reason.penalized || it.dueAt > now }.forEach { request ->
             SectionCard("Photo proof requested") {
-                Text(request.reason.prompt)
+                Text("Photograph: ${request.subject}")
+                if (request.explicit) Muted("Explicit. She'll check it on your phone.")
                 val left = request.dueAt - now
                 Text(
                     if (left > 0) "Due in ${formatDuration(left)}" else "Overdue",

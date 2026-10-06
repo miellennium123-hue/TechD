@@ -54,6 +54,15 @@ import com.guardianangel.core.Guardian
 import com.guardianangel.core.Permissions
 import com.guardianangel.ui.theme.GuardianTheme
 import java.io.File
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.style.TextAlign
+import com.guardianangel.core.Line
+import com.guardianangel.core.PhotoVerifier
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** In-app camera only (no gallery uploads), so proof can't be faked with an old photo. */
 class ProofActivity : ComponentActivity() {
@@ -82,14 +91,38 @@ class ProofActivity : ComponentActivity() {
 @Composable
 private fun ProofScreen(id: Long, onDone: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val state by Guardian.state.flow.collectAsState()
     val request = state.proofs.firstOrNull { it.id == id }
     var hasCamera by remember { mutableStateOf(Permissions.camera(context)) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasCamera = it }
     var captured by remember { mutableStateOf<File?>(null) }
     var reply by remember { mutableStateOf<String?>(null) }
+    var rejection by remember { mutableStateOf<String?>(null) }
+    var checking by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { if (!hasCamera) permission.launch(Manifest.permission.CAMERA) }
+
+    fun send(photo: File, verified: Boolean) {
+        reply = Guardian.completeProof(id, photo, verified)
+        captured = null
+    }
+
+    fun check(photo: File, explicit: Boolean) {
+        checking = true
+        scope.launch {
+            val issue = withContext(Dispatchers.Default) { PhotoVerifier.verify(context, photo, explicit) }
+            checking = false
+            if (issue == null) {
+                send(photo, verified = true)
+            } else {
+                Guardian.recordFailedCheck(id)
+                rejection = "${Guardian.say(Line.PROOF_REJECTED)}\n${issue.message}"
+                photo.delete()
+                captured = null
+            }
+        }
+    }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -114,22 +147,38 @@ private fun ProofScreen(id: Long, onDone: () -> Unit) {
                     Button(onClick = { permission.launch(Manifest.permission.CAMERA) }) { Text("Allow camera") }
                 }
                 photo == null -> {
-                    Text(request.reason.prompt, style = MaterialTheme.typography.titleMedium)
-                    CameraCapture { captured = it }
+                    ProofHeader(request.subject, request.explicit)
+                    rejection?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    CameraCapture {
+                        rejection = null
+                        captured = it
+                    }
                 }
                 else -> {
-                    Text("Send this to her?", style = MaterialTheme.typography.titleMedium)
+                    ProofHeader(request.subject, request.explicit)
                     PhotoThumb(photo, 1600, Modifier.weight(1f).fillMaxWidth(), ContentScale.Fit)
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedButton(onClick = {
-                            photo.delete()
-                            captured = null
-                        }) { Text("Retake") }
-                        Button(onClick = { reply = Guardian.completeProof(id, photo) }) { Text("Send to her") }
+                    if (checking) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(Modifier.size(24.dp))
+                            Text("She's checking it...")
+                        }
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            OutlinedButton(onClick = {
+                                photo.delete()
+                                captured = null
+                            }) { Text("Retake") }
+                            Button(onClick = { check(photo, request.explicit) }) { Text("Send to her") }
+                        }
+                        if (request.failedChecks >= MAX_FAILED_CHECKS) {
+                            TextButton(onClick = { send(photo, verified = false) }) {
+                                Text("Send anyway (no merit, she'll be suspicious)")
+                            }
+                        }
                     }
                 }
             }
-            if (shown == null) {
+            if (shown == null && !checking) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = {
                         captured?.delete()
@@ -144,6 +193,15 @@ private fun ProofScreen(id: Long, onDone: () -> Unit) {
             }
         }
     }
+}
+
+/** After this many rejected photos, a false detection can't trap you: "Send anyway" appears. */
+private const val MAX_FAILED_CHECKS = 3
+
+@Composable
+private fun ProofHeader(subject: String, explicit: Boolean) {
+    Text("Photograph: $subject", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+    if (explicit) Muted("She'll check this one is explicit. The check runs on your phone; nothing is uploaded.")
 }
 
 @Composable

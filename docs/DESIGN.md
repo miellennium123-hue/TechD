@@ -1,7 +1,7 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.1 built (see README). Partner remote control and Bluetooth toys are still later phases.
+> **Status:** v0.2 built (see README). Partner remote control and Bluetooth toys are still later phases.
 > **Last updated:** 2026-10-06 (round 8)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
@@ -69,7 +69,10 @@ Two lockout scopes:
 ### 4.4 Photo proof
 - **No task list.** Photo proof requests replace tasks
 - She **requests photo proof** of things, mainly **being locked in chastity** (also usable for permission requests)
-- **Proposed:** Photos taken through the in-app camera only (no gallery uploads, so no cheating), stored privately on the device
+- Photos taken through the in-app camera only (no gallery uploads, so no cheating), stored privately on the device
+- **What to photograph:** chastity requests always ask for the cage. Everything else (asking permission, Firm bypass, check-ins outside chastity) uses an **editable prompt list** in Settings. She picks one at random and the screen says exactly what to photograph (round 8)
+- **Explicit prompts:** each prompt can be marked Explicit (round 8)
+- **Verification (round 8):** every photo gets basic checks (rejects too dark, blank or very blurry). Photos for Explicit prompts must also pass an on-device nudity detector. Rejected photos are deleted and she asks for a retake. After 3 rejections, "Send anyway" appears: accepted, but no merit. Photos never leave the phone
 
 ### 4.5 Chastity mode
 - **Toggleable** (for days without the cage)
@@ -121,6 +124,7 @@ User wants **a list of individual settings**, each toggled on/off, spanning **va
 | Chastity mode | Off | 1 to 4 |
 | Chastity: she can add time | Off | On / Off, plus **amount per addition** (user-set) |
 | Photo proof requests | Off | Occasional / Frequent |
+| Photo proof prompts | 6 defaults (1 explicit) | Editable list, each prompt Explicit or not |
 | Check-in frequency | Every 2 hours | 30 min to 2 hours |
 | Degradation on failure | Off | Mild / Harsh |
 | Lockout as punishment | Off | Short / Long |
@@ -146,6 +150,7 @@ User wants **a list of individual settings**, each toggled on/off, spanning **va
 - **Wallpaper lock:** True lock needs Device Owner mode (complex setup). Simpler option: she re-applies her wallpaper whenever it changes
 - **Check-ins:** Exact alarms so the 2 hour minimum is reliable
 - **Photos:** CameraX in-app capture, saved to private app storage
+- **Photo checks:** brightness, contrast and edge-sharpness checks in pure Kotlin. Explicit check uses the NudeNet 320n model (YOLOv8, AGPL-3.0) through ONNX Runtime, fully offline. Counts as explicit when an exposed genitalia, breast, buttocks or anus detection scores 0.3 or higher. It can't recognize a chastity cage, so chastity photos get basic checks only
 - **Permissions you'll grant knowingly:** Accessibility, Usage Access, Display over other apps, Notifications, Camera, Exact alarms
 
 ---
@@ -170,13 +175,14 @@ Choices made while building, where the spec left room:
 
 ## 9. Open questions
 
-- **Photo proof subject outside chastity (round 8):** Asking to open an app (or a Firm bypass) can demand "a photo" with no subject, which is confusing when chastity is off. What should she ask for? Options: a user-editable list of proof prompts she picks from, proof only while locked in chastity, or a fixed built-in set
-- **Photo verification (round 8):** v0.1 does no checking: any photo from the in-app camera is accepted (honor system). Options: basic checks (reject dark, blank or blurry shots), an on-device explicit-content classifier (can tell explicit from not, but not a cage or a specific body part), or keep the honor system. Photos must never leave the phone
+None right now.
 
-### Known issues
-- **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." doesn't say what to photograph. Fix depends on the first open question
+### Fixed issues
+- **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
 ### Answered
+- **Proof subject outside chastity:** an editable prompt list she picks from at random (round 8)
+- **Photo verification:** basic checks on every photo, plus an on-device explicit check for prompts marked Explicit (round 8)
 - **Mood:** Set via Settings, switches somewhat randomly, affects dialogue only (rounds 2 and 3)
 - **Tasks:** None. Photo proof requests instead, like being locked in chastity (round 2)
 - **Chastity countdown:** Visible, and she can add time. Amount is a setting (rounds 2 and 3)
@@ -200,4 +206,4 @@ Choices made while building, where the spec left room:
 - **2026-10-06 (round 5):** v0.1 built: Kotlin + Compose app with every feature in sections 3 to 5. Build decisions recorded in section 8
 - **2026-10-06 (round 6):** Development continues in the same chat. Added the update rule: Claude updates this doc after every message. Added `CLAUDE.md` with the same rule
 - **2026-10-06 (round 7):** No design changes. User is downloading v0.1 to test on their phone
-- **2026-10-06 (round 8):** First test feedback. Logged the vague permission-proof prompt as a known issue, and opened two questions: what she asks for outside chastity, and whether photos get verified
+- **2026-10-06 (round 8):** First test feedback: permission proof didn't say what to photograph, and photos weren't verified. Decided on an editable prompt list (with Explicit flag) and on-device photo checks. Built in v0.2

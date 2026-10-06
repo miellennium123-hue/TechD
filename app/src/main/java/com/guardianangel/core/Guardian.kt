@@ -9,6 +9,7 @@ import com.guardianangel.data.GuardianState
 import com.guardianangel.data.Intensity
 import com.guardianangel.data.Mood
 import com.guardianangel.data.ProofFrequency
+import com.guardianangel.data.ProofPrompts
 import com.guardianangel.data.ProofReason
 import com.guardianangel.data.ProofRequest
 import com.guardianangel.data.Store
@@ -215,7 +216,21 @@ object Guardian {
         notify: Boolean = false,
     ): ProofRequest {
         val t = now()
-        val request = ProofRequest(t, reason, t, t + dueMinutes * MINUTE, pkg, grantLevel)
+        val prompt = if (reason.usesPromptList) {
+            config.value.proofPrompts.randomOrNull(random) ?: ProofPrompts.FALLBACK
+        } else {
+            null
+        }
+        val request = ProofRequest(
+            id = t,
+            reason = reason,
+            createdAt = t,
+            dueAt = t + dueMinutes * MINUTE,
+            packageName = pkg,
+            grantLevel = grantLevel,
+            prompt = prompt?.text.orEmpty(),
+            explicit = prompt?.explicit == true,
+        )
         state.update { st ->
             st.copy(proofs = st.proofs.filterNot { pkg != null && it.packageName == pkg } + request)
         }
@@ -224,8 +239,17 @@ object Guardian {
         return request
     }
 
-    /** Saves the photo privately and settles the request. Returns her reaction. */
-    fun completeProof(id: Long, photo: File): String {
+    /** A photo failed her checks. Returns how many times this request has failed. */
+    fun recordFailedCheck(id: Long): Int =
+        state.update { st ->
+            st.copy(proofs = st.proofs.map { if (it.id == id) it.copy(failedChecks = it.failedChecks + 1) else it })
+        }.proofs.firstOrNull { it.id == id }?.failedChecks ?: 0
+
+    /**
+     * Saves the photo privately and settles the request. Returns her reaction.
+     * [verified] is false when sent anyway after repeated failed checks: accepted, but no merit.
+     */
+    fun completeProof(id: Long, photo: File, verified: Boolean = true): String {
         val t = now()
         val request = state.value.proofs.firstOrNull { it.id == id }
         val dir = File(appContext.filesDir, ProofFiles.DIR).apply { mkdirs() }
@@ -242,9 +266,9 @@ object Guardian {
         }
         Scheduler.cancelProofDeadline(appContext, request)
         Notifier.cancel(appContext, Notifier.ID_PROOF)
-        if (request.reason.penalized && t <= request.dueAt) addMerit(5)
+        if (verified && request.reason.penalized && t <= request.dueAt) addMerit(5)
         request.packageName?.let { grant(it, Rules.GRANT_MINUTES, request.grantLevel ?: Intensity.FIRM) }
-        return say(Line.PRAISE)
+        return say(if (verified) Line.PRAISE else Line.WARNING)
     }
 
     fun onProofDeadline(id: Long) {

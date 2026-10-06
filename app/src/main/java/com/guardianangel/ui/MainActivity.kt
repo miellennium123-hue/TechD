@@ -35,6 +35,7 @@ enum class Screen(val title: String) {
     CHASTITY("Chastity"),
     GALLERY("Photo proof"),
     ALLOWED("Always-allowed apps"),
+    PROMPTS("What she can ask for"),
     SETUP("Permissions"),
 }
 
@@ -55,7 +56,7 @@ private fun MainContent() {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     val config by Guardian.config.flow.collectAsState()
     val state by Guardian.state.flow.collectAsState()
-    val back = { screen = if (screen == Screen.ALLOWED) Screen.SETTINGS else Screen.HOME }
+    val back = { screen = if (screen == Screen.ALLOWED || screen == Screen.PROMPTS) Screen.SETTINGS else Screen.HOME }
 
     BackHandler(enabled = screen != Screen.HOME) { back() }
 
@@ -77,10 +78,11 @@ private fun MainContent() {
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (screen) {
                 Screen.HOME -> HomeScreen(config, state) { screen = it }
-                Screen.SETTINGS -> SettingsScreen(config) { screen = Screen.ALLOWED }
+                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS })
                 Screen.CHASTITY -> ChastityScreen(config, state)
                 Screen.GALLERY -> GalleryScreen()
                 Screen.ALLOWED -> AllowedAppsScreen(config)
+                Screen.PROMPTS -> PromptsScreen(config)
                 Screen.SETUP -> SetupScreen()
             }
         }
