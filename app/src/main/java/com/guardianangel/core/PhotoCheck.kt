@@ -76,4 +76,32 @@ object ExplicitScore {
     }
 
     fun isExplicit(output: Array<FloatArray>): Boolean = maxScore(output) >= THRESHOLD
+
+    const val MALE_GENITALIA = 14
+
+    /** The most confident box for [cls], in model input pixels (centre x, centre y, width, height), or null if none. */
+    fun best(output: Array<FloatArray>, cls: Int): Detection? {
+        val scores = output.getOrNull(4 + cls) ?: return null
+        if (output.size < 4 || scores.isEmpty()) return null
+        var bestIndex = 0
+        for (i in scores.indices) if (scores[i] > scores[bestIndex]) bestIndex = i
+        return Detection(
+            score = scores[bestIndex],
+            cx = output[0].getOrElse(bestIndex) { 0f },
+            cy = output[1].getOrElse(bestIndex) { 0f },
+            w = output[2].getOrElse(bestIndex) { 0f },
+            h = output[3].getOrElse(bestIndex) { 0f },
+        )
+    }
+}
+
+/** One detector box, in model input pixels. */
+data class Detection(val score: Float, val cx: Float, val cy: Float, val w: Float, val h: Float)
+
+/** Brightness (mean, 0 to 255) and sharpness (variance of the Laplacian) of a grayscale image. */
+data class PhotoStats(val brightness: Double, val sharpness: Double) {
+    companion object {
+        fun of(gray: IntArray, width: Int, height: Int): PhotoStats =
+            PhotoStats(gray.take(width * height).average(), PhotoQuality.laplacianVariance(gray, width, height))
+    }
 }

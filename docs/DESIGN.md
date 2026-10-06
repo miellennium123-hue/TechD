@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.9.0 (adds Her lines). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 26)
+> **Status:** v0.10.0 (adds Rate me). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 27)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -103,6 +103,10 @@ Two lockout scopes:
 - She opens one of **your own sites** in Chrome after a 10 second warning, and you stay for a set time
 - Details in 9.7 and section 8 (v0.8.0)
 
+### 4.10 Rate me (v0.10.0)
+- She rates you: your measurements against published data, plus how well you show her in a photo, then her verdict
+- Details in 9.10 and section 8 (v0.10.0)
+
 ---
 
 ## 5. Settings
@@ -122,7 +126,7 @@ User wants **a list of individual settings**, each toggled on/off.
 
 *"Quit for now" overrides every level.*
 
-**Current settings (v0.9.0):** one toggle each, plus details.
+**Current settings (v0.10.0):** one toggle each, plus details.
 
 | Setting | Default | Details |
 |---|---|---|
@@ -146,6 +150,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Discreet notifications | On | On / Off |
 | Mood | Switching | Sweet / Strict / Switching. Dialogue, plus begging odds |
 | Her lines | Her built-in lines | Edit the sweet and strict lines for each situation. Reset one or all |
+| Rate me | Off | Her taste: likes bigger / likes smaller. Units: cm / inches. Last 5 scores, clear history |
 | Merit points and levels | On | On / Off |
 
 ---
@@ -295,11 +300,26 @@ Choices made while building, where the spec left room:
 - **Tidy up:** the unused `WAIT` line is gone. An old saved edit for a situation that no longer exists is ignored
 - **No limits** on what you write, like the rest of her lines (round 2). There's no length limit; long lines get cut off in notifications
 
+### v0.10.0 (round 27, builds 9.10 Rate me)
+- **Claude's pick (user said "code the most accurate one"):** design 1 + 3 from the round 26 research, plus a taste setting. No card-and-ruler measuring yet (accuracy untested)
+- **Toggle "Rate me"**, off by default. **Rate me** button on home while she's on. Only when you ask; never at check-ins
+- **Step 1, measurements:** erect length and girth, in cm or inches (prefilled from last time). Allowed range 2 to 40 cm
+- **Step 2, photo:** in-app camera only, screenshots blocked. Usual quality checks (dark, blank, blurry), then the NudeNet detector must see male genitalia (score 0.3 or more). If the detector can't run, she rates anyway with neutral photo signals. After 3 rejected photos: "Rate me on my numbers" (presentation 0)
+- **The photo is deleted** as soon as she's looked. Only numbers are kept (last 30 ratings in `GuardianState.ratings`). Quit for now keeps the history; Settings can clear it
+- **Size:** percentiles from Veale et al. 2015, BJU International 115:978-986 (erect length mean 13.12 cm, SD 1.66, n = 692; erect girth mean 11.66 cm, SD 1.10, n = 381), assuming a normal distribution like the paper's nomograms. Shown as 1st to 99th
+- **Size score:** 60% length, 40% girth percentile. **Her taste** "She likes smaller" flips it (100 minus), the percentiles shown stay real
+- **Presentation (0 to 100):** how clearly the detector sees it 30% (0.3 to 0.8), framing 25% (best at 15% to 60% of the frame), centring 15%, sharpness 15%, lighting 15%
+- **Her score (1 to 10):** 80% size, 20% presentation. Rated on your word alone counts presentation as 0
+- **Verdict:** 4 tiers (1 to 3, 4 to 5, 6 to 7, 8 to 10), each a new situation in Her lines, plus "Couldn't see it". Claude's built-in lines are mild; you write your own
+- **Mood rule kept:** mood only picks the sweet or strict line, never the score
+- **Flavor only:** no merit, no failures, no added lock time
+- **Scorecard:** score, length and girth with percentiles, presentation, your taste, and the source
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
 
-**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). 9.7 Open sites built in v0.8.0 (round 19). 9.8 Editable lines built in v0.9.0 (round 21).
+**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). 9.7 Open sites built in v0.8.0 (round 19). 9.8 Editable lines built in v0.9.0 (round 21). 9.9 is a concept only. 9.10 Rate me built in v0.10.0 (round 27).
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -373,13 +393,14 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
   - Chastity: blocked during a lock, or allowed and always ending in denial
   - Beat: vibration, visual pulse, or both
 
+### 9.10 Rate me (asked rounds 24 to 27, built v0.10.0)
+- **Asked:** a "cock rating" where she really rates you. She can't judge the body itself, so the build uses what's real: your measurements against published data and what the phone measures in the photo (see section 10 and section 8, v0.10.0)
+- **Possible later:** measuring against a card or ruler in the photo, effects (merit or lock time) as a setting, demanding a rating at check-ins, categories from merit and chastity history
+
 ---
 
 ## 10. Open questions
 
-- **Rating idea (round 24, not decided):** user asked about a cock rating feature. Possible: an explicit photo through the in-app camera (checked on device like other Explicit prompts), then her verdict with a score. She can't really judge the photo (no on-device model can, and photos never leave the phone), so the score comes from chance, your own measurements or a setting. Claude writes mild lines; explicit wording via Her lines. Open: what decides the score, tone, when it happens, any effects, and whether the photo is kept
-  - **Can she really judge it? (round 25):** not the body itself. No on-device model does that, and cloud AI would break "photos never leave the phone" (and mainstream AI services refuse explicit images). Real options: score the photo from what the phone can measure (detector confidence, how much of the frame it fills, sharpness and lighting), measurements you enter, or both
-  - **Research (round 26):** confirmed NudeNet has no size or shape labels (presence, confidence and box only). Phone depth/AR measuring isn't proven accurate at close range (one study: a few cm error at 1 to 3 m). Ranked ideas, most real first: (1) measurements you enter turned into a percentile from published size data, with a photo gate and her verdict by tier; (2) measuring against a credit card or ruler in the photo; (3) a presentation score from photo signals; (4) categories using what the app already knows (merit, lock hours, failures); (5) chance. Size data (Veale et al. 2015) still has to be checked against the paper before use
 - **Guided sessions (round 22):** written up as concept 9.9 (round 23). Four open points listed there. Not planned until the user has tested v0.9.0
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
 
@@ -387,6 +408,7 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
 ### Answered
+- **Rating (rounds 24 to 27):** built as Rate me in v0.10.0. Size percentiles from your measurements, presentation from the photo, her taste setting. Card-and-ruler measuring and effects are possible later
 - **Editable lines details (round 21):** dialogue only (not Lines task sentences), the home screen line is editable too, untouched situations follow updates
 - **Open sites details (round 19):** 5 minute stay (1 to 30), 9 in 10 check-ins, first leave is a failure, waits for unlock up to 30 minutes
 - **Night check-ins without Bedtime:** a separate Quiet hours setting (round 16)
@@ -437,3 +459,4 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **2026-10-06 (round 24):** No code changes. User asked whether a cock rating feature is possible. Answered yes, with open questions. Recorded in section 10
 - **2026-10-06 (round 25):** No code changes. User asked whether she could really rate the photo. Answered: not the body itself, but she could score real photo signals and your measurements. Added to the rating question in section 10
 - **2026-10-06 (round 26):** No code changes. Ran a deep-research brainstorm on the rating idea. Findings and a ranked list of designs added to the rating question in section 10
+- **2026-10-06 (round 27, v0.10.0):** Built 9.10 Rate me: your measurements become percentiles from Veale et al. 2015, the photo must pass the on-device detector and gives a presentation score, and her taste setting decides which way the score runs. Score out of 10 with her verdict in 4 tiers (editable in Her lines). The photo is deleted straight after; only numbers are kept. Details in section 8

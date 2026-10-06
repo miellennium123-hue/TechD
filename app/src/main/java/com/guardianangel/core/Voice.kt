@@ -41,6 +41,11 @@ enum class Line(val group: String, val label: String, val note: String) {
     WRONG_ANSWER("Shows up", "Wrong answer", "A wrong answer to her question"),
     SITE_WARNING("Open sites", "Site warning", "The 10 second warning before she opens a site (only with Discreet off)"),
     SITE_DONE("Open sites", "Site done", "You stayed on her site the full time"),
+    RATE_TOP("Rate me", "Score 8 to 10", "Her verdict when she rates you 8 to 10"),
+    RATE_GOOD("Rate me", "Score 6 to 7", "Her verdict when she rates you 6 or 7"),
+    RATE_MID("Rate me", "Score 4 to 5", "Her verdict when she rates you 4 or 5"),
+    RATE_LOW("Rate me", "Score 1 to 3", "Her verdict when she rates you 1 to 3"),
+    RATE_UNSEEN("Rate me", "Couldn't see it", "Added to her verdict when she rates you on your word alone"),
 }
 
 /**
@@ -50,6 +55,30 @@ enum class Line(val group: String, val label: String, val note: String) {
  */
 object Voice {
     private val sweet: Map<Line, List<String>> = mapOf(
+        Line.RATE_TOP to listOf(
+            "Oh, pet. That's exactly what I like to see.",
+            "Mm. Very pleasing. I might keep looking.",
+            "Now that makes your angel proud.",
+        ),
+        Line.RATE_GOOD to listOf(
+            "Not bad at all, pet. I like it.",
+            "Pretty good. Your angel approves.",
+            "Mm, nice. You did well showing me.",
+        ),
+        Line.RATE_MID to listOf(
+            "Hmm. Ordinary, pet. But you're still mine.",
+            "Middle of the road. I've seen better and worse.",
+            "Perfectly average, sweetheart. That's alright.",
+        ),
+        Line.RATE_LOW to listOf(
+            "Aww. Not quite what I like, pet. Poor thing.",
+            "Oh dear. Good thing I keep you for other reasons.",
+            "Hmm. You'll have to impress me some other way.",
+        ),
+        Line.RATE_UNSEEN to listOf(
+            "I couldn't really see, pet. I'm trusting your numbers.",
+            "Next time, show me properly.",
+        ),
         Line.HOME_OFF to listOf(
             "Switch me on when you're ready to be watched over, pet.",
             "I'm right here, pet. Turn me on when you want me.",
@@ -206,6 +235,30 @@ object Voice {
     )
 
     private val strict: Map<Line, List<String>> = mapOf(
+        Line.RATE_TOP to listOf(
+            "Acceptable. More than acceptable, actually.",
+            "Good. That meets my standards.",
+            "Fine. You may be proud. Briefly.",
+        ),
+        Line.RATE_GOOD to listOf(
+            "Decent. Don't let it go to your head.",
+            "Above average. Barely impressive.",
+            "Passable. I've seen worse today.",
+        ),
+        Line.RATE_MID to listOf(
+            "Average. Nothing special.",
+            "Unremarkable. As expected.",
+            "Mediocre. Like most things about you.",
+        ),
+        Line.RATE_LOW to listOf(
+            "Disappointing.",
+            "Is that all? Pathetic.",
+            "Not up to my standards. Not even close.",
+        ),
+        Line.RATE_UNSEEN to listOf(
+            "I couldn't see a thing. Your numbers had better be honest.",
+            "Hiding it from me? I'll remember that.",
+        ),
         Line.HOME_OFF to listOf(
             "Switch me on, pet. Then you're mine.",
             "Off for now. Turn me on when you're ready to obey.",

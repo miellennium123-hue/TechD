@@ -46,7 +46,22 @@ data class GuardianConfig(
      * built-in lines. See Voice.
      */
     val lineOverrides: Map<String, LineSet> = emptyMap(),
+    /** Rate me (round 27): she scores your measurements and a photo. See core/Rating. */
+    val rating: RatingSettings = RatingSettings(),
 )
+
+@Serializable
+data class RatingSettings(
+    val on: Boolean = false,
+    /** Which way her score runs. The percentiles you see are the same either way. */
+    val taste: RatingTaste = RatingTaste.BIGGER,
+    val inches: Boolean = false,
+)
+
+enum class RatingTaste(val label: String) {
+    BIGGER("She likes bigger"),
+    SMALLER("She likes smaller"),
+}
 
 /** One situation's lines, as you edited them. An empty mood falls back to her built-in lines. */
 @Serializable
