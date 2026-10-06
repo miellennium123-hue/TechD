@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.1 built (see README). Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 7)
+> **Last updated:** 2026-10-06 (round 8)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -170,7 +170,11 @@ Choices made while building, where the spec left room:
 
 ## 9. Open questions
 
-None. Design complete.
+- **Photo proof subject outside chastity (round 8):** Asking to open an app (or a Firm bypass) can demand "a photo" with no subject, which is confusing when chastity is off. What should she ask for? Options: a user-editable list of proof prompts she picks from, proof only while locked in chastity, or a fixed built-in set
+- **Photo verification (round 8):** v0.1 does no checking: any photo from the in-app camera is accepted (honor system). Options: basic checks (reject dark, blank or blurry shots), an on-device explicit-content classifier (can tell explicit from not, but not a cage or a specific body part), or keep the honor system. Photos must never leave the phone
+
+### Known issues
+- **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." doesn't say what to photograph. Fix depends on the first open question
 
 ### Answered
 - **Mood:** Set via Settings, switches somewhat randomly, affects dialogue only (rounds 2 and 3)
@@ -196,3 +200,4 @@ None. Design complete.
 - **2026-10-06 (round 5):** v0.1 built: Kotlin + Compose app with every feature in sections 3 to 5. Build decisions recorded in section 8
 - **2026-10-06 (round 6):** Development continues in the same chat. Added the update rule: Claude updates this doc after every message. Added `CLAUDE.md` with the same rule
 - **2026-10-06 (round 7):** No design changes. User is downloading v0.1 to test on their phone
+- **2026-10-06 (round 8):** First test feedback. Logged the vague permission-proof prompt as a known issue, and opened two questions: what she asks for outside chastity, and whether photos get verified
