@@ -15,16 +15,19 @@ object Scheduler {
     const val ACTION_CHECK_IN = "com.guardianangel.action.CHECK_IN"
     const val ACTION_PROOF_DEADLINE = "com.guardianangel.action.PROOF_DEADLINE"
     const val ACTION_CHASTITY_END = "com.guardianangel.action.CHASTITY_END"
+    const val ACTION_TASK = "com.guardianangel.action.TASK"
     const val EXTRA_ID = "id"
 
     private const val RC_CHECK_IN = 1
     private const val RC_CHASTITY = 2
+    private const val RC_TASK = 3
 
     fun scheduleAll(context: Context) {
         val st = Guardian.state.value
         scheduleNextCheckIn(context)
         st.chastity?.let { scheduleChastityEnd(context, it.endsAt) }
         st.proofs.filter { it.reason.penalized }.forEach { scheduleProofDeadline(context, it) }
+        st.task?.let { scheduleTask(context, Guardian.nextTaskAlarm(it, Guardian.now())) }
     }
 
     /** Next check-in lands somewhere between 60% and 100% of the interval, so never later than it. */
@@ -50,9 +53,16 @@ object Scheduler {
     fun cancelChastityEnd(context: Context) =
         cancel(context, pending(context, ACTION_CHASTITY_END, RC_CHASTITY))
 
+    fun scheduleTask(context: Context, at: Long) =
+        set(context, pending(context, ACTION_TASK, RC_TASK), max(at, Guardian.now() + 5_000))
+
+    fun cancelTask(context: Context) =
+        cancel(context, pending(context, ACTION_TASK, RC_TASK))
+
     fun cancelAll(context: Context, proofs: List<ProofRequest>) {
         cancel(context, pending(context, ACTION_CHECK_IN, RC_CHECK_IN))
         cancelChastityEnd(context)
+        cancelTask(context)
         proofs.forEach { cancelProofDeadline(context, it) }
     }
 

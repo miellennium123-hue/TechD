@@ -49,6 +49,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `core/Guardian.kt` | Every action: enable, quit, ask, proof, chastity, failures, check-ins |
 | `core/Rules.kt` | Pure blocking and timer logic |
 | `core/PhotoCheck.kt`, `core/PhotoVerifier.kt` | Photo quality and explicit checks |
+| `data/Tasks.kt`, `core/TaskChecks.kt` | Rules & Tasks list, active task, lines and stillness checks (tested in `TaskChecksTest.kt`) |
 | `core/Voice.kt` | Her lines |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen |
 | `ui/` | Compose screens and the Block and Proof activities |

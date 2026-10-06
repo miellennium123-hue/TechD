@@ -1,13 +1,13 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.3.0 (no more intensity levels)
+> **Version under test:** 0.4.0 (adds Rules & Tasks)
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.3.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.4.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
@@ -53,6 +53,17 @@
 - [ ] With "She can add time" on: some denials add your amount. Hard cap is never passed
 - [ ] With "She can add time" on: missing a proof deadline adds time and drops merit
 - [ ] When the timer ends, you get a notification and "Release me" gives merit
+
+## 7b. Rules & Tasks (Settings > Rules & Tasks on)
+Use **Ask her for a task** on the home screen to get one now. Quit for now clears any task.
+- [ ] Settings > Rules & Tasks > Her list: add, edit and delete work, Reset brings back 12
+- [ ] **Enforced rule** ("No social media..."): social apps are blocked with "locked by her rule", no wait or photo option. When time is up you get merit
+- [ ] **Honor rule:** when time is up, a notification asks you to report. "I obeyed" gives merit, "I broke it" counts as a failure
+- [ ] **Photo task:** shows on home as "Her task" with the task as the photo subject
+- [ ] **Stillness:** 5 second countdown, then holding still passes. Tilting the phone fails. Leaving the screen just cancels
+- [ ] **Lines:** a typo sends you back to line 1. Pasting is ignored. Keyboard shows no suggestions. Finishing gives merit
+- [ ] Let a task's deadline pass: it counts as a failure, and the next lines task is harder
+- [ ] With the toggle on and check-ins every 30 min, a task arrives at roughly 1 in 3 check-ins
 
 ## 8. Check-ins and notifications (set frequency to 30 min)
 - [ ] A check-in arrives within 30 minutes, even with the screen off

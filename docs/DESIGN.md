@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.3.0 (sections 9.1 to 9.3 built). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 13)
+> **Status:** v0.4.0 (sections 9.1 to 9.4 built). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 13, v0.4.0)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -192,11 +192,25 @@ Choices made while building, where the spec left room:
 - **Whim:** with "She can add time" on, each check-in during a lock has a 10% chance of adding time (was Strict and up only)
 - **Upgrade:** old saved intensity values are ignored. Existing settings and photos are kept
 
+### v0.4.0 (round 13, builds 9.4 Rules & Tasks)
+- **Four kinds:** Rule (obey for a set time), Photo task (do it, then photo proof of the task before its deadline), Stillness (motion sensor), Lines (typing)
+- **When:** at each check-in with the toggle on, 1 in 3 chance she issues one (if nothing else is pending). That check-in is the task. **"Ask her for a task"** on the home screen issues one on demand (handy for testing)
+- **One at a time:** a single rule or task can be open
+- **App-enforced rules** lock social media or everything except Always-allowed, with **no way in** (like a punishment lockout). They finish on their own when time is up (+5 merit)
+- **Honor rules** (not enforceable): when time is up, report "I obeyed" (+5 merit) or "I broke it" (failure) within 30 minutes. No report is a failure
+- **Photo tasks** use the normal photo checks, including the nudity check if marked Explicit. On time: +5 merit
+- **Stillness:** 5 seconds to get into position, then the accelerometer watches. Fails if the phone tilts or shifts (more than 2 m/s² from its resting reading for 0.4 seconds). Small tremors and single bumps don't count. Leaving the screen cancels the attempt without failing; start again before the deadline (60 minutes). Phones without a motion sensor just get the timer
+- **Lines:** Easy 5, Medium 15, Hard 30 lines, longer sentences at higher difficulty. Pasting and keyboard suggestions are blocked (more than one character at once is ignored; the keyboard opens without suggestions). Any typo restarts from line 1. Capitals and curly apostrophes don't count as typos. Deadline 60 minutes
+- **Harder after failure:** every failure raises the lowest lines difficulty by one (up to Hard). Finishing a lines task resets it
+- **Failures:** missing a deadline -8 merit, moving or admitting a broken rule -5. Both follow the usual failure settings (degradation, added chastity time, punishment lockout)
+- **Starter list:** 12 entries Claude wrote, editable in Settings > Rules & Tasks (add, edit, delete, reset)
+- **Off:** turning the toggle off, turning her off, or Quit for now clears any open task with no penalty
+
 ## 9. Planned next (round 12)
 
 Agreed in round 12. Build these next, one release at a time.
 
-**Build status:** 9.1 to 9.3 built in v0.3.0. 9.4 and 9.5 not built yet.
+**Build status:** 9.1 to 9.3 built in v0.3.0, 9.4 in v0.4.0. 9.5 not built yet.
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -215,7 +229,7 @@ Agreed in round 12. Build these next, one release at a time.
 - **Mood rule change:** strict mood is harsher about begging (denies more often, adds time more often), sweet mood is kinder. This is the only place mood affects outcomes; everywhere else it stays dialogue-only
 - More chastity features to be discussed later
 
-### 9.4 Rules & Tasks (new toggle)
+### 9.4 Rules & Tasks (new toggle, built, v0.4.0)
 - **Source:** a starter list Claude writes, editable in Settings (add, edit, delete), like the photo prompts
 - **When:** at about 1 in 3 check-ins she issues one
 - **Rules:** obey for a set time. **App-enforced rules** where possible, e.g. "No social media for 2 hours" auto-locks those apps
@@ -274,4 +288,5 @@ None right now.
 - **2026-10-06 (round 10):** Merged all work into `main`. Added automatic GitHub Releases with a stable download link, an About section in Settings (version and update link), and a full workflow guide in `CLAUDE.md` for future sessions
 - **2026-10-06 (round 11):** No design changes. Added `docs/TESTING.md`, an on-device test checklist for v0.2.2. Releases now publish only when the version number changes
 - **2026-10-06 (round 12):** Planned the next version: one toggle per setting (no intensity levels), hard-block lockouts, chastity min/max length and begging, Rules & Tasks, and Shows up. Popups dropped. Written up in section 9 for the next chat; not built yet
+- **2026-10-06 (round 13, v0.4.0):** Built 9.4 Rules & Tasks: app-enforced and honor rules, photo tasks, stillness with the motion sensor, and line writing. Decisions in section 8
 - **2026-10-06 (round 13):** Building section 9, one part at a time. v0.3.0 builds 9.1 to 9.3: intensity levels removed, lockouts and bedtime hard blocked with a wait or everyday photo as the way in, attempts never fail, chastity min/max lock length and mood-aware begging. Decisions in section 8

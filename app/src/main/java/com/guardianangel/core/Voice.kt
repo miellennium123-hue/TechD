@@ -7,6 +7,7 @@ enum class Line {
     GREETING, PRAISE, GRANT, DENY, DEMAND_PROOF, WARNING, BLOCKED, BEDTIME, WAIT,
     FAIL_NEUTRAL, DEGRADE_MILD, DEGRADE_HARSH, CHASTITY_START, TIME_ADDED, CHECK_IN,
     RELEASED, TIMER_DONE, EARLY_DENIED, BEG_GRANTED, BEG_TIME_ADDED, PROOF_REJECTED, OFF, QUIT,
+    TASK_ISSUED, RULE_REPORT, MOVED, TYPO,
 }
 
 /** Everything she says. Edit freely; every line needs a sweet and a strict version. */
@@ -115,6 +116,25 @@ object Voice {
             "Hmm, that's not what I asked for, pet. Try again.",
             "Nice try. Take it properly this time.",
             "I can't see what I wanted. Again, pet.",
+        ),
+        Line.TASK_ISSUED to listOf(
+            "I have something for you to do, pet. Come and see.",
+            "A little task for my pet. Don't keep me waiting.",
+            "I made a rule just for you. Come look.",
+        ),
+        Line.RULE_REPORT to listOf(
+            "Time's up on my rule, pet. Did you obey? Tell me honestly.",
+            "Come report in, pet. Were you good for me?",
+        ),
+        Line.MOVED to listOf(
+            "Oh, pet. You moved. I felt that.",
+            "Wobbly little thing. That's a fail.",
+            "So close, and you fidgeted. Try to be stiller next time.",
+        ),
+        Line.TYPO to listOf(
+            "Oops, a mistake. Back to line one, pet.",
+            "Careful, sweetheart. From the top.",
+            "Mm, that's wrong. Start again for me.",
         ),
         Line.OFF to listOf(
             "Resting now. I'll be here when you want me.",
@@ -230,6 +250,25 @@ object Voice {
             "Rejected. Do it properly.",
             "That's not what I asked for. Again.",
             "Did you think I wouldn't check? Retake it.",
+        ),
+        Line.TASK_ISSUED to listOf(
+            "I have orders for you. Open it. Now.",
+            "New task. Get to it.",
+            "I've set you a rule. Read it and obey.",
+        ),
+        Line.RULE_REPORT to listOf(
+            "My rule is over. Report. Did you obey?",
+            "Report in. And don't lie to me.",
+        ),
+        Line.MOVED to listOf(
+            "You moved. Failed.",
+            "I said still. You couldn't even manage that.",
+            "Pathetic. Not even a few minutes of stillness.",
+        ),
+        Line.TYPO to listOf(
+            "Wrong. Line one. Again.",
+            "Sloppy. Start over.",
+            "A mistake. From the beginning.",
         ),
         Line.OFF to listOf(
             "Fine. I'm off duty. For now.",

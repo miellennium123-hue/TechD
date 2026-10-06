@@ -31,6 +31,8 @@ import com.guardianangel.core.Permissions
 import com.guardianangel.core.Rules
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
+import com.guardianangel.data.ProofReason
+import com.guardianangel.data.TaskKind
 
 @Composable
 fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) -> Unit) {
@@ -69,8 +71,25 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        state.task?.let { task ->
+            SectionCard(if (task.kind == TaskKind.RULE) "Her rule" else "Her task") {
+                Text(task.text)
+                val left = (if (task.kind == TaskKind.RULE && now < task.ruleUntil) task.ruleUntil else task.dueAt) - now
+                Text(
+                    when {
+                        task.kind == TaskKind.RULE && now < task.ruleUntil -> "${formatDuration(left)} left"
+                        task.kind == TaskKind.RULE -> "Report back: ${formatDuration(left)} left"
+                        else -> "Due in ${formatDuration(left)}"
+                    },
+                    color = MaterialTheme.colorScheme.tertiary,
+                    fontWeight = FontWeight.Bold,
+                )
+                Button(onClick = { navigate(Screen.TASK) }) { Text("Open") }
+            }
+        }
+
         state.proofs.filter { it.reason.penalized || it.dueAt > now }.forEach { request ->
-            SectionCard("Photo proof requested") {
+            SectionCard(if (request.reason == ProofReason.TASK) "Her task" else "Photo proof requested") {
                 Text("Photograph: ${request.subject}")
                 if (request.explicit) Muted("Explicit. She'll check it on your phone.")
                 val left = request.dueAt - now
@@ -116,6 +135,11 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
                 Text("${state.merit} points" + (level.next?.let { " (next level at $it)" } ?: ""))
                 LinearProgressIndicator(progress = { level.progress(state.merit) }, modifier = Modifier.fillMaxWidth())
             }
+        }
+
+        val photoTaskOpen = state.proofs.any { it.reason == ProofReason.TASK }
+        if (config.enabled && config.tasksOn && state.task == null && !photoTaskOpen) {
+            OutlinedButton(onClick = { Guardian.issueTask() }, modifier = Modifier.fillMaxWidth()) { Text("Ask her for a task") }
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

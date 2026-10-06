@@ -142,13 +142,15 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                         RestrictionKind.PERMISSION -> "guarded. Ask her first."
                         RestrictionKind.BEDTIME -> "off limits at bedtime"
                         RestrictionKind.PUNISHMENT -> "locked as punishment"
+                        RestrictionKind.RULE -> "locked by her rule"
                     }
                 }",
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
             )
             when (block.kind) {
-                RestrictionKind.PUNISHMENT -> Text("${formatDuration(block.until - now)} left", fontWeight = FontWeight.Bold)
+                RestrictionKind.PUNISHMENT, RestrictionKind.RULE ->
+                    Text("${formatDuration(block.until - now)} left", fontWeight = FontWeight.Bold)
                 RestrictionKind.BEDTIME -> Text("Until ${formatMinuteOfDay(config.bedtime.endMinute)}", fontWeight = FontWeight.Bold)
                 else -> Unit
             }
@@ -187,6 +189,7 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                 ) { Text(if (cooldown > now) "Ask again in ${formatDuration(cooldown - now)}" else "Ask her") }
             }
 
+            if (block.kind == RestrictionKind.RULE) state.task?.let { Text(it.text, textAlign = TextAlign.Center) }
             if (!block.selfBypass && !block.askAllowed) Muted("Blocked until the timer ends.")
 
             OutlinedButton(onClick = onHome, modifier = Modifier.fillMaxWidth()) { Text("Go home") }

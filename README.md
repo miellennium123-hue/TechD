@@ -1,6 +1,6 @@
 # Guardian Angel
 
-An Android app with a dominant angel who manages your phone: app lockouts, bedtime, wallpaper control, chastity timers with photo proof, check-ins, and merit levels. Self-use only. You consent by turning her on, and **Quit for now** always ends everything instantly.
+An Android app with a dominant angel who manages your phone: app lockouts, bedtime, wallpaper control, chastity timers with photo proof, rules and tasks, check-ins, and merit levels. Self-use only. You consent by turning her on, and **Quit for now** always ends everything instantly.
 
 Full spec: [`docs/DESIGN.md`](docs/DESIGN.md). Section 8 lists the decisions made while building it.
 
@@ -55,6 +55,7 @@ Open **Permissions** in the app and grant:
 | `data/State.kt` | What she's doing right now: locks, proofs, grants, merit |
 | `core/Rules.kt` | Pure decision logic: what's blocked, ask and beg outcomes, timer lengths, levels |
 | `core/Guardian.kt` | All actions: enable, quit, ask, proof, chastity, failures, check-ins |
+| `core/TaskChecks.kt` | Line writing and stillness checks |
 | `core/Voice.kt` | Her lines |
 | `service/GuardianAccessibilityService.kt` | Detects the foreground app and shows the block screen |
 | `ui/` | Compose screens: home, settings, chastity, photos, block screen, camera |

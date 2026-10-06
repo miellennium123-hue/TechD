@@ -35,7 +35,7 @@ import com.guardianangel.data.WallpaperMode
 import kotlin.math.roundToInt
 
 @Composable
-fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit) {
+fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
 
@@ -168,6 +168,15 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 valueRange = 30f..120f,
                 steps = 5,
             )
+        }
+
+        SectionCard("Rules & Tasks") {
+            SwitchRow(
+                "Rules & Tasks",
+                "At about 1 in 3 check-ins she gives you a rule or task: app-enforced rules, photo tasks, stillness or lines.",
+                config.tasksOn,
+            ) { v -> update { it.copy(tasksOn = v) } }
+            OutlinedButton(onClick = openTasks) { Text("Her list (${config.taskList.size})") }
         }
 
         SectionCard("Discipline") {
