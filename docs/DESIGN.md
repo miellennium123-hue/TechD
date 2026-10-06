@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.6.0 (section 9 built, then a full review pass). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 14, v0.6.0)
+> **Last updated:** 2026-10-06 (round 15)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -332,3 +332,4 @@ Agreed in round 12 and built one release at a time. Kept as the record of what w
 - **2026-10-06 (round 13, v0.4.0):** Built 9.4 Rules & Tasks: app-enforced and honor rules, photo tasks, stillness with the motion sensor, and line writing. Decisions in section 8
 - **2026-10-06 (round 13, v0.5.0):** Built 9.5 Shows up: she summons you at some check-ins, everything locks if you ignore her for 10 minutes, and she asks a multiple choice or typed-phrase question. Section 9 is now fully built
 - **2026-10-06 (round 14, v0.6.0):** Full review of every version so far. Fixed app-in-front tracking, hidden deadlines with notifications off, demands at bedtime, stillness and lines edge cases, and Shows up wording. Added a reset confirmation and faster chastity steppers. Two open questions in section 10. Details in section 8
+- **2026-10-06 (round 15):** No design changes. User reports v0.6.0 looks like it works (logged in `docs/TESTING.md`). Confirmed `CLAUDE.md` still requires a design doc update after every message. The two open questions in section 10 are still open
