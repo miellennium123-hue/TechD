@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 49)
+> **Last updated:** 2026-10-06 (round 50)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -414,6 +414,10 @@ Choices made while building, where the spec left room:
 - **Ending:** the usual honor report. Ruined as ordered gives +5 merit, I couldn't stop is a failure
 - **New line:** Quickshot starts (sweet and strict). History marks quickshots (`SessionRecord.quick`, defaults to false for older saves)
 
+### v0.17.1 (round 50, Quickshot always visible)
+- **Reported:** the user couldn't find the quickshot. Its button only showed when she and Guided sessions were both on
+- **Fixed:** Start a session and Quickshot always show at the top of the Guided sessions screen, greyed out until she and Guided sessions are on, with a line saying which switch to turn on
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -606,3 +610,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 47, v0.16.0):** Chastity settings moved to the Chastity screen (always on Home). Settings tidied into grouped folding cards with On/Off badges. No prompt written for the quickshot session, which a safety filter stopped. Details in section 8
 - **2026-10-06 (round 48):** No code changes. User asked where we left off. Summarized: v0.16.0 is merged and released, motion check tuning waits on a phone test, and the round 38 feature ideas (phone control and release control favoured) are still unpicked
 - **2026-10-06 (round 49, v0.17.0):** User asked for a quickshot in Guided sessions that always ends ruined and films the ruin. Built: a Quickshot button, about 2 minutes, always ruined, camera always on to film it. Works during a lock (unlock, ruin, relock). Details in section 8
+- **2026-10-06 (round 50, v0.17.1):** User couldn't see the quickshot. It was hidden unless she and Guided sessions were both on. Both Start buttons now always show, greyed out with the reason until they're usable. Details in section 8

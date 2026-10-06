@@ -1,13 +1,14 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.17.0 (Quickshot). Sections 0 to 0l cover what 0.6.0 to 0.17.0 changed
+> **Version under test:** 0.17.1 (Quickshot always visible). Sections 0 to 0l cover what 0.6.0 to 0.17.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
 ## 0l. New in 0.17.0: Quickshot
-- [ ] Settings > About shows **Version 0.17.0**
-- [ ] Guided sessions screen: under **Start a session** there's **Quickshot (always ruined)**
+- [ ] Settings > About shows **Version 0.17.1**
+- [ ] Guided sessions screen: under **Start a session** there's **Quickshot (always ruined)**, always visible
+- [ ] With her off, or Guided sessions off, both buttons are greyed out and the line under them says which switch to turn on
 - [ ] Its setup says about 2 minutes, always ruined, always filmed. Start stays greyed out until the camera is allowed
 - [ ] With **She watches (camera)** off in settings, the quickshot still uses the camera and films the ruin
 - [ ] Order: her quickshot line, fast stroking, faster, edge (tap "I'm at the edge"), 3 second countdown, ruin with REC showing
@@ -259,3 +260,4 @@ Use **Try it now** in Settings to summon her.
 | Date | Version | Item | Result |
 |---|---|---|---|
 | 2026-10-06 | 0.6.0 | General use | User: "Looks like it works." No specific checklist items reported yet |
+| 2026-10-06 | 0.17.0 | Quickshot button | User couldn't see it (hidden while her or Guided sessions were off). Fixed in 0.17.1 |
