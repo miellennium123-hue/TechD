@@ -37,11 +37,8 @@ object Permissions {
 /** Apps that must never be blocked, discovered on the device itself. */
 object ProtectedApps {
     fun discover(context: Context): Set<String> {
-        val pm = context.packageManager
         val result = mutableSetOf(context.packageName)
-        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-        @Suppress("DEPRECATION")
-        pm.queryIntentActivities(home, 0).forEach { result += it.activityInfo.packageName }
+        result += launchers(context)
         runCatching {
             context.getSystemService(TelecomManager::class.java)?.defaultDialerPackage?.let { result += it }
         }
@@ -49,6 +46,13 @@ object ProtectedApps {
             context.getSystemService(InputMethodManager::class.java)?.inputMethodList?.forEach { result += it.packageName }
         }
         return result
+    }
+
+    /** Home screen apps. Going home always counts as leaving the app you were in. */
+    fun launchers(context: Context): Set<String> {
+        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        @Suppress("DEPRECATION")
+        return context.packageManager.queryIntentActivities(home, 0).map { it.activityInfo.packageName }.toSet()
     }
 }
 

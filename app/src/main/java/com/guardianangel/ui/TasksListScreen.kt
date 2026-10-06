@@ -2,6 +2,8 @@ package com.guardianangel.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +34,7 @@ import com.guardianangel.data.TaskTemplate
 import com.guardianangel.data.TaskTemplates
 
 /** The editable list she picks rules and tasks from. Tap one to edit it. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TasksListScreen(config: GuardianConfig) {
     var editing by remember { mutableIntStateOf(-1) }
@@ -58,7 +61,10 @@ fun TasksListScreen(config: GuardianConfig) {
             label = { Text(if (editing >= 0) "Edit" else "New rule or task") },
             modifier = Modifier.fillMaxWidth(),
         )
-        ChoiceChips(TaskKind.entries, kind, { it.label }) { kind = it }
+        ChoiceChips(TaskKind.entries, kind, { it.label }) {
+            if (it != kind) minutes = defaultMinutes(it)
+            kind = it
+        }
         when (kind) {
             TaskKind.RULE -> {
                 Stepper("Lasts", formatMinutes(minutes), { minutes = (minutes - 15).coerceAtLeast(15) }, { minutes = (minutes + 15).coerceAtMost(12 * 60) })
@@ -75,7 +81,7 @@ fun TasksListScreen(config: GuardianConfig) {
                 Stepper("Hold still for", formatMinutes(minutes), { minutes = (minutes - 1).coerceAtLeast(1) }, { minutes = (minutes + 1).coerceAtMost(30) })
             TaskKind.LINES -> Muted("She picks the sentence and difficulty: Easy 5, Medium 15 or Hard 30 lines.")
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 enabled = text.isNotBlank(),
                 onClick = {
@@ -124,6 +130,14 @@ fun TasksListScreen(config: GuardianConfig) {
             }
         }
     }
+}
+
+/** Starting length when you pick a kind: rules an hour, photo tasks 30 minutes to do, stillness 5 minutes. */
+private fun defaultMinutes(kind: TaskKind): Int = when (kind) {
+    TaskKind.RULE -> 60
+    TaskKind.PHOTO -> 30
+    TaskKind.STILLNESS -> 5
+    TaskKind.LINES -> 30
 }
 
 private fun describe(item: TaskTemplate): String = when (item.kind) {

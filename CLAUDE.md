@@ -1,6 +1,6 @@
 # Guardian Angel
 
-Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. **Section 9 lists the agreed next changes, not yet built.**
+Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the round 12 plan (all built), section 10 the open questions.
 
 ## Design doc rule (always)
 
@@ -25,7 +25,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 ## Building
 
-- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt` and `core/PhotoCheck.kt` has JVM unit tests in `app/src/test/`, which CI runs.
+- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/PhotoCheck.kt` and `core/TaskChecks.kt` has JVM unit tests in `app/src/test/`, which CI runs.
+- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
 - Maven Central sometimes rate-limits this environment (HTTP 429), so local JVM test runs may fail to resolve dependencies. Rely on CI.
 - Locally with an SDK: `./gradlew testDebugUnitTest assembleDebug`.
 - Every build is signed with `app/signing/guardian.keystore` so updates install over the old app. Never replace or regenerate it, or the user has to uninstall and loses their data.
@@ -38,6 +39,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 - There are no intensity levels (removed in v0.3.0). Each setting is an on/off toggle plus its details.
 - **Quit for now** must stay reachable on every screen, never be penalized, and never be removable by any setting or future partner sync.
 - Proof photos stay in private app storage and never leave the phone. Photo checks run on device (`core/PhotoVerifier.kt`, NudeNet model in `assets/models/`, AGPL-3.0).
+- Check-ins decide what to do in the pure `Rules.checkInAction`: no deadlines when she can't notify, and quiet during bedtime.
+- The **Changelog** in `docs/DESIGN.md` is oldest first. The release workflow uses its last 3 entries as release notes, so always append at the bottom.
 - Writing style in docs and replies: plain language, short bullets, bold cues, no em dashes.
 
 ## Where things are

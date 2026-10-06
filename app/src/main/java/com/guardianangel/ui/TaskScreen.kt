@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -172,11 +171,18 @@ private fun StillnessCard(task: ActiveTask) {
                 )
                 if (accelerometer == null) Muted("This phone has no motion sensor, so she'll trust you.")
                 note?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                Button(onClick = {
-                    note = null
-                    phase = Phase.SETTLING
-                    phaseEndsAt = System.currentTimeMillis() + SETTLE_SECONDS * 1_000L
-                }) { Text("Start") }
+                // Starting a hold that can't finish before the deadline would only fail you halfway through.
+                val needed = task.minutes * MINUTE + SETTLE_SECONDS * 1_000L
+                if (task.dueAt - now < needed) {
+                    Text("Too late to finish before the deadline.", color = MaterialTheme.colorScheme.error)
+                } else {
+                    Button(onClick = {
+                        note = null
+                        phase = Phase.SETTLING
+                        phaseEndsAt = System.currentTimeMillis() + SETTLE_SECONDS * 1_000L
+                    }) { Text("Start") }
+                    Muted("Start by ${formatDuration(task.dueAt - now - needed)} from now to finish in time.")
+                }
             }
             Phase.SETTLING -> Text(
                 "Get into position... ${formatDuration(phaseEndsAt - now + 999)}",
@@ -199,15 +205,17 @@ private fun StillnessCard(task: ActiveTask) {
 private fun LinesCard(task: ActiveTask) {
     val now = rememberNow()
     var text by rememberSaveable(task.id) { mutableStateOf("") }
-    var done by rememberSaveable(task.id) { mutableIntStateOf(0) }
     var note by remember(task.id) { mutableStateOf<String?>(null) }
+    // Progress lives in the saved task, so leaving the screen or the app doesn't lose it.
+    val done = task.linesDone
+    val total = task.lines.coerceAtLeast(1)
 
     SectionCard("Lines: ${Lines.LABELS[task.difficulty.coerceIn(0, 2)]}") {
-        Text("Type this ${task.lines} times:")
+        Text("Type this $total times:")
         Text(task.sentence, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         DueLine(task, now)
-        Text("Line ${minOf(done + 1, task.lines)} of ${task.lines}")
-        LinearProgressIndicator(progress = { done.toFloat() / task.lines }, modifier = Modifier.fillMaxWidth())
+        Text("Line ${minOf(done + 1, total)} of $total")
+        LinearProgressIndicator(progress = { done.toFloat() / total }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(
             value = text,
             onValueChange = { next ->
@@ -219,12 +227,11 @@ private fun LinesCard(task: ActiveTask) {
                     Lines.Input.LINE_DONE -> {
                         text = ""
                         note = null
-                        done++
-                        if (done >= task.lines) Guardian.finishTask()
+                        if (done + 1 >= total) Guardian.finishTask() else Guardian.setLinesDone(done + 1)
                     }
                     Lines.Input.TYPO -> {
                         text = ""
-                        done = 0
+                        Guardian.setLinesDone(0)
                         note = Guardian.say(Line.TYPO)
                     }
                     Lines.Input.PASTE -> note = "Type it yourself, one letter at a time. No pasting or suggestions."
@@ -241,6 +248,6 @@ private fun LinesCard(task: ActiveTask) {
             ),
         )
         note?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        Muted("Any typo sends you back to line 1. Capitals don't matter. Leaving the app may lose your progress.")
+        Muted("Any typo sends you back to line 1. Capitals don't matter. You can leave and come back; finished lines are kept.")
     }
 }

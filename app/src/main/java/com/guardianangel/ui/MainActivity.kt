@@ -1,5 +1,7 @@
 package com.guardianangel.ui
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -19,6 +21,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,20 +47,47 @@ enum class Screen(val title: String) {
 }
 
 class MainActivity : ComponentActivity() {
+    /** A screen asked for by a notification tap. Consumed once by [MainContent]. */
+    private val requested = mutableStateOf<Screen?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
         )
-        setContent { GuardianTheme { MainContent() } }
+        // Only on a fresh start: after a rotation, keep whatever screen you navigated to.
+        if (savedInstanceState == null) requested.value = screenFrom(intent)
+        setContent { GuardianTheme { MainContent(requested) } }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        screenFrom(intent)?.let { requested.value = it }
+    }
+
+    companion object {
+        private const val EXTRA_SCREEN = "screen"
+
+        fun intent(context: Context, screen: Screen): Intent =
+            Intent(context, MainActivity::class.java).putExtra(EXTRA_SCREEN, screen.name)
+
+        private fun screenFrom(intent: Intent?): Screen? =
+            intent?.getStringExtra(EXTRA_SCREEN)?.let { name -> Screen.entries.firstOrNull { it.name == name } }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainContent() {
+private fun MainContent(requested: MutableState<Screen?>) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
+    LaunchedEffect(requested.value) {
+        requested.value?.let {
+            screen = it
+            requested.value = null
+        }
+    }
     val config by Guardian.config.flow.collectAsState()
     val state by Guardian.state.flow.collectAsState()
     val back = {

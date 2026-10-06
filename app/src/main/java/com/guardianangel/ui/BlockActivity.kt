@@ -120,6 +120,7 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
             when {
                 block == null -> Line.GRANT
                 block.kind == RestrictionKind.BEDTIME -> Line.BEDTIME
+                block.kind == RestrictionKind.SUMMONS -> Line.IGNORED
                 else -> Line.BLOCKED
             },
         )

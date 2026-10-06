@@ -2,6 +2,8 @@ package com.guardianangel
 
 import com.guardianangel.core.AskOutcome
 import com.guardianangel.core.BegOutcome
+import com.guardianangel.core.CheckInAction
+import com.guardianangel.core.CheckInRolls
 import com.guardianangel.core.Decision
 import com.guardianangel.core.HOUR
 import com.guardianangel.core.Line
@@ -10,6 +12,10 @@ import com.guardianangel.core.Rules
 import com.guardianangel.core.Voice
 import com.guardianangel.data.ActiveTask
 import com.guardianangel.data.BedtimeSettings
+import com.guardianangel.data.ChastityLock
+import com.guardianangel.data.PhotoProofSettings
+import com.guardianangel.data.ProofReason
+import com.guardianangel.data.ProofRequest
 import com.guardianangel.data.Question
 import com.guardianangel.data.QuestionKind
 import com.guardianangel.data.Questions
@@ -167,6 +173,90 @@ class RulesTest {
         assertTrue(Rules.isCorrect(phrase, "  i’m your  good pet. "))
         assertFalse(Rules.isCorrect(phrase, "I'm your good pet"))
         assertFalse(Rules.isCorrect(phrase, "I'm your pet."))
+    }
+
+    private val sure = CheckInRolls(task = 0.0, summons = 0.0, proof = 0.0)
+    private val never = CheckInRolls(task = 0.99, summons = 0.99, proof = 0.99)
+    private val busy = GuardianConfig(
+        enabled = true,
+        tasksOn = true,
+        showsUpOn = true,
+        photoProof = PhotoProofSettings(on = true),
+    )
+
+    @Test
+    fun checkInPicksTaskThenSummonsThenProof() {
+        assertEquals(CheckInAction.TASK, Rules.checkInAction(busy, GuardianState(), noon, true, sure))
+        assertEquals(CheckInAction.SUMMONS, Rules.checkInAction(busy, GuardianState(), noon, true, sure.copy(task = 0.99)))
+        assertEquals(CheckInAction.PROOF, Rules.checkInAction(busy, GuardianState(), noon, true, sure.copy(task = 0.99, summons = 0.99)))
+        assertEquals(CheckInAction.PLAIN, Rules.checkInAction(busy, GuardianState(), noon, true, never))
+    }
+
+    @Test
+    fun checkInNeverSetsDeadlinesItCantAnnounce() {
+        assertEquals(CheckInAction.PLAIN, Rules.checkInAction(busy, GuardianState(), noon, canNotify = false, rolls = sure))
+    }
+
+    @Test
+    fun checkInIsQuietAtBedtime() {
+        val c = busy.copy(bedtime = BedtimeSettings(on = true))
+        assertEquals(CheckInAction.QUIET, Rules.checkInAction(c, GuardianState(), 2 * 60, true, sure))
+        assertEquals(CheckInAction.TASK, Rules.checkInAction(c, GuardianState(), noon, true, sure))
+    }
+
+    @Test
+    fun checkInDoesntStackDemands() {
+        val pendingProof = GuardianState(
+            proofs = listOf(ProofRequest(id = 1, reason = ProofReason.CHECK_IN, createdAt = now, dueAt = now + HOUR)),
+        )
+        // A photo is already owed: no task and no second photo, but she can still show up.
+        assertEquals(CheckInAction.SUMMONS, Rules.checkInAction(busy, pendingProof, noon, true, sure))
+        assertEquals(CheckInAction.PLAIN, Rules.checkInAction(busy.copy(showsUpOn = false), pendingProof, noon, true, sure))
+        // An empty task list never issues a task.
+        assertEquals(CheckInAction.SUMMONS, Rules.checkInAction(busy.copy(taskList = emptyList()), GuardianState(), noon, true, sure))
+    }
+
+    @Test
+    fun chastityAlwaysIncludesCageChecks() {
+        val locked = GuardianState(chastity = ChastityLock(startedAt = now, endsAt = now + HOUR))
+        assertEquals(0.0, Rules.proofChance(GuardianConfig(enabled = true), GuardianState()), 0.0)
+        assertEquals(0.25, Rules.proofChance(GuardianConfig(enabled = true), locked), 0.0)
+    }
+
+    @Test
+    fun lockSteppersGrowAndReturn() {
+        assertEquals(90, Rules.stepLockMinutes(60, up = true))
+        assertEquals(300, Rules.stepLockMinutes(240, up = true))
+        assertEquals(240, Rules.stepLockMinutes(300, up = false))
+        assertEquals(36 * 60, Rules.stepLockMinutes(24 * 60, up = true))
+        assertEquals(24 * 60, Rules.stepLockMinutes(36 * 60, up = false))
+        assertEquals(30, Rules.stepLockMinutes(30, up = false))
+        assertEquals(7 * 24 * 60, Rules.stepLockMinutes(7 * 24 * 60, up = true))
+        // From 30 minutes to 7 days takes far fewer taps than 30 minute steps (335).
+        var minutes = 30
+        var taps = 0
+        while (minutes < 7 * 24 * 60) {
+            minutes = Rules.stepLockMinutes(minutes, up = true)
+            taps++
+        }
+        assertTrue("taps $taps", taps < 50)
+        // Every value on the way up comes back down to where it was.
+        var v = 30
+        repeat(40) {
+            val upOne = Rules.stepLockMinutes(v, up = true)
+            if (upOne != v) assertEquals(v, Rules.stepLockMinutes(upOne, up = false))
+            v = upOne
+        }
+    }
+
+    @Test
+    fun capStepper() {
+        assertEquals(2, Rules.stepCapHours(1, up = true))
+        assertEquals(1, Rules.stepCapHours(1, up = false))
+        assertEquals(36, Rules.stepCapHours(24, up = true))
+        assertEquals(24, Rules.stepCapHours(36, up = false))
+        assertEquals(23, Rules.stepCapHours(24, up = false))
+        assertEquals(168, Rules.stepCapHours(168, up = true))
     }
 
     @Test

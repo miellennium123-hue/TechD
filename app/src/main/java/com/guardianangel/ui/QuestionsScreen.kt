@@ -2,6 +2,8 @@ package com.guardianangel.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +32,7 @@ import com.guardianangel.data.QuestionKind
 import com.guardianangel.data.Questions
 
 /** The editable list of questions she asks when she shows up. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun QuestionsScreen(config: GuardianConfig) {
     var editing by remember { mutableIntStateOf(-1) }
@@ -62,7 +65,7 @@ fun QuestionsScreen(config: GuardianConfig) {
         if (kind == QuestionKind.CHOICE) {
             OutlinedTextField(wrong, { wrong = it }, Modifier.fillMaxWidth(), label = { Text("Wrong answers, one per line") }, minLines = 2)
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 enabled = valid,
                 onClick = {

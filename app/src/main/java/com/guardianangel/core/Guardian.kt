@@ -8,7 +8,6 @@ import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.Mood
-import com.guardianangel.data.ProofFrequency
 import com.guardianangel.data.ProofPrompt
 import com.guardianangel.data.ProofPrompts
 import com.guardianangel.data.ProofReason
@@ -370,26 +369,24 @@ object Guardian {
         addMerit(2) // for keeping her enabled
         val st = state.value
         val lock = st.chastity
-        val proofChance = when {
-            c.photoProof.on && c.photoProof.frequency == ProofFrequency.FREQUENT -> 0.6
-            c.photoProof.on -> 0.25
-            lock != null -> 0.25 // chastity always includes random check-ins
-            else -> 0.0
+        val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble())
+        val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls)
+        val handled = when (action) {
+            CheckInAction.QUIET -> true // bedtime: let her pet sleep
+            CheckInAction.TASK -> issueTask()
+            CheckInAction.SUMMONS -> summon()
+            CheckInAction.PROOF -> {
+                requestProof(if (lock != null) ProofReason.CHASTITY_CHECK else ProofReason.CHECK_IN, 30, notify = true)
+                true
+            }
+            CheckInAction.PLAIN -> false
         }
-        val hasPending = st.proofs.any { it.reason.penalized }
-        val wantsTask = c.tasksOn && st.task == null && !hasPending && random.nextDouble() < Rules.TASK_CHANCE
-        val wantsYou = c.showsUpOn && st.summons == null && random.nextDouble() < Rules.SUMMON_CHANCE
-        if (wantsTask && issueTask()) {
-            // This check-in is her task.
-        } else if (wantsYou && summon()) {
-            // This check-in is her showing up.
-        } else if (!hasPending && random.nextDouble() < proofChance) {
-            requestProof(if (lock != null) ProofReason.CHASTITY_CHECK else ProofReason.CHECK_IN, 30, notify = true)
-        } else {
+        if (!handled) {
             state.update { it.copy(checkInPending = true) }
             Notifier.checkIn(appContext, say(Line.CHECK_IN))
         }
-        if (lock != null && c.chastity.canAddTime && random.nextDouble() < 0.1) addChastityTime()
+        val whim = action != CheckInAction.QUIET && lock != null && c.chastity.canAddTime
+        if (whim && random.nextDouble() < 0.1) addChastityTime()
         Scheduler.scheduleNextCheckIn(appContext)
     }
 
@@ -404,12 +401,16 @@ object Guardian {
 
     // ---- Rules & Tasks -----------------------------------------------------------------------
 
-    /** Picks one from the list and issues it. Photo tasks become a proof request. */
+    /** Picks one from the list and issues it. Photo tasks become a proof request. One open task at a time. */
     fun issueTask(): Boolean {
-        val template = config.value.taskList.randomOrNull(random) ?: return false
+        val c = config.value
+        val st = state.value
+        if (!c.enabled || !c.tasksOn || st.task != null || st.proofs.any { it.reason == ProofReason.TASK }) return false
+        val template = c.taskList.randomOrNull(random) ?: return false
         val t = now()
         if (template.kind == TaskKind.PHOTO) {
             requestProof(ProofReason.TASK, template.minutes.coerceAtLeast(5), custom = ProofPrompt(template.text, template.explicit))
+            Notifier.proof(appContext, say(Line.TASK_ISSUED))
         } else {
             val task = when (template.kind) {
                 TaskKind.RULE -> {
@@ -423,7 +424,7 @@ object Guardian {
                 }
                 TaskKind.STILLNESS -> ActiveTask(
                     id = t, text = template.text, kind = template.kind, issuedAt = t,
-                    dueAt = t + Rules.TASK_DUE_MINUTES * MINUTE, minutes = template.minutes.coerceAtLeast(1),
+                    dueAt = t + Rules.TASK_DUE_MINUTES * MINUTE, minutes = template.minutes.coerceIn(1, 30),
                 )
                 else -> {
                     val difficulty = Lines.pickDifficulty(state.value.linesFloor, random)
@@ -436,8 +437,8 @@ object Guardian {
             }
             state.update { it.copy(task = task) }
             Scheduler.scheduleTask(appContext, nextTaskAlarm(task, t))
+            Notifier.task(appContext, say(Line.TASK_ISSUED))
         }
-        Notifier.proof(appContext, say(Line.TASK_ISSUED))
         return true
     }
 
@@ -449,7 +450,7 @@ object Guardian {
         val task = state.value.task ?: return
         val t = now()
         if (t < task.dueAt - 1_000) {
-            if (task.kind == TaskKind.RULE && t >= task.ruleUntil - 1_000) Notifier.message(appContext, say(Line.RULE_REPORT))
+            if (task.kind == TaskKind.RULE && t >= task.ruleUntil - 1_000) Notifier.task(appContext, say(Line.RULE_REPORT))
             Scheduler.scheduleTask(appContext, task.dueAt)
             return
         }
@@ -458,6 +459,7 @@ object Guardian {
             return
         }
         state.update { it.copy(task = null) }
+        Notifier.cancel(appContext, Notifier.ID_TASK)
         if (config.value.enabled) fail(Failure.MISSED_TASK)
     }
 
@@ -466,9 +468,14 @@ object Guardian {
         val task = state.value.task ?: return say(Line.PRAISE)
         state.update { it.copy(task = null, linesFloor = if (task.kind == TaskKind.LINES) 0 else it.linesFloor) }
         Scheduler.cancelTask(appContext)
-        Notifier.cancel(appContext, Notifier.ID_PROOF)
+        Notifier.cancel(appContext, Notifier.ID_TASK)
         addMerit(5)
         return say(Line.PRAISE)
+    }
+
+    /** Saves line-writing progress (0 after a typo). Finishing the last line goes through [finishTask]. */
+    fun setLinesDone(done: Int) {
+        state.update { st -> st.copy(task = st.task?.takeIf { it.kind == TaskKind.LINES }?.copy(linesDone = done) ?: st.task) }
     }
 
     /** Moved during stillness, or admitted breaking a rule. [reaction] is what she says on screen. */
@@ -476,6 +483,7 @@ object Guardian {
         if (state.value.task == null) return say(reaction)
         state.update { it.copy(task = null) }
         Scheduler.cancelTask(appContext)
+        Notifier.cancel(appContext, Notifier.ID_TASK)
         val line = fail(Failure.TASK_FAILED)
         return if (reaction == Line.FAIL_NEUTRAL) line else say(reaction)
     }
@@ -484,6 +492,7 @@ object Guardian {
         val photoTasks = state.value.proofs.filter { it.reason == ProofReason.TASK }
         state.update { st -> st.copy(task = null, proofs = st.proofs - photoTasks.toSet()) }
         Scheduler.cancelTask(appContext)
+        Notifier.cancel(appContext, Notifier.ID_TASK)
         photoTasks.forEach { Scheduler.cancelProofDeadline(appContext, it) }
     }
 
@@ -491,9 +500,10 @@ object Guardian {
 
     /** She wants you: a notification that opens her full screen. Ignore it and everything locks. */
     fun summon(): Boolean {
-        if (state.value.summons != null) return false
+        val c = config.value
+        if (!c.enabled || !c.showsUpOn || state.value.summons != null) return false
         val t = now()
-        val question = config.value.questions.randomOrNull(random) ?: Questions.FALLBACK
+        val question = c.questions.randomOrNull(random) ?: Questions.FALLBACK
         val summons = Summons(id = t, createdAt = t, lockAt = t + Rules.SUMMON_LOCK_MINUTES * MINUTE, question = question)
         state.update { it.copy(summons = summons) }
         Scheduler.scheduleSummons(appContext, summons.lockAt)

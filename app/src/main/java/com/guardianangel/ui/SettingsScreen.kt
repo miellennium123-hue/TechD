@@ -5,22 +5,31 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.Notifier
 import com.guardianangel.core.Rules
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
@@ -34,10 +43,12 @@ import com.guardianangel.data.PunishmentLength
 import com.guardianangel.data.WallpaperMode
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
+    var confirmReset by remember { mutableStateOf(false) }
 
     fun pickTime(initial: Int, onPicked: (Int) -> Unit) {
         TimePickerDialog(context, { _, h, m -> onPicked(h * 60 + m) }, initial / 60, initial % 60, true).show()
@@ -116,14 +127,14 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             Stepper(
                 "Shortest lock",
                 formatMinutes(config.chastity.minLockMinutes),
-                onMinus = { update { it.copy(chastity = it.chastity.withMinLock(it.chastity.minLockMinutes - LOCK_STEP)) } },
-                onPlus = { update { it.copy(chastity = it.chastity.withMinLock(it.chastity.minLockMinutes + LOCK_STEP)) } },
+                onMinus = { update { it.copy(chastity = it.chastity.withMinLock(Rules.stepLockMinutes(it.chastity.minLockMinutes, up = false))) } },
+                onPlus = { update { it.copy(chastity = it.chastity.withMinLock(Rules.stepLockMinutes(it.chastity.minLockMinutes, up = true))) } },
             )
             Stepper(
                 "Longest picked lock",
                 formatMinutes(config.chastity.maxLockMinutes),
-                onMinus = { update { it.copy(chastity = it.chastity.withMaxLock(it.chastity.maxLockMinutes - LOCK_STEP)) } },
-                onPlus = { update { it.copy(chastity = it.chastity.withMaxLock(it.chastity.maxLockMinutes + LOCK_STEP)) } },
+                onMinus = { update { it.copy(chastity = it.chastity.withMaxLock(Rules.stepLockMinutes(it.chastity.maxLockMinutes, up = false))) } },
+                onPlus = { update { it.copy(chastity = it.chastity.withMaxLock(Rules.stepLockMinutes(it.chastity.maxLockMinutes, up = true))) } },
             )
             SwitchRow(
                 "She can add time",
@@ -142,9 +153,16 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             Stepper(
                 "Hard cap (incl. added time)",
                 "${config.chastity.maxHours}h",
-                onMinus = { update { it.copy(chastity = it.chastity.copy(maxHours = (it.chastity.maxHours - 1).coerceAtLeast(1))) } },
-                onPlus = { update { it.copy(chastity = it.chastity.copy(maxHours = (it.chastity.maxHours + 1).coerceAtMost(168))) } },
+                onMinus = { update { it.copy(chastity = it.chastity.copy(maxHours = Rules.stepCapHours(it.chastity.maxHours, up = false))) } },
+                onPlus = { update { it.copy(chastity = it.chastity.copy(maxHours = Rules.stepCapHours(it.chastity.maxHours, up = true))) } },
             )
+            if (config.chastity.maxLockMinutes > config.chastity.maxHours * 60) {
+                Text(
+                    "The hard cap is shorter than your longest picked lock, so locks stop at ${config.chastity.maxHours}h.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
 
         SectionCard("Photo proof and check-ins") {
@@ -186,9 +204,18 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                     "(phone and Quit for now still work). ${Rules.MAX_WRONG_ANSWERS} wrong answers count as a failure.",
                 config.showsUpOn,
             ) { v -> update { it.copy(showsUpOn = v) } }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = openQuestions) { Text("Her questions (${config.questions.size})") }
-                OutlinedButton(onClick = { Guardian.summon() }, enabled = config.enabled && config.showsUpOn) { Text("Try it now") }
+                OutlinedButton(
+                    onClick = {
+                        // Without notifications she can't call you, so open her screen straight away.
+                        if (Guardian.summon() && !Notifier.canNotify(context)) context.startActivity(ShowUpActivity.intent(context))
+                    },
+                    enabled = config.enabled && config.showsUpOn,
+                ) { Text("Try it now") }
+            }
+            if (!Notifier.canNotify(context)) {
+                Muted("Notifications are off, so she won't show up on her own. Turn them on in Permissions.")
             }
         }
 
@@ -212,15 +239,13 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             SwitchRow("Discreet notifications", "Neutral wording, nothing explicit on the lock screen.", config.discreetNotifications) { v ->
                 update { it.copy(discreetNotifications = v) }
             }
-            Text("Mood (dialogue only)")
+            Text("Mood")
             ChoiceChips(Mood.entries, config.mood, { it.label }) { v -> update { it.copy(mood = v) } }
             Muted("Mood only changes what she says. One exception: in a strict mood she's harsher when you beg to be released early.")
             SwitchRow("Merit points and levels", null, config.meritOn) { v -> update { it.copy(meritOn = v) } }
         }
 
-        OutlinedButton(onClick = {
-            update { GuardianConfig(alwaysAllowed = AppLists.DEFAULT_ALLOWED) }
-        }) { Text("Reset all settings to defaults") }
+        OutlinedButton(onClick = { confirmReset = true }) { Text("Reset all settings to defaults") }
 
         SectionCard("About") {
             val version = remember {
@@ -233,19 +258,39 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             Muted("New versions install over this one and keep your settings and photos.")
         }
     }
+
+    if (confirmReset) {
+        AlertDialog(
+            onDismissRequest = { confirmReset = false },
+            title = { Text("Reset all settings?") },
+            text = {
+                Text(
+                    "Every setting goes back to its default, including your photo prompts, rules and tasks, and questions. " +
+                        "Your merit, photos and any running lock are kept.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    update { GuardianConfig(alwaysAllowed = AppLists.DEFAULT_ALLOWED) }
+                    confirmReset = false
+                }) { Text("Reset") }
+            },
+            dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Cancel") } },
+        )
+    }
 }
 
-private const val LOCK_STEP = 30
+private const val LOCK_MIN = 30
 private const val LOCK_LIMIT = 7 * 24 * 60
 
 /** Keeps shortest <= longest: moving one past the other drags it along. */
 private fun ChastitySettings.withMinLock(minutes: Int): ChastitySettings {
-    val m = minutes.coerceIn(LOCK_STEP, LOCK_LIMIT)
+    val m = minutes.coerceIn(LOCK_MIN, LOCK_LIMIT)
     return copy(minLockMinutes = m, maxLockMinutes = maxOf(maxLockMinutes, m))
 }
 
 private fun ChastitySettings.withMaxLock(minutes: Int): ChastitySettings {
-    val m = minutes.coerceIn(LOCK_STEP, LOCK_LIMIT)
+    val m = minutes.coerceIn(LOCK_MIN, LOCK_LIMIT)
     return copy(maxLockMinutes = m, minLockMinutes = minOf(minLockMinutes, m))
 }
 

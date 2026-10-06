@@ -71,6 +71,8 @@ data class ActiveTask(
     val difficulty: Int = 0,
     val sentence: String = "",
     val lines: Int = 0,
+    /** Lines typed correctly so far. Kept here so leaving the screen doesn't lose progress. */
+    val linesDone: Int = 0,
 ) {
     val enforced: Boolean get() = kind == TaskKind.RULE && enforce != RuleEnforcement.NONE
 }
