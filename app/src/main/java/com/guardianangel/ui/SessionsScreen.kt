@@ -35,21 +35,25 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        when {
-            !config.enabled -> Muted("Switch her on to start a session.")
-            !config.session.on -> Muted("Switch guided sessions on below to start one.")
-            else -> {
-                Button(
-                    onClick = { context.startActivity(SessionActivity.intent(context)) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Start a session") }
-                OutlinedButton(
-                    onClick = { context.startActivity(SessionActivity.intent(context, quick = true)) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Quickshot (always ruined)") }
-                Muted("About 2 minutes. Always a ruin, and she always films it, even with the camera setting off.")
-            }
-        }
+        // Both Start buttons always show (round 50), greyed out with the reason until she and sessions are on.
+        val ready = config.enabled && config.session.on
+        Button(
+            onClick = { context.startActivity(SessionActivity.intent(context)) },
+            enabled = ready,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Start a session") }
+        OutlinedButton(
+            onClick = { context.startActivity(SessionActivity.intent(context, quick = true)) },
+            enabled = ready,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Quickshot (always ruined)") }
+        Muted(
+            when {
+                !config.enabled -> "Switch her on (Settings, top card) to start either one."
+                !config.session.on -> "Switch Guided sessions on below to start either one."
+                else -> "Quickshot: about 2 minutes. Always a ruin, and she always films it, even with the camera setting off."
+            },
+        )
 
         SectionCard("Settings") {
             SwitchRow(
