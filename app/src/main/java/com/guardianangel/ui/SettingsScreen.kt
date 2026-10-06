@@ -36,6 +36,8 @@ import com.guardianangel.core.Permissions
 import com.guardianangel.core.Rules
 import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.Voice
+import com.guardianangel.core.Peek
+import com.guardianangel.core.ScreenPeek
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.data.Backgrounds
@@ -212,6 +214,23 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 config.mark.tint,
             ) { v -> update { it.copy(mark = it.mark.copy(tint = v)) } }
             Muted("Taps go straight through both, so nothing under them is ever blocked. Shown by her watch (Accessibility).")
+        }
+
+        FoldCard("She peeks", config.peek.on) {
+            val supported = ScreenPeek.supported()
+            SwitchRow(
+                "She peeks",
+                "About every ${Peek.EVERY_MINUTES} minutes she captures your screen into her private gallery and comments on what you were doing.",
+                config.peek.on,
+            ) { v -> if (supported || !v) update { it.copy(peek = it.peek.copy(on = v)) } }
+            if (!supported) {
+                Text("Needs Android 11 or later.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            Muted(
+                "Never with the screen off or locked, never while the keyboard is up, and never at the phone, " +
+                    "her own screens or your Always-allowed apps (put banking apps there). Screenshots stay in this app only, " +
+                    "she keeps the newest ${Peek.KEEP}. If nothing shows up after updating, switch her watch off and on in Accessibility.",
+            )
         }
 
         GroupHeader("Check-ins")

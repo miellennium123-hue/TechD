@@ -19,6 +19,8 @@ data class GuardianConfig(
     val wallpaper: WallpaperSettings = WallpaperSettings(),
     /** Her mark (round 60): a small collar badge over every app, and a dark tint during her blocks. */
     val mark: MarkSettings = MarkSettings(),
+    /** She peeks (round 60): about every 5 minutes she captures your screen into her private gallery. */
+    val peek: PeekSettings = PeekSettings(),
     val chastity: ChastitySettings = ChastitySettings(),
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
     /** What she can ask you to photograph when it isn't about chastity. */
@@ -145,6 +147,12 @@ data class MarkSettings(
     val on: Boolean = false,
     val tint: Boolean = true,
     val corner: MarkCorner = MarkCorner.TOP_RIGHT,
+)
+
+/** She peeks (round 60). Needs Android 11 or later. See core/Peek. */
+@Serializable
+data class PeekSettings(
+    val on: Boolean = false,
 )
 
 enum class MarkCorner(val label: String, val top: Boolean, val left: Boolean) {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Guardian Angel</string>
-    <string name="accessibility_description">Lets Guardian Angel see which app is in front so she can lock apps you chose to restrict. It only reads the app\'s name, never screen content. Turn this off at any time to stop her.</string>
+    <string name="accessibility_description">Lets Guardian Angel see which app is in front so she can lock apps you chose to restrict. It reads the app\'s name. With Lock guard on it looks for her name on Settings screens, and with She peeks on it takes a screenshot about every 5 minutes, kept privately in the app. It also draws her mark if you switch it on. Turn this off at any time to stop her.</string>
 </resources>

@@ -50,6 +50,13 @@ enum class Line(val group: String, val label: String, val note: String) {
     WRONG_ANSWER("Shows up", "Wrong answer", "A wrong answer to her question"),
     SITE_WARNING("Open sites", "Site warning", "The 10 second warning before she opens a site (only with Discreet off)"),
     SITE_DONE("Open sites", "Site done", "You stayed on her site the full time"),
+    PEEK_HOME("She peeks", "Home screen", "She peeked and you were on your home screen"),
+    PEEK_SOCIAL("She peeks", "Social media", "She peeked and you were on social media"),
+    PEEK_VIDEO("She peeks", "Videos", "She peeked and you were watching videos"),
+    PEEK_GAME("She peeks", "Games", "She peeked and you were playing a game"),
+    PEEK_CHAT("She peeks", "Messages", "She peeked and you were messaging someone"),
+    PEEK_BROWSER("She peeks", "Browsing", "She peeked and you were in a browser"),
+    PEEK_OTHER("She peeks", "Anything else", "She peeked at any other app"),
     RATE_TOP("Rate me", "Score 8 to 10", "Her verdict when she rates you 8 to 10"),
     RATE_GOOD("Rate me", "Score 6 to 7", "Her verdict when she rates you 6 or 7"),
     RATE_MID("Rate me", "Score 4 to 5", "Her verdict when she rates you 4 or 5"),
@@ -95,6 +102,41 @@ enum class Line(val group: String, val label: String, val note: String) {
  */
 object Voice {
     private val sweet: Map<Line, List<String>> = mapOf(
+        Line.PEEK_HOME to listOf(
+            "Just staring at your home screen, pet? Waiting for me, I hope.",
+            "Nothing open? Good. I like you idle and thinking of me.",
+            "Peeked at you. Home screen. Such a well-behaved little pet.",
+        ),
+        Line.PEEK_SOCIAL to listOf(
+            "Scrolling again, pet? I saw that.",
+            "Social media? Remember who you really belong to.",
+            "I peeked. All those strangers, and none of them own you like I do.",
+        ),
+        Line.PEEK_VIDEO to listOf(
+            "Watching videos, pet? I'm watching you.",
+            "Cute. You watch them, I watch you.",
+            "Comfy with your videos? Don't forget I can see you.",
+        ),
+        Line.PEEK_GAME to listOf(
+            "Playing games, pet? Win one for me.",
+            "A game? Fine. Just remember who's really playing with whom.",
+            "I peeked. Having fun? Good pets get a little fun.",
+        ),
+        Line.PEEK_CHAT to listOf(
+            "Chatting with someone, pet? Do they know you're mine?",
+            "Messaging away. I saw it, so be nice.",
+            "Talking to someone? Mind your manners, I'm reading over your shoulder.",
+        ),
+        Line.PEEK_BROWSER to listOf(
+            "Browsing, pet? I saw where you were.",
+            "Looking something up? I'll know what it was.",
+            "I peeked at your browser. Curious little thing, aren't you?",
+        ),
+        Line.PEEK_OTHER to listOf(
+            "Peeked at you, pet. I see everything.",
+            "There you are. Just checking on my pet.",
+            "I took a little look. You're always in my sight.",
+        ),
         Line.SESSION_START to listOf(
             "Lie back and get comfortable, pet. I'm in charge now.",
             "Phone where I can see you, sweetheart. Let's begin.",
@@ -473,6 +515,41 @@ object Voice {
     )
 
     private val strict: Map<Line, List<String>> = mapOf(
+        Line.PEEK_HOME to listOf(
+            "Staring at your home screen? Idle hands, pet. I noticed.",
+            "Nothing open. Waiting for orders? Good. Stay that way.",
+            "I peeked. Home screen. At least you're not wasting my time somewhere worse.",
+        ),
+        Line.PEEK_SOCIAL to listOf(
+            "Scrolling again. Pathetic. I saved it so we can both remember.",
+            "Social media, pet? Caught you. That's going in my gallery.",
+            "I saw you wasting yourself on strangers. You belong to me.",
+        ),
+        Line.PEEK_VIDEO to listOf(
+            "Watching videos while I watch you. Who do you think is in charge?",
+            "Lazy pet, glued to your videos. I saw it.",
+            "Caught you staring at videos. I've kept the evidence.",
+        ),
+        Line.PEEK_GAME to listOf(
+            "Games? You'd better be winning, since you're so useless otherwise.",
+            "Playing again. I saw. Don't think I'll forget it.",
+            "Caught you playing. Toys don't get to play without asking.",
+        ),
+        Line.PEEK_CHAT to listOf(
+            "Who are you talking to, pet? I saw. Behave.",
+            "Messaging behind my back? There's no behind my back.",
+            "I read over your shoulder. Every word.",
+        ),
+        Line.PEEK_BROWSER to listOf(
+            "I saw what you were looking at. Don't bother hiding it.",
+            "Browsing, pet? It's in my gallery now.",
+            "Caught you searching. Nothing you look at is private from me.",
+        ),
+        Line.PEEK_OTHER to listOf(
+            "Peeked at you. Nothing you do on this phone is yours alone.",
+            "I see everything, pet. Remember that.",
+            "Caught you. Whatever that was, I kept a copy.",
+        ),
         Line.SESSION_START to listOf(
             "Phone up. Eyes on me. We start now.",
             "You'll do exactly what I say. Begin.",

@@ -8,6 +8,7 @@ import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.Mood
+import com.guardianangel.data.PeekRecord
 import com.guardianangel.data.ProofPrompt
 import com.guardianangel.data.ProofPrompts
 import com.guardianangel.data.ProofReason
@@ -791,6 +792,38 @@ object Guardian {
 
     private fun clearVisit() {
         state.update { it.copy(visit = null) }
+    }
+
+    // ---- She peeks ---------------------------------------------------------------------------
+
+    /** She peeks (round 60): time for a look. Her watch also checks [Peek.mayLook] first. */
+    fun peekDue(): Boolean = Peek.due(config.value, state.value.lastPeekAt, now())
+
+    /** She's taking a look now, so the next one waits its 5 minutes whether or not this one works. */
+    fun peekStarted() {
+        state.update { it.copy(lastPeekAt = now()) }
+    }
+
+    /**
+     * She peeked: the screenshot [file] is in her private gallery. She comments on [kind], keeps the
+     * newest peeks and deletes the oldest screenshots. Her comment is a silent notification, never in
+     * quiet time. Never a failure, no merit.
+     */
+    fun peeked(file: String, app: String, kind: PeekKind) {
+        val line = say(kind.line)
+        var dropped: List<PeekRecord> = emptyList()
+        state.update { st ->
+            val (kept, gone) = Peek.add(st.peeks, PeekRecord(now(), file, app, line))
+            dropped = gone
+            st.copy(peeks = kept)
+        }
+        dropped.forEach { File(File(appContext.filesDir, ProofFiles.DIR), it.file).delete() }
+        if (!Rules.isQuiet(config.value, minuteOfDay())) Notifier.peek(appContext, "$app. $line")
+    }
+
+    /** The gallery deleted screenshots: forget their peeks too. */
+    fun forgetPeeks(files: Set<String>?) {
+        state.update { st -> st.copy(peeks = if (files == null) emptyList() else st.peeks.filter { it.file !in files }) }
     }
 
     // ---- Rate me -----------------------------------------------------------------------------

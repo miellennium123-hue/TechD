@@ -25,6 +25,7 @@ object Notifier {
     const val ID_MESSAGE = 3
     const val ID_SUMMON = 4
     const val ID_TASK = 5
+    const val ID_PEEK = 6
 
     fun createChannel(context: Context) {
         val channel = NotificationChannel(CHANNEL_ID, "Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -36,6 +37,10 @@ object Notifier {
     fun checkIn(context: Context, line: String) = post(context, ID_CHECK_IN, line, "Time to check in.")
     fun proof(context: Context, line: String) = post(context, ID_PROOF, line, "You have something to do.")
     fun message(context: Context, line: String) = post(context, ID_MESSAGE, line, "You have a new message.")
+
+    /** She peeks (round 60): every 5 minutes, so it replaces the last one and never buzzes. */
+    fun peek(context: Context, line: String) =
+        post(context, ID_PEEK, line, "You have a new message.", MainActivity.intent(context, Screen.GALLERY), silent = true)
 
     /** Tapping it opens her task screen directly. */
     fun task(context: Context, line: String) =
@@ -65,6 +70,7 @@ object Notifier {
         line: String,
         neutral: String,
         target: Intent = Intent(context, MainActivity::class.java),
+        silent: Boolean = false,
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -88,6 +94,7 @@ object Notifier {
             .setContentIntent(open)
             .setAutoCancel(true)
             .setPublicVersion(publicVersion)
+            .setSilent(silent)
         if (discreet) {
             builder.setContentTitle("Reminder").setContentText(neutral)
         } else {
