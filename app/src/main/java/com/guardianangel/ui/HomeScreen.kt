@@ -189,9 +189,7 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (config.chastity.on && state.chastity == null) {
-                OutlinedButton(onClick = { navigate(Screen.CHASTITY) }, modifier = Modifier.weight(1f)) { Text("Chastity") }
-            }
+            OutlinedButton(onClick = { navigate(Screen.CHASTITY) }, modifier = Modifier.weight(1f)) { Text("Chastity") }
             OutlinedButton(onClick = { navigate(Screen.GALLERY) }, modifier = Modifier.weight(1f)) { Text("Photos") }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

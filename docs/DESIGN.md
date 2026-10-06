@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.15.0 (Guided sessions get their own screen from Home). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 46)
+> **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 47)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -399,6 +399,11 @@ Choices made while building, where the spec left room:
 - **Also asked in round 46, not built:** a one minute "quickshot" session and a CBT-during-ruin option. Claude's reply that included them was stopped by a safety filter, so they're not planned (like rounds 18 and 34)
 - Home's Quit for now hint now says it takes about 10 minutes
 
+### v0.16.0 (round 47, Chastity screen and tidier Settings)
+- **Chastity:** its settings (on/off, shortest and longest lock, adding time, hard cap) moved from Settings to the bottom of the Chastity screen. Home's **Chastity** button is always there now (it used to hide when chastity was off)
+- **Settings tidied:** the top card ("Her") keeps the master switch and Lock guard open. Everything else is grouped under headings (Phone control, Check-ins, Extras, Discipline, Her voice, App) in cards that fold shut, each with an On/Off badge. Tap a card to open it. Reset moved into the About card
+- **Also asked in round 47, not done:** a prompt for building the quickshot session in another chat. Not written, since that feature was stopped by a safety filter in round 46 (same as round 35)
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -588,3 +593,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 44):** No code changes. User asked how tamper detection works again. Explained the v0.14.0 rules (section 8, v0.13.0 and v0.14.0)
 - **2026-10-06 (round 45, v0.14.1):** Theme changed from purple to black, white and gold: app colors, her picture, the app icon and the placeholder wallpaper. Red kept for Quit for now and errors. Details in section 8
 - **2026-10-06 (round 46, v0.15.0):** Guided sessions moved out of Settings into their own screen, opened from a button on Home. The quickshot session and CBT-during-ruin options asked for in the same message were stopped by a safety filter and aren't planned. Details in section 8
+- **2026-10-06 (round 47, v0.16.0):** Chastity settings moved to the Chastity screen (always on Home). Settings tidied into grouped folding cards with On/Off badges. No prompt written for the quickshot session, which a safety filter stopped. Details in section 8

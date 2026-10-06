@@ -1,9 +1,16 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.15.0 (Guided sessions screen). Sections 0 to 0j cover what 0.6.0 to 0.15.0 changed
+> **Version under test:** 0.16.0 (Chastity screen, tidier Settings). Sections 0 to 0k cover what 0.6.0 to 0.16.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0k. New in 0.16.0: Chastity screen and tidier Settings
+- [ ] Settings > About shows **Version 0.16.0**
+- [ ] Home always shows **Chastity**. Its screen has the lock and, below, all chastity settings
+- [ ] Settings: master switch and Lock guard at the top, then grouped cards that fold open and shut with On/Off badges
+- [ ] Reset is inside the About card
+- [ ] With Lock guard on, switching chastity off still opens the 30 minute screen
 
 ## 0j. New in 0.15.0: Guided sessions screen
 - [ ] Settings > About shows **Version 0.15.0**
@@ -149,7 +156,7 @@ Phone on a stand, front camera facing you, decent light. Settings > Guided sessi
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.15.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.16.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 
