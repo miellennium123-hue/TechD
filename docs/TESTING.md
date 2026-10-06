@@ -1,9 +1,20 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.13.0 (adds Lock guard and the slow Quit for now). Sections 0 to 0g cover what 0.6.0 to 0.13.0 changed
+> **Version under test:** 0.14.0 (Lock guard whenever she is on, 10 minute Quit for now). Sections 0 to 0h cover what 0.6.0 to 0.14.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0h. New in 0.14.0: Lock guard without a lock
+- [ ] Settings > About shows **Version 0.14.0**
+- [ ] **Quit for now** waits about 9:30 after the hold and the sentence
+- [ ] Lock guard on, no lock running: switching her off asks for the 30 minute way, and finishing it is a failure
+- [ ] Switching off **App lockouts** (or any of her controls) opens "Loosen her control". Cancel: the switch stays on. Finish the 30 minutes: it switches off, no failure
+- [ ] Adding an always-allowed app or switching Quiet hours on opens the same screen
+- [ ] Switching things **on**, and changing details like times, is instant
+- [ ] Switching Lock guard **off** takes the 30 minutes too
+- [ ] Her App info and uninstall screens are blocked even without a lock
+- [ ] Restart the phone **without** a lock: no tampering failure. **With** a lock: a failure
 
 ## 0g. New in 0.13.0: Lock guard and the slow Quit for now
 Before any lock: if Lock guard's screen check doesn't work, switch her Accessibility off and on once (not during a lock, that's tampering).
@@ -125,7 +136,7 @@ Phone on a stand, front camera facing you, decent light. Settings > Guided sessi
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.13.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.14.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 

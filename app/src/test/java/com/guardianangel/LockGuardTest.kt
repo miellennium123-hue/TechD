@@ -8,8 +8,10 @@ import com.guardianangel.data.ChastityLock
 import com.guardianangel.data.ChastitySettings
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
+import com.guardianangel.data.LockoutSettings
 import com.guardianangel.data.Mood
 import com.guardianangel.data.PunishmentSettings
+import com.guardianangel.data.QuietHoursSettings
 import com.guardianangel.data.TaskKind
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -35,43 +37,44 @@ class LockGuardTest {
     }
 
     @Test
-    fun guardingNeedsTheToggle() {
-        assertTrue(LockGuard.guarding(on, caged, now))
-        assertFalse(LockGuard.guarding(on.copy(lockGuard = false), caged, now))
+    fun guardingNeedsOnlyTheToggleAndHer() {
+        assertTrue(LockGuard.guarding(on))
+        assertFalse(LockGuard.guarding(on.copy(lockGuard = false)))
+        assertFalse(LockGuard.guarding(on.copy(enabled = false)))
     }
 
     @Test
-    fun settingsCantEndAGuardedLock() {
-        val before = on.copy(
+    fun switchingOffHerControlsLoosens() {
+        val strict = on.copy(
+            lockouts = LockoutSettings(on = true),
             chastity = ChastitySettings(on = true),
             punishment = PunishmentSettings(on = true),
             tasksOn = true,
             showsUpOn = true,
+            sitesOn = true,
+            quietHours = QuietHoursSettings(on = false),
         )
-        val weakened = before.copy(
-            lockGuard = false,
-            chastity = ChastitySettings(on = false),
-            punishment = PunishmentSettings(on = false),
-            tasksOn = false,
-            showsUpOn = false,
-            meritOn = !before.meritOn,
-        )
-        val kept = LockGuard.keepGuard(before, weakened, guarding = true)
-        assertTrue(kept.lockGuard)
-        assertTrue(kept.chastity.on)
-        assertTrue(kept.punishment.on)
-        assertTrue(kept.tasksOn)
-        assertTrue(kept.showsUpOn)
-        // Other settings still change.
-        assertEquals(weakened.meritOn, kept.meritOn)
-        // Not guarding: anything goes.
-        assertEquals(weakened, LockGuard.keepGuard(before, weakened, guarding = false))
+        listOf(
+            strict.copy(lockGuard = false),
+            strict.copy(lockouts = LockoutSettings(on = false)),
+            strict.copy(chastity = ChastitySettings(on = false)),
+            strict.copy(punishment = PunishmentSettings(on = false)),
+            strict.copy(tasksOn = false),
+            strict.copy(showsUpOn = false),
+            strict.copy(sitesOn = false),
+            strict.copy(quietHours = QuietHoursSettings(on = true)),
+            strict.copy(alwaysAllowed = strict.alwaysAllowed + "com.instagram.android"),
+        ).forEach { assertTrue(it.toString(), LockGuard.loosens(strict, it)) }
     }
 
     @Test
-    fun turningTheGuardOnIsAlwaysAllowed() {
-        val before = on.copy(lockGuard = false)
-        assertTrue(LockGuard.keepGuard(before, before.copy(lockGuard = true), guarding = false).lockGuard)
+    fun strictnessAndDetailsDontLoosen() {
+        val before = on.copy(lockGuard = false, chastity = ChastitySettings(on = false))
+        assertFalse(LockGuard.loosens(before, before.copy(lockGuard = true)))
+        assertFalse(LockGuard.loosens(before, before.copy(chastity = ChastitySettings(on = true))))
+        assertFalse(LockGuard.loosens(before, before.copy(meritOn = !before.meritOn)))
+        assertFalse(LockGuard.loosens(before, before.copy(alwaysAllowed = emptySet())))
+        assertFalse(LockGuard.loosens(before, before))
     }
 
     @Test
@@ -109,13 +112,13 @@ class LockGuardTest {
     @Test
     fun quitIsSlowButBounded() {
         val total = LockGuard.QUIT_HOLD_SECONDS + LockGuard.QUIT_WAIT_SECONDS
-        assertTrue(total in 120..200)
+        assertTrue(total in 540..660)
         assertTrue(LockGuard.OFF_WAIT_SECONDS > total)
     }
 
     @Test
     fun newLinesHaveBothMoods() {
-        listOf(Line.QUIT_TALK, Line.OFF_TALK, Line.ADMIN_OFF, Line.GUARDED, Line.TAMPERED).forEach {
+        listOf(Line.QUIT_TALK, Line.OFF_TALK, Line.LOOSEN_TALK, Line.ADMIN_OFF, Line.GUARDED, Line.TAMPERED).forEach {
             assertTrue(it.name, Voice.builtIn(it, Mood.SWEET).isNotEmpty())
             assertTrue(it.name, Voice.builtIn(it, Mood.STRICT).isNotEmpty())
         }

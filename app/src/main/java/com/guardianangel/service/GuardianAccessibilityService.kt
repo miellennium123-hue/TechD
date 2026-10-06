@@ -24,7 +24,7 @@ import com.guardianangel.ui.MainActivity
 
 /**
  * Watches which app is in front and sends her block screen when it's off limits.
- * It reads the package name of the foreground window. With Lock guard on during a lock, it also
+ * It reads the package name of the foreground window. With Lock guard on, it also
  * looks for her name on Settings and uninstall screens, and nowhere else.
  */
 class GuardianAccessibilityService : AccessibilityService() {
@@ -150,7 +150,7 @@ class GuardianAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Lock guard: a Settings or uninstall screen showing her name during a lock. She sends you
+     * Lock guard: a Settings or uninstall screen showing her name while Lock guard is on. She sends you
      * home and back to her. Never a failure; Quit for now is on her screen.
      */
     private fun guard(event: AccessibilityEvent, pkg: String): Boolean {

@@ -63,7 +63,12 @@ class MainActivity : ComponentActivity() {
         )
         // Only on a fresh start: after a rotation, keep whatever screen you navigated to.
         if (savedInstanceState == null) requested.value = screenFrom(intent)
-        setContent { GuardianTheme { MainContent(requested) } }
+        setContent {
+            GuardianTheme {
+                MainContent(requested)
+                LoosenHost()
+            }
+        }
     }
 
     override fun onResume() {
