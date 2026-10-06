@@ -29,6 +29,8 @@ data class GuardianState(
     val visit: SiteVisit? = null,
     /** Rate me history, newest last. Numbers only, never the photo. Quit for now keeps it. */
     val ratings: List<RatingRecord> = emptyList(),
+    /** Finished guided sessions, newest last. Quit for now keeps them. */
+    val sessions: List<SessionRecord> = emptyList(),
 )
 
 /** One of her ratings. Sizes in cm. [presentation] is -1 when she rated without seeing it. */

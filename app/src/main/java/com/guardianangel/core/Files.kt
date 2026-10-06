@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.media.MediaMetadataRetriever
 import androidx.exifinterface.media.ExifInterface
 import java.io.File
 
@@ -28,19 +29,40 @@ object AssetImages {
         runCatching { context.assets.open(path).use { BitmapFactory.decodeStream(it) } }.getOrNull()
 }
 
-/** Proof photos live in private app storage only: no gallery, no backups. */
+/** Proof photos and ruin clips live in private app storage only: no gallery, no backups. */
 object ProofFiles {
     const val DIR = "proof"
 
     fun list(context: Context): List<File> =
         File(context.filesDir, DIR).listFiles()
-            ?.filter { it.extension == "jpg" }
+            ?.filter { it.extension == "jpg" || it.extension == "mp4" }
             ?.sortedByDescending { it.lastModified() }
             .orEmpty()
 
     fun deleteAll(context: Context) {
         File(context.filesDir, DIR).listFiles()?.forEach { it.delete() }
     }
+
+    fun isVideo(file: File): Boolean = file.extension == "mp4"
+
+    /** A still for the gallery: the photo itself, or a frame from a clip. */
+    fun thumbnail(file: File, maxDim: Int): Bitmap? =
+        if (!isVideo(file)) {
+            load(file, maxDim)
+        } else {
+            runCatching {
+                val retriever = MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(file.path)
+                    retriever.getFrameAtTime(0)?.let { frame ->
+                        val scale = maxDim.toFloat() / maxOf(frame.width, frame.height)
+                        if (scale >= 1f) frame else Bitmap.createScaledBitmap(frame, (frame.width * scale).toInt(), (frame.height * scale).toInt(), true)
+                    }
+                } finally {
+                    retriever.release()
+                }
+            }.getOrNull()
+        }
 
     /** Decodes a downscaled, correctly rotated bitmap. */
     fun load(file: File, maxDim: Int): Bitmap? = runCatching {

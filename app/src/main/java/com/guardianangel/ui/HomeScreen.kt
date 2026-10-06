@@ -179,6 +179,12 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        if (config.enabled && config.session.on) {
+            Button(onClick = { context.startActivity(SessionActivity.intent(context)) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Start a session")
+            }
+        }
+
         if (config.enabled && config.rating.on) {
             OutlinedButton(onClick = { context.startActivity(RateActivity.intent(context)) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Rate me")

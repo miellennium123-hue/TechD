@@ -15,6 +15,10 @@ import com.guardianangel.data.ProofRequest
 import com.guardianangel.data.Questions
 import com.guardianangel.data.RatingRecord
 import com.guardianangel.data.RuleEnforcement
+import com.guardianangel.data.SessionEnding
+import com.guardianangel.data.SessionOutcome
+import com.guardianangel.data.SessionRecord
+import com.guardianangel.data.Sessions
 import com.guardianangel.data.SiteVisit
 import com.guardianangel.data.Sites
 import com.guardianangel.data.Store
@@ -32,6 +36,7 @@ enum class Failure(val merit: Int) {
     TASK_FAILED(5),
     WRONG_ANSWERS(5),
     LEFT_SITE(5),
+    RUIN_FAILED(5),
 }
 
 sealed interface AskResult {
@@ -691,5 +696,35 @@ object Guardian {
 
     fun clearRatings() {
         state.update { it.copy(ratings = emptyList()) }
+    }
+
+    // ---- Guided sessions ---------------------------------------------------------------------
+
+    /** True when a chastity lock is running, so the session only uses cage-safe commands. */
+    fun caged(): Boolean = state.value.chastity != null
+
+    /**
+     * A finished session (leaving early isn't recorded and costs nothing). Obeying to the end: +5 merit.
+     * A ruin you couldn't hold is a failure with the usual failure settings. Returns her last line.
+     * After a ruin during a lock she wants a photo of the cage back on: returns that request's id too.
+     */
+    fun finishSession(record: SessionRecord): Pair<String, Long?> {
+        state.update { it.copy(sessions = (it.sessions + record).takeLast(Sessions.HISTORY)) }
+        val line = if (record.outcome == SessionOutcome.RUIN_FAILED) {
+            fail(Failure.RUIN_FAILED)
+        } else {
+            addMerit(5)
+            say(if (record.outcome == SessionOutcome.RUINED) Line.SESSION_RUIN_DONE else Line.SESSION_END)
+        }
+        val relock = if (record.caged && record.ending == SessionEnding.RUINED && state.value.chastity != null) {
+            requestProof(ProofReason.CHASTITY_CHECK, 15).id
+        } else {
+            null
+        }
+        return line to relock
+    }
+
+    fun clearSessions() {
+        state.update { it.copy(sessions = emptyList()) }
     }
 }

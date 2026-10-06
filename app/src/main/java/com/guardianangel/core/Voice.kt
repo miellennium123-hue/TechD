@@ -46,6 +46,34 @@ enum class Line(val group: String, val label: String, val note: String) {
     RATE_MID("Rate me", "Score 4 to 5", "Her verdict when she rates you 4 or 5"),
     RATE_LOW("Rate me", "Score 1 to 3", "Her verdict when she rates you 1 to 3"),
     RATE_UNSEEN("Rate me", "Couldn't see it", "Added to her verdict when she rates you on your word alone"),
+    SESSION_START("Guided sessions", "Session starts", "She starts a guided session"),
+    SESSION_STROKE("Guided sessions", "Stroke", "Stroke to her beat"),
+    SESSION_FASTER("Guided sessions", "Faster", "Speed changes: a fast burst"),
+    SESSION_SLOWER("Guided sessions", "Slower", "Speed changes: slow right down"),
+    SESSION_TEASE("Guided sessions", "Tease", "Teasing: fingertips only, slow and light"),
+    SESSION_EDGE("Guided sessions", "Edge", "Edging: get to the edge and tap the button"),
+    SESSION_EDGE_HOLD("Guided sessions", "After the edge", "Hands off while the edge fades"),
+    SESSION_STOP("Guided sessions", "Stop", "Stop and go: a hands-off pause"),
+    SESSION_HOLD("Guided sessions", "Hold still", "Holds: freeze until she says (also the base command during a lock)"),
+    SESSION_NIPPLES("Guided sessions", "Nipple play", "Nipple play to her beat"),
+    SESSION_CAGE_TEASE("Guided sessions", "Cage tease", "Cage tease to her beat, only while locked"),
+    SESSION_TOY("Guided sessions", "Toy", "Toys: a toy command"),
+    SESSION_CBT_SOFT("Guided sessions", "CBT, soft", "Counted ball play, soft setting"),
+    SESSION_CBT_HARD("Guided sessions", "CBT, hard", "Counted ball play, hard setting"),
+    SESSION_SOUND_IN("Guided sessions", "Sound in", "Sounding: slowly in"),
+    SESSION_SOUND_HOLD("Guided sessions", "Sound hold", "Sounding: hold still"),
+    SESSION_SOUND_OUT("Guided sessions", "Sound out", "Sounding: slowly out"),
+    SESSION_COUNTDOWN("Guided sessions", "Countdown", "Countdowns: she counts you down to her next command"),
+    SESSION_PRAISE("Guided sessions", "Praise remark", "Praise: a remark during a command"),
+    SESSION_HUMILIATION("Guided sessions", "Humiliation remark", "Humiliation: a remark during a command"),
+    SESSION_CAUGHT("Guided sessions", "Caught", "She caught you (out of view): a reprimand, then an extra edge"),
+    SESSION_UNLOCK("Guided sessions", "Unlock", "Ruined ending during a lock: take the cage off"),
+    SESSION_FINISH("Guided sessions", "Permission", "Permission ending: you may finish"),
+    SESSION_RUIN("Guided sessions", "Ruin", "Ruined ending: hands off at the edge. She films it"),
+    SESSION_RUIN_DONE("Guided sessions", "Ruin done", "You report the ruin went as she ordered"),
+    SESSION_DENIED("Guided sessions", "Denied", "Denied ending: hands off, no release"),
+    SESSION_RELOCK("Guided sessions", "Lock back up", "After a ruin during a lock: cage back on, then a photo"),
+    SESSION_END("Guided sessions", "Session over", "The session is over"),
 }
 
 /**
@@ -55,6 +83,146 @@ enum class Line(val group: String, val label: String, val note: String) {
  */
 object Voice {
     private val sweet: Map<Line, List<String>> = mapOf(
+        Line.SESSION_START to listOf(
+            "Lie back and get comfortable, pet. I'm in charge now.",
+            "Phone where I can see you, sweetheart. Let's begin.",
+            "Ready for me? Good. Do exactly as I say.",
+        ),
+        Line.SESSION_STROKE to listOf(
+            "Stroke for me, pet. Nice and steady with my beat.",
+            "Follow my rhythm, sweetheart. Just like that.",
+            "Keep that pace for me. Good pet.",
+        ),
+        Line.SESSION_FASTER to listOf(
+            "Faster, pet. Keep up with me.",
+            "Quicker now. Don't fall behind my beat.",
+            "Speed up for me, sweetheart.",
+        ),
+        Line.SESSION_SLOWER to listOf(
+            "Slow down, pet. Nice and slow.",
+            "Slower. Make it last for me.",
+            "Ease off, sweetheart. Barely moving.",
+        ),
+        Line.SESSION_TEASE to listOf(
+            "Just your fingertips, pet. Light as a feather.",
+            "Gently. I want you to feel how little you're allowed.",
+            "Tease yourself for me. Slow and soft.",
+        ),
+        Line.SESSION_EDGE to listOf(
+            "Take yourself to the edge for me, pet. Tap when you're there.",
+            "Get close, sweetheart. Right to the edge, then tell me.",
+            "Edge for me. Not one stroke too far.",
+        ),
+        Line.SESSION_EDGE_HOLD to listOf(
+            "Hands off, pet. Let it fade.",
+            "Good. Now don't touch. Breathe.",
+            "Let go. Feel it slip away for me.",
+        ),
+        Line.SESSION_STOP to listOf(
+            "Stop, pet. Hands off.",
+            "Freeze. Not a touch until I say.",
+            "Hands away, sweetheart. Wait for me.",
+        ),
+        Line.SESSION_HOLD to listOf(
+            "Hold still for me, pet. Don't move.",
+            "Stay perfectly still. I'm watching.",
+            "Not a twitch, sweetheart. Just wait.",
+        ),
+        Line.SESSION_NIPPLES to listOf(
+            "Hands on your chest, pet. Play with your nipples for me.",
+            "Pinch gently, with my beat.",
+            "Rub your nipples slowly for me, sweetheart.",
+        ),
+        Line.SESSION_CAGE_TEASE to listOf(
+            "Tap your cage for me, pet. Feel how useless it is.",
+            "Rub the cage, sweetheart. Nothing gets through, does it?",
+            "Squeeze the cage gently. That's all you get.",
+        ),
+        Line.SESSION_TOY to listOf(
+            "Toy on, pet. Keep it there until I say.",
+            "Turn your toy on for me, sweetheart.",
+            "Use your toy now. Slowly.",
+        ),
+        Line.SESSION_CBT_SOFT to listOf(
+            "Gentle squeezes, pet. One for every beat.",
+            "Soft taps on your balls for me. Count them.",
+            "Gently, sweetheart. One each time I tick.",
+        ),
+        Line.SESSION_CBT_HARD to listOf(
+            "Firm taps this time, pet. Count every one.",
+            "Firm squeezes, one per beat. Don't lose count.",
+            "Firmer for me, sweetheart. Stay with my beat.",
+        ),
+        Line.SESSION_SOUND_IN to listOf(
+            "Sound in, pet. Slowly. Take all the time you need.",
+            "Gently now. Ease it in for me, never force it.",
+            "Slowly, sweetheart. Breathe and let it slide in.",
+        ),
+        Line.SESSION_SOUND_HOLD to listOf(
+            "Hold it there, pet. Stay still for me.",
+            "Keep still, sweetheart. Just feel it.",
+            "Don't move. Let it rest there.",
+        ),
+        Line.SESSION_SOUND_OUT to listOf(
+            "Ease it out, pet. Slowly.",
+            "Gently out now, sweetheart. No rushing.",
+            "Slowly take it out for me.",
+        ),
+        Line.SESSION_COUNTDOWN to listOf(
+            "Counting you down, pet. Get ready.",
+            "On my count, sweetheart.",
+            "Wait for zero. Then do as I say.",
+        ),
+        Line.SESSION_PRAISE to listOf(
+            "Good pet. You're doing so well.",
+            "That's it. I love how obedient you are.",
+            "Such a good pet for me.",
+        ),
+        Line.SESSION_HUMILIATION to listOf(
+            "Look at you, so desperate.",
+            "So easy to control, aren't you?",
+            "Pathetic little thing, doing everything I say.",
+        ),
+        Line.SESSION_CAUGHT to listOf(
+            "Where did you go, pet? I can't see you. Back to the edge for that.",
+            "Tsk. Out of sight? That earns you another edge.",
+            "Naughty. Stay where I can see you. Edge for me again.",
+        ),
+        Line.SESSION_UNLOCK to listOf(
+            "Unlock for me, pet. Just this once.",
+            "Take the cage off, sweetheart. Quickly.",
+            "Out of the cage for a moment. Tap when you're free.",
+        ),
+        Line.SESSION_FINISH to listOf(
+            "You may finish, pet. Now.",
+            "Go on, sweetheart. You've earned it.",
+            "Let go for me. Good pet.",
+        ),
+        Line.SESSION_RUIN to listOf(
+            "Hands off, now! Ruin it for me. I'm watching.",
+            "Let go, pet! Don't touch. Ruin it.",
+            "Hands away, right now. Let it be ruined.",
+        ),
+        Line.SESSION_RUIN_DONE to listOf(
+            "Good pet. Ruined, just like I wanted.",
+            "Mm, so obedient. That's how I like it.",
+            "Perfect. You did exactly as you were told.",
+        ),
+        Line.SESSION_DENIED to listOf(
+            "Hands off, pet. Not today.",
+            "No release for you, sweetheart. Hands away.",
+            "Denied. Let it fade. You'll stay wanting.",
+        ),
+        Line.SESSION_RELOCK to listOf(
+            "Back in the cage, pet. Then show me.",
+            "Lock up again, sweetheart. I want a photo.",
+            "Cage on. Tap when it's locked.",
+        ),
+        Line.SESSION_END to listOf(
+            "All done, pet. You were good for me.",
+            "That's enough for now, sweetheart.",
+            "Session over. Rest now, pet.",
+        ),
         Line.RATE_TOP to listOf(
             "Oh, pet. That's exactly what I like to see.",
             "Mm. Very pleasing. I might keep looking.",
@@ -235,6 +403,146 @@ object Voice {
     )
 
     private val strict: Map<Line, List<String>> = mapOf(
+        Line.SESSION_START to listOf(
+            "Phone up. Eyes on me. We start now.",
+            "You'll do exactly what I say. Begin.",
+            "Get in position. I'm watching every second.",
+        ),
+        Line.SESSION_STROKE to listOf(
+            "Stroke. Match my beat.",
+            "Keep my rhythm. Don't drift.",
+            "Steady. Exactly my pace.",
+        ),
+        Line.SESSION_FASTER to listOf(
+            "Faster. Now.",
+            "Speed up. Don't fall behind.",
+            "Quicker. Keep up.",
+        ),
+        Line.SESSION_SLOWER to listOf(
+            "Slow. Down.",
+            "Slower. You'll go at my pace.",
+            "Barely move. Slower.",
+        ),
+        Line.SESSION_TEASE to listOf(
+            "Fingertips only. Nothing more.",
+            "Lightly. You don't deserve more.",
+            "Tease. Slow. Don't you dare grip.",
+        ),
+        Line.SESSION_EDGE to listOf(
+            "Edge. Tap when you're there. Not a stroke more.",
+            "To the edge. Then tell me.",
+            "Get to the edge. Now.",
+        ),
+        Line.SESSION_EDGE_HOLD to listOf(
+            "Hands off. Let it die.",
+            "Don't touch. Wait.",
+            "Let go. Feel it fade.",
+        ),
+        Line.SESSION_STOP to listOf(
+            "Stop. Hands off.",
+            "Freeze.",
+            "Hands away. Now.",
+        ),
+        Line.SESSION_HOLD to listOf(
+            "Hold still. Don't move.",
+            "Freeze. Not a twitch.",
+            "Stay still until I say.",
+        ),
+        Line.SESSION_NIPPLES to listOf(
+            "Nipples. Pinch. To my beat.",
+            "Hands on your chest. Pinch them.",
+            "Play with your nipples. Now.",
+        ),
+        Line.SESSION_CAGE_TEASE to listOf(
+            "Tap the cage. That's all you get.",
+            "Rub the cage. Useless, isn't it?",
+            "Squeeze the cage. Feel how locked you are.",
+        ),
+        Line.SESSION_TOY to listOf(
+            "Toy on. Keep it there.",
+            "Use your toy. Don't stop until I say.",
+            "Toy. Now.",
+        ),
+        Line.SESSION_CBT_SOFT to listOf(
+            "Squeeze your balls. One per beat. Count.",
+            "Taps on your balls. Count them.",
+            "One gentle squeeze per tick. Don't miss one.",
+        ),
+        Line.SESSION_CBT_HARD to listOf(
+            "Firm taps. Every beat. Count them.",
+            "Firm squeezes. Don't you dare skip one.",
+            "Firmer. Every tick. Count out loud.",
+        ),
+        Line.SESSION_SOUND_IN to listOf(
+            "Sound in. Slowly. Never force it.",
+            "In. Slowly. Don't you dare rush.",
+            "Ease it in. Take your time.",
+        ),
+        Line.SESSION_SOUND_HOLD to listOf(
+            "Hold it. Still.",
+            "Don't move.",
+            "Stay still with it in.",
+        ),
+        Line.SESSION_SOUND_OUT to listOf(
+            "Out. Slowly.",
+            "Ease it out. No rushing.",
+            "Slowly out.",
+        ),
+        Line.SESSION_COUNTDOWN to listOf(
+            "Countdown. Be ready.",
+            "On zero, you obey.",
+            "Wait for my count.",
+        ),
+        Line.SESSION_PRAISE to listOf(
+            "Good. Keep obeying.",
+            "Acceptable. Continue.",
+            "That's what you're for. Good.",
+        ),
+        Line.SESSION_HUMILIATION to listOf(
+            "Pathetic. Look at you.",
+            "So desperate. It's embarrassing.",
+            "You'll do anything I say, won't you? Pathetic.",
+        ),
+        Line.SESSION_CAUGHT to listOf(
+            "I can't see you. Another edge. Now.",
+            "Out of sight? That's an edge you've earned.",
+            "Hiding from me? Edge. Again.",
+        ),
+        Line.SESSION_UNLOCK to listOf(
+            "Unlock. Quickly. Tap when you're out.",
+            "Cage off. Now.",
+            "Take it off. Don't get used to it.",
+        ),
+        Line.SESSION_FINISH to listOf(
+            "Finish. Now.",
+            "You may finish. Don't expect this often.",
+            "Go. Now.",
+        ),
+        Line.SESSION_RUIN to listOf(
+            "Hands off. Now. Ruin it.",
+            "Let go! Ruined. I'm recording.",
+            "Hands away. Don't you dare touch.",
+        ),
+        Line.SESSION_RUIN_DONE to listOf(
+            "Ruined. As ordered.",
+            "Good. That's all you deserved.",
+            "Obedient. Barely.",
+        ),
+        Line.SESSION_DENIED to listOf(
+            "Denied. Hands off.",
+            "No release. Hands away.",
+            "Not today. Let it fade.",
+        ),
+        Line.SESSION_RELOCK to listOf(
+            "Cage back on. Then proof.",
+            "Lock up. Now. I want a photo.",
+            "Back in the cage. Tap when it's locked.",
+        ),
+        Line.SESSION_END to listOf(
+            "Done. You may rest.",
+            "Session over.",
+            "That's enough. Dismissed.",
+        ),
         Line.RATE_TOP to listOf(
             "Acceptable. More than acceptable, actually.",
             "Good. That meets my standards.",

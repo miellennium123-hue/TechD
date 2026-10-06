@@ -48,6 +48,8 @@ data class GuardianConfig(
     val lineOverrides: Map<String, LineSet> = emptyMap(),
     /** Rate me (round 27): she scores your measurements and a photo. See core/Rating. */
     val rating: RatingSettings = RatingSettings(),
+    /** Guided sessions and the kink menu (round 33). See data/Sessions and core/Session. */
+    val session: SessionSettings = SessionSettings(),
 )
 
 @Serializable
