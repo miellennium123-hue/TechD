@@ -13,6 +13,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 - The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions (`.github/workflows/build.yml`). Push, then check the **Build APK** run. The APK is uploaded as the `guardian-angel-debug-apk` artifact.
 - Locally with an SDK: `./gradlew testDebugUnitTest assembleDebug`.
+- Every build is signed with `app/signing/guardian.keystore` so updates install over the old app. Never replace or regenerate it, or the user has to uninstall and loses their data.
+- Bump `versionCode` and `versionName` in `app/build.gradle.kts` with each user-facing release.
 
 ## Code conventions
 

@@ -13,8 +13,8 @@ android {
         applicationId = "com.guardianangel"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.2.1"
 
         // ONNX Runtime ships native code; keep real phones (arm) and the emulator (x86_64).
         ndk {
@@ -22,11 +22,24 @@ android {
         }
     }
 
+    // One fixed key for every build, so a new APK installs over the old one and keeps your data.
+    // Android refuses updates signed with a different key. Never replace this keystore.
+    signingConfigs {
+        create("guardian") {
+            storeFile = file("signing/guardian.keystore")
+            storePassword = "guardian"
+            keyAlias = "guardian"
+            keyPassword = "guardian"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("guardian")
+        }
         release {
             isMinifyEnabled = false
-            // Sideloaded app: sign release builds with the debug key so they install without extra setup.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("guardian")
         }
     }
 

@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.2 built (see README). Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 8)
+> **Status:** v0.2.1 built (see README). Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 9)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -172,6 +172,7 @@ Choices made while building, where the spec left room:
 - **Punishment lockout** blocks social media (or everything if the lockout scope is Everything) for 30 min (Short) or 3h (Long)
 - **Art:** `assets/angel.png` replaces the placeholder angel, images in `assets/wallpapers/` replace the placeholder wallpaper
 - **Photos** are private app storage only, screenshots blocked on photo screens, app backups disabled
+- **Signing (round 9):** every build is signed with one fixed key (`app/signing/guardian.keystore`) so new APKs install over old ones and keep settings and photos. Before v0.2.1 each CI build had a random key, so updating needed an uninstall
 
 ## 9. Open questions
 
@@ -207,3 +208,4 @@ None right now.
 - **2026-10-06 (round 6):** Development continues in the same chat. Added the update rule: Claude updates this doc after every message. Added `CLAUDE.md` with the same rule
 - **2026-10-06 (round 7):** No design changes. User is downloading v0.1 to test on their phone
 - **2026-10-06 (round 8):** First test feedback: permission proof didn't say what to photograph, and photos weren't verified. Decided on an editable prompt list (with Explicit flag) and on-device photo checks. Built in v0.2
+- **2026-10-06 (round 9):** Questions about the context limit and updating. Found that CI builds had random signing keys (updates wouldn't install over old versions); fixed with a fixed keystore in v0.2.1. One last uninstall needed
