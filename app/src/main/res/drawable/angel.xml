@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder art. Drop app/src/main/assets/angel.png in to replace it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- wings -->
+    <path android:fillColor="#F3E5F5" android:pathData="M90,105 C55,70 18,78 10,122 C28,112 42,120 38,142 C58,126 74,132 90,124 Z" />
+    <path android:fillColor="#F3E5F5" android:pathData="M110,105 C145,70 182,78 190,122 C172,112 158,120 162,142 C142,126 126,132 110,124 Z" />
+    <path android:fillColor="#D7C2E0" android:pathData="M90,112 C66,96 40,100 30,124 C46,118 60,122 90,124 Z" />
+    <path android:fillColor="#D7C2E0" android:pathData="M110,112 C134,96 160,100 170,124 C154,118 140,122 110,124 Z" />
+    <!-- dress -->
+    <path android:fillColor="#2D1B3D" android:pathData="M84,104 L116,104 L142,188 L58,188 Z" />
+    <path android:fillColor="#C2185B" android:pathData="M84,104 L116,104 L112,120 L88,120 Z" />
+    <!-- hair back -->
+    <path android:fillColor="#2D1B3D" android:pathData="M72,72 C68,100 70,112 82,118 L86,80 Z" />
+    <path android:fillColor="#2D1B3D" android:pathData="M128,72 C132,100 130,112 118,118 L114,80 Z" />
+    <!-- face -->
+    <path android:fillColor="#FFE0D0" android:pathData="M76,74 a24,24 0 1,0 48,0 a24,24 0 1,0 -48,0 Z" />
+    <!-- fringe -->
+    <path android:fillColor="#2D1B3D" android:pathData="M74,72 C72,44 128,44 126,72 C120,60 110,56 100,62 C90,56 80,60 74,72 Z" />
+    <!-- eyes -->
+    <path android:fillColor="#C2185B" android:pathData="M87,76 a3.5,4.5 0 1,0 7,0 a3.5,4.5 0 1,0 -7,0 Z" />
+    <path android:fillColor="#C2185B" android:pathData="M106,76 a3.5,4.5 0 1,0 7,0 a3.5,4.5 0 1,0 -7,0 Z" />
+    <!-- smirk -->
+    <path android:strokeColor="#880E4F" android:strokeWidth="2" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M94,88 Q101,92 108,86" />
+    <!-- halo -->
+    <path android:strokeColor="#F6D58E" android:strokeWidth="4" android:fillColor="#00000000" android:pathData="M72,30 a28,8 0 1,0 56,0 a28,8 0 1,0 -56,0 Z" />
+</vector>

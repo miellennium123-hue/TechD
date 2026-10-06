@@ -1,0 +1,49 @@
+# Guardian Angel
+
+Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far.
+
+## Design doc rule (always)
+
+- **Update `docs/DESIGN.md` after every user message**, so the doc never falls behind the code.
+- Each update: refresh **Last updated** (date and round number), record any new or changed decision in its section (build decisions go in section 8), and add a **Changelog** entry.
+- If a message changes nothing, still add a short changelog entry saying so.
+- Commit the doc update together with the related code change.
+
+## Workflow
+
+1. Work on the session's feature branch, cut from the latest `main`.
+2. Bump `versionCode` and `versionName` in `app/build.gradle.kts` for every user-facing change.
+3. Push, then wait for the **Build APK** workflow to pass (`.github/workflows/build.yml`). Check it with the GitHub MCP `actions_list` tool, or poll `https://api.github.com/repos/miellennium123-hue/TechD/actions/runs?branch=<branch>`.
+4. Open a pull request into `main` and merge it once CI is green. The user asked for changes to be merged so new versions get published (round 10).
+5. Merging to `main` publishes a GitHub Release automatically. Give the user the stable download link:
+   - **Direct APK:** https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk
+   - **Releases page:** https://github.com/miellennium123-hue/TechD/releases/latest
+
+## Building
+
+- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt` and `core/PhotoCheck.kt` has JVM unit tests in `app/src/test/`, which CI runs.
+- Maven Central sometimes rate-limits this environment (HTTP 429), so local JVM test runs may fail to resolve dependencies. Rely on CI.
+- Locally with an SDK: `./gradlew testDebugUnitTest assembleDebug`.
+- Every build is signed with `app/signing/guardian.keystore` so updates install over the old app. Never replace or regenerate it, or the user has to uninstall and loses their data.
+
+## Code conventions
+
+- Every setting lives in `data/GuardianConfig` (one serializable object, ready for partner sync). Runtime state lives in `data/GuardianState`. Add new fields with defaults so saved data from older versions still loads.
+- All actions go through `core/Guardian`. Decision logic stays pure in `core/Rules` and is covered by `RulesTest.kt`.
+- Mood only changes dialogue (`core/Voice`). It must never affect rules, timers or punishments. Every `Line` needs sweet and strict versions (a test enforces this).
+- **Quit for now** must stay reachable on every screen, never be penalized, and never be removable by any setting or future partner sync.
+- Proof photos stay in private app storage and never leave the phone. Photo checks run on device (`core/PhotoVerifier.kt`, NudeNet model in `assets/models/`, AGPL-3.0).
+- Writing style in docs and replies: plain language, short bullets, bold cues, no em dashes.
+
+## Where things are
+
+| Path | What it does |
+|---|---|
+| `data/Config.kt` | All settings, proof prompts |
+| `data/State.kt` | Locks, proof requests, grants, merit |
+| `core/Guardian.kt` | Every action: enable, quit, ask, proof, chastity, failures, check-ins |
+| `core/Rules.kt` | Pure blocking and timer logic |
+| `core/PhotoCheck.kt`, `core/PhotoVerifier.kt` | Photo quality and explicit checks |
+| `core/Voice.kt` | Her lines |
+| `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen |
+| `ui/` | Compose screens and the Block and Proof activities |
