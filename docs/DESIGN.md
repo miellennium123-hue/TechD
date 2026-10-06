@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 54)
+> **Last updated:** 2026-10-06 (round 55)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -440,6 +440,11 @@ Choices made while building, where the spec left room:
 - **Setting:** **Bedtime screen** in the Bedtime card, on by default. Off, bedtime uses the normal block screen. With Lock guard on, switching it off takes the 30 minute screen, and it's frozen while bedtime runs
 - **Honest limits:** the notification shade, recents and system Settings are system screens she never covers (Settings stays reachable by design, so she can always be switched off). Lock guard still sends you away from her own Settings pages. Within about 30 seconds of bedtime starting, she covers the home screen if you're on it; an allowed app you're already in stays open until you leave it
 
+### v0.19.1 (round 55, her app from the bedtime screen)
+- **Reported:** with Lock guard off, the user couldn't change bedtime hours during bedtime, because the bedtime screen covers the home screen and her app had no button on it
+- **Fixed:** an **Open Guardian Angel** button on the bedtime screen. Her own app was never meant to be blocked. Inside it, Lock guard decides: off, bedtime settings change instantly; on, they're frozen until bedtime ends (round 53)
+- **Workaround on v0.19.0:** open her app from Recents
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -658,3 +663,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 52):** No code changes. User answered the app lock questions: timed blocks, no wait, no photo or Ask her, bedtime locked until morning, merit buys time in. Asked what question 6 (Lock guard) means; explained. Recorded in section 10
 - **2026-10-06 (round 53, v0.18.0):** User picked option C and agreed to the three details. Built timed app blocks with no wait, photo or asking, 15 merit for 10 minutes as the only way in, bedtime locked until it ends, and Lock guard freezing block and bedtime settings while they run. Details in section 8
 - **2026-10-06 (round 54, v0.19.0):** User asked for a full-screen bedtime overlay with a kinky line that only lets the unlocked apps through. Built the bedtime screen: covers the home screen and blocked apps during bedtime, her new "Locked out, pet." lines, buttons for Always-allowed apps and the phone, Quit for now. On by default, guarded by Lock guard. Details in section 8
+- **2026-10-06 (round 55, v0.19.1):** User couldn't reach bedtime hours during bedtime with Lock guard off: the bedtime screen hid her app. Added an Open Guardian Angel button to the bedtime screen. Details in section 8

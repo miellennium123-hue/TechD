@@ -115,6 +115,10 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
             OutlinedButton(onClick = { onOpen(Intent(Intent.ACTION_DIAL)) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Phone")
             }
+            // Her own app is never blocked (round 55): her settings follow Lock guard's rules from inside it.
+            OutlinedButton(onClick = { onOpen(Intent(context, MainActivity::class.java)) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Open Guardian Angel")
+            }
             QuitButton(Modifier.fillMaxWidth()) { Guardian.quitForNow() }
         }
     }
