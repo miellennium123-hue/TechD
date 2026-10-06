@@ -23,6 +23,8 @@ data class SessionSettings(
     /** With the camera: she checks you keep her beat and stop when she says (9.9 part 2). */
     val motionChecks: Boolean = true,
     val motionSensitivity: MotionSensitivity = MotionSensitivity.NORMAL,
+    /** Which camera watches: front by default, back if you'd rather (switch on the session screen). */
+    val backCamera: Boolean = false,
 )
 
 /** How much movement counts. [threshold] is the change between frames (0 until 1); tune on a real phone. */

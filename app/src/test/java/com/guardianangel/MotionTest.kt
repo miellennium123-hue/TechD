@@ -127,6 +127,17 @@ class MotionTest {
     }
 
     @Test
+    fun resetForgetsTheOldCamera() {
+        val tracker = MotionTracker()
+        val g = FloatArray(Motion.GRID_W * Motion.GRID_H) { 0.5f }
+        (0..20).forEach { tracker.add(g.copyOf(), it * 50L) }
+        tracker.reset()
+        // The first frame from the new camera is only a starting point, not movement.
+        tracker.add(FloatArray(g.size) { if (it % 2 == 0) 0.1f else 0.9f }, 1_050)
+        assertFalse(tracker.reading(0, 1_100, MotionSensitivity.NORMAL).live)
+    }
+
+    @Test
     fun trackerSeesMovement() {
         val tracker = MotionTracker()
         (0..40).forEach { i ->

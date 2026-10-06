@@ -38,7 +38,7 @@ import java.util.concurrent.Executors
 enum class CameraMode { WATCH, RECORD }
 
 /**
- * The front camera during a session. WATCH runs the on-device detector about every 1.5 seconds and
+ * The camera during a session (front by default, [back] for the back one). WATCH runs the on-device detector about every 1.5 seconds and
  * reports whether she can see you (null when the detector can't run), and feeds every frame to
  * [motion] as a tiny brightness grid for the beat and stop checks. RECORD films [recordSeconds]
  * of silent video into the private proof folder and reports the file (null if it failed).
@@ -52,6 +52,7 @@ fun SessionCamera(
     onClip: (File?) -> Unit,
     modifier: Modifier = Modifier,
     motion: MotionTracker? = null,
+    back: Boolean = false,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -59,7 +60,7 @@ fun SessionCamera(
     val clip by rememberUpdatedState(onClip)
     val previewView = remember { PreviewView(context) }
 
-    DisposableEffect(mode, lifecycleOwner) {
+    DisposableEffect(mode, lifecycleOwner, back) {
         val executor = Executors.newSingleThreadExecutor()
         val main = ContextCompat.getMainExecutor(context)
         val handler = Handler(Looper.getMainLooper())
@@ -73,11 +74,10 @@ fun SessionCamera(
                 val p = future.get()
                 provider = p
                 val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
-                val selector = if (p.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
-                    CameraSelector.DEFAULT_FRONT_CAMERA
-                } else {
-                    CameraSelector.DEFAULT_BACK_CAMERA
-                }
+                // The camera you picked; the other one only if this phone doesn't have it.
+                val wanted = if (back) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
+                val other = if (back) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+                val selector = if (runCatching { p.hasCamera(wanted) }.getOrDefault(false)) wanted else other
                 p.unbindAll()
                 when (mode) {
                     CameraMode.WATCH -> {
