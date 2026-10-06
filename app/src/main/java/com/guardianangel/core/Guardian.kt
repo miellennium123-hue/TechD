@@ -37,6 +37,8 @@ enum class Failure(val merit: Int) {
     WRONG_ANSWERS(5),
     LEFT_SITE(5),
     RUIN_FAILED(5),
+    SWITCHED_OFF(10),
+    TAMPERED(10),
 }
 
 sealed interface AskResult {
@@ -166,10 +168,48 @@ object Guardian {
         say(Line.QUIT)
     }
 
-    /** For every setting except the on/off switch, which uses [setEnabled]. */
+    // ---- Lock guard (round 41) ----------------------------------------------------------------
+
+    fun locked(): Boolean = LockGuard.locked(config.value, state.value, now())
+
+    fun guarding(): Boolean = LockGuard.guarding(config.value, state.value, now())
+
+    /** Switching her off now needs the slow way (Lock guard on, a lock running). */
+    fun offNeedsWait(): Boolean = guarding()
+
+    /** The slow switch off is done: it counts as a failure, then she's off. */
+    fun slowOff() {
+        fail(Failure.SWITCHED_OFF)
+        setEnabled(false)
+    }
+
+    /** Her watch (the accessibility service) started. A start during a lock that isn't an update is tampering. */
+    fun onWatchStarted(version: Int) {
+        val st = state.value
+        val tamper = LockGuard.tamperOnStart(guarding(), st.guardVersion, version, st.tamperOffNoticed)
+        state.update { it.copy(guardVersion = version, tamperOffNoticed = false) }
+        if (tamper) tampered()
+    }
+
+    /** Checked when you open the app and at check-ins: her watch switched off during a lock. */
+    fun checkWatch() {
+        if (!::appContext.isInitialized) return
+        val watchOn = Permissions.accessibility(appContext)
+        if (!LockGuard.tamperWhenOff(guarding(), watchOn, state.value.tamperOffNoticed)) return
+        state.update { it.copy(tamperOffNoticed = true) }
+        tampered()
+    }
+
+    private fun tampered() {
+        fail(Failure.TAMPERED)
+        Notifier.message(appContext, say(Line.TAMPERED))
+    }
+
+    /** For every setting except the on/off switch, which uses [setEnabled]. Lock guard stays on during a lock. */
     fun updateConfig(transform: (GuardianConfig) -> GuardianConfig) {
         val before = config.value
-        val after = config.update { transform(it).copy(enabled = it.enabled) }
+        val guarded = guarding()
+        val after = config.update { LockGuard.keepGuard(it, transform(it).copy(enabled = it.enabled), guarded) }
         if (before.chastity.on && !after.chastity.on) endChastity()
         if (before.tasksOn && !after.tasksOn) clearTasks()
         if (before.showsUpOn && !after.showsUpOn && state.value.summons != null) clearSummons()
@@ -390,6 +430,7 @@ object Guardian {
     fun onCheckIn() {
         val c = config.value
         if (!c.enabled) return
+        checkWatch()
         addMerit(2) // for keeping her enabled
         checkVisit()
         val st = state.value

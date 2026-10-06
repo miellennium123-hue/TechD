@@ -1,6 +1,7 @@
 package com.guardianangel.core
 
 import android.Manifest
+import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.view.inputmethod.InputMethodManager
 import android.telecom.TelecomManager
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.guardianangel.receiver.GuardAdminReceiver
 import com.guardianangel.service.GuardianAccessibilityService
 
 object Permissions {
@@ -26,6 +28,11 @@ object Permissions {
         NotificationManagerCompat.from(context).areNotificationsEnabled()
 
     fun exactAlarms(context: Context): Boolean = Scheduler.canScheduleExact(context)
+
+    /** Lock guard: her device admin is on, so Android won't uninstall her without removing it first. */
+    fun deviceAdmin(context: Context): Boolean =
+        context.getSystemService(DevicePolicyManager::class.java)
+            ?.isAdminActive(ComponentName(context, GuardAdminReceiver::class.java)) == true
 
     fun camera(context: Context): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED

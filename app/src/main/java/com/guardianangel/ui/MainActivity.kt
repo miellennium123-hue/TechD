@@ -66,6 +66,11 @@ class MainActivity : ComponentActivity() {
         setContent { GuardianTheme { MainContent(requested) } }
     }
 
+    override fun onResume() {
+        super.onResume()
+        Guardian.checkWatch() // Lock guard: her watch switched off during a lock
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)

@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.12.1 (Guided sessions: motion checks, and a front or back camera switch). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 40)
+> **Status:** v0.13.0 (adds Lock guard and the slow Quit for now). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 41)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -39,8 +39,8 @@
 
 These are always available, no matter what she's doing.
 
-- **On/off switch:** You can disable her yourself at any time
-- **"Quit for now" button:** Instantly ends every active lock, timer, and restriction. Always visible, never blocked
+- **On/off switch:** You can disable her yourself at any time. With **Lock guard** on during a lock, it takes 30 minutes and counts as a failure (round 41)
+- **"Quit for now" button:** Ends every active lock, timer, and restriction. Always visible, never blocked, never punished, and it always finishes. **Slow by the user's choice (round 41):** hold 10 seconds, type her sentence exactly, then wait 2.5 minutes with the screen open, about 3 minutes in all. Leaving the screen starts it over. No separate instant emergency exit (user's choice); calls and the dialer are never blocked
 - **Never blocked:** Phone dialer and emergency calls, the Guardian Angel app itself (so Quit is always reachable), plus the **Always-allowed list** (see 4.1)
 
 ---
@@ -365,6 +365,19 @@ Choices made while building, where the spec left room:
 - **Switching resets the motion check**, so the jump between cameras never counts as movement
 - Proof photos already had their own switch; unchanged
 
+### v0.13.0 (round 41, Lock guard and the slow Quit for now)
+- **Asked:** a lock that feels real, with a tedious way to turn her off. The user chose: Quit for now about 3 minutes, no separate emergency exit, and all three Lock guard parts. Claude recommended an instant emergency exit; the user declined
+- **Quit for now (everywhere, always):** hold the button 10 seconds (letting go resets), type "I am giving up on my angel for now, and I know she will be disappointed in me." exactly (a typo starts the sentence over, pasting is ignored), then 2.5 minutes with the screen open while she talks you out of it (new line "Talking you out of quitting", every 15 seconds). Leaving the screen starts it all over; the screen stays on. "Never mind, I'll stay" cancels. Still never punished, never blocked, and no setting can make it longer or remove it. Not a setting
+- **Lock guard (Settings, off by default):** only acts during a lock. **A lock** = chastity lock, punishment lockout, one of her rules running, or a pending Shows up summons
+- **Slow switch off:** during a lock the on/off switch needs a 10 second hold, a longer sentence and 30 minutes with the screen open, then it's a failure (-10 merit and the usual failure settings) and she's off. Switching her on is always instant
+- **Settings can't end a guarded lock:** Lock guard, chastity, punishments, Rules & Tasks and Shows up can't be switched off until the lock ends. Everything else still changes
+- **Tamper guard:** during a lock, a Settings or uninstall screen (package with "settings", "packageinstaller", "securitycenter" or "safecenter") that shows her name sends you home and back to her (new line "Lock guard"). Never a failure. This covers her App info (force stop, uninstall, clear data), her Accessibility page and her device admin page. Screen content events are only switched on while guarding, and she only looks for her own name
+- **Device admin (optional, Permissions screen):** no policies. Android won't uninstall her until it's removed, and removing it is blocked during a lock. Android shows her warning line ("Removing her admin") when you try
+- **Tamper detection:** her watch (the accessibility service) starting again during a lock (a restart, force stop, or switching it off and on) is a failure (-10 and the usual failure settings) with her "Tampering" line, except after an app update or the very first start. Her watch found off during a lock (when you open the app or at a check-in) is a failure too, counted once until it comes back
+- **Accessibility now reads window content** (needed for the tamper guard). Updating may need her Accessibility switched off and on once; do that before any lock
+- **Honest limits:** safe mode, ADB, a factory reset and Quit for now still get you out. A crash of her watch during a lock would count as tampering
+- **New lines (5):** Talking you out of quitting, Slow switch off, Removing her admin, Lock guard, Tampering. Sweet and strict
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -476,7 +489,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 
 - **A lock that feels real (round 40, proposed, not decided):** the user wants turning her off to be tedious
   - **Proposed:** a slow off switch during a lock (wait, type a line, logged as a failure), a tamper guard (accessibility blocks her app info, accessibility and uninstall screens during a lock, plus device admin so uninstalling takes extra steps), and tamper detection (accessibility turned off, force stop or a reboot during a lock is noticed next start and counts as a failure)
-  - **Unchanged:** Quit for now stays instant and penalty free (section 3). Claude recommends no delay on it; at most a one-tap confirm, the user's call
+  - **Decided in round 41:** built as Lock guard in v0.13.0 (section 8). Claude recommended keeping Quit for now instant; the user chose a slow Quit for now (about 3 minutes) and no emergency exit
   - **Honest limit:** Android can't make it unbreakable (safe mode, ADB, factory reset, Quit for now)
 
 ### Fixed issues
@@ -548,3 +561,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 38):** No code changes. User asked for more femdom and techdom features (they like it strict). Proposed ideas grouped as discipline, routine, phone control, release control and presence, recorded in section 10. Nothing picked yet
 - **2026-10-06 (round 39):** No code changes. User picked phone control and release control as favourites and asked whether they'd trip the safety filter. Explained the risk honestly and suggested one feature per round. Recorded in section 10
 - **2026-10-06 (round 40):** No code changes. User asked for a lock that feels real and a tedious way to turn her off. Proposed a slow off switch, a tamper guard and tamper detection, with Quit for now kept instant. Recorded in section 10, waiting on the user's picks
+- **2026-10-06 (round 41, v0.13.0):** User chose a slow Quit for now (about 3 minutes: hold, type, wait), no emergency exit, and all of Lock guard. Built: slow Quit for now everywhere, Lock guard with a 30 minute switch off that counts as a failure, blocked settings and uninstall screens, optional device admin, and tamper detection. Section 3 and `CLAUDE.md` updated. Details in section 8

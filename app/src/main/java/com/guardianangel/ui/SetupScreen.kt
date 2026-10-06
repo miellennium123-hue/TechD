@@ -1,6 +1,8 @@
 package com.guardianangel.ui
 
 import android.Manifest
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.guardianangel.core.Permissions
+import com.guardianangel.receiver.GuardAdminReceiver
 
 @Composable
 fun SetupScreen() {
@@ -41,6 +44,7 @@ fun SetupScreen() {
     val notifications = remember(refresh) { Permissions.notifications(context) }
     val exactAlarms = remember(refresh) { Permissions.exactAlarms(context) }
     val camera = remember(refresh) { Permissions.camera(context) }
+    val admin = remember(refresh) { Permissions.deviceAdmin(context) }
 
     fun open(intent: Intent) = runCatching { context.startActivity(intent) }
     val appDetails = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
@@ -53,7 +57,8 @@ fun SetupScreen() {
 
         PermissionCard(
             "Accessibility",
-            "Lets her see which app is open so she can lock apps. She only reads the app's name, never what's on screen.",
+            "Lets her see which app is open so she can lock apps. She reads the app's name. With Lock guard on " +
+                "during a lock, she also looks for her own name on Settings and uninstall screens, nowhere else.",
             accessibility,
         ) { open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         if (!accessibility && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -82,6 +87,19 @@ fun SetupScreen() {
 
         PermissionCard("Camera", "For photo proof. Photos stay private inside this app.", camera) {
             requestPermission.launch(Manifest.permission.CAMERA)
+        }
+
+        PermissionCard(
+            "Device admin (optional)",
+            "For Lock guard: Android won't uninstall her until you remove this first, and during a lock she blocks that " +
+                "screen. She asks for no other powers. Quit for now still always works.",
+            admin,
+        ) {
+            open(
+                Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+                    .putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, ComponentName(context, GuardAdminReceiver::class.java))
+                    .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Lock guard: uninstalling her takes an extra step."),
+            )
         }
     }
 }

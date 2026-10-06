@@ -3,15 +3,15 @@ package com.guardianangel.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -23,8 +23,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -36,6 +38,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.guardianangel.R
 import com.guardianangel.core.AssetImages
+import com.guardianangel.core.Guardian
+import com.guardianangel.core.Line
+import com.guardianangel.core.LockGuard
 import kotlinx.coroutines.delay
 
 @Composable
@@ -96,8 +101,26 @@ fun SpeechBubble(text: String, modifier: Modifier = Modifier) {
 /** The safety exit. Shown on every screen and never disabled. */
 @Composable
 fun QuitButton(modifier: Modifier = Modifier, onQuit: () -> Unit) {
+    // Always here and always finishes, never punished. The user chose a slow way out (round 41): about 3 minutes.
+    var open by remember { mutableStateOf(false) }
+    if (open) {
+        SlowExitDialog(
+            title = "Quit for now",
+            holdSeconds = LockGuard.QUIT_HOLD_SECONDS,
+            sentence = LockGuard.QUIT_SENTENCE,
+            waitSeconds = LockGuard.QUIT_WAIT_SECONDS,
+            talk = Line.QUIT_TALK,
+            warning = null,
+            finishLabel = "Quit for now",
+            onFinished = {
+                open = false
+                onQuit()
+            },
+            onCancel = { open = false },
+        )
+    }
     Button(
-        onClick = onQuit,
+        onClick = { open = true },
         modifier = modifier,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
@@ -105,6 +128,34 @@ fun QuitButton(modifier: Modifier = Modifier, onQuit: () -> Unit) {
         ),
     ) {
         Text("Quit for now", fontWeight = FontWeight.Bold)
+    }
+}
+
+/**
+ * Her master on/off switch. With Lock guard on during a lock, switching her off takes the slow way
+ * (30 minutes) and counts as a failure. Switching her on is always instant.
+ */
+@Composable
+fun EnabledSwitch(title: String, subtitle: String?, checked: Boolean) {
+    var slowOff by remember { mutableStateOf(false) }
+    if (slowOff) {
+        SlowExitDialog(
+            title = "Switch her off",
+            holdSeconds = LockGuard.OFF_HOLD_SECONDS,
+            sentence = LockGuard.OFF_SENTENCE,
+            waitSeconds = LockGuard.OFF_WAIT_SECONDS,
+            talk = Line.OFF_TALK,
+            warning = "You're locked and Lock guard is on. This counts as a failure.",
+            finishLabel = "Switch her off",
+            onFinished = {
+                slowOff = false
+                Guardian.slowOff()
+            },
+            onCancel = { slowOff = false },
+        )
+    }
+    SwitchRow(title, subtitle, checked) { on ->
+        if (!on && Guardian.offNeedsWait()) slowOff = true else Guardian.setEnabled(on)
     }
 }
 
