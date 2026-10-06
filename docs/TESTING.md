@@ -1,9 +1,22 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.19.3 (debug mode keeps Lock guard). Sections 0 to 0o cover what 0.6.0 to 0.19.3 changed
+> **Version under test:** 0.20.0 (the background update). Sections 0 to 0p cover what 0.6.0 to 0.20.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0p. New in 0.20.0: the background update
+Settings > Wallpaper: Wallpaper control on, Cycle backgrounds on, Every 2m.
+- [ ] Settings > About shows **Version 0.20.0**
+- [ ] **Backgrounds** opens a screen with 12 previews of her designs, all marked On
+- [ ] Tap a preview: it dims and says Hidden. Tap again: back On
+- [ ] **Add your own:** pick a few photos. They appear under Yours, upright. Tap one to remove it
+- [ ] **Next background now** changes the home and lock screen right away
+- [ ] Leave the phone on the home screen: the background changes about every 2 minutes, through hers then yours
+- [ ] Hidden designs never come up. With Use her backgrounds off, only yours come up
+- [ ] **Every** stepper changes the interval (1 to 60 min). Cycle off: it stays on one
+- [ ] **Set and lock:** change the wallpaper by hand, it comes back within about 30 seconds
+- [ ] Text on her designs fits the screen and reads clearly
 
 ## 0o. New in 0.19.2 and 0.19.3: debug mode
 - [ ] Settings > About shows **Version 0.19.3** and a **Debug mode** switch

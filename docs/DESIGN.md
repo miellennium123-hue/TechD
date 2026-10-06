@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 58)
+> **Last updated:** 2026-10-06 (round 59)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -68,6 +68,7 @@ Two lockout scopes:
 
 ### 4.3 Wallpaper control
 - She sets your wallpaper to **femdom-themed** images (**placeholders** until user sends real ones)
+- **From v0.20.0 (the background update):** 12 built-in femdom designs drawn on the phone, your own images added in the app, and she cycles them every 2 minutes (a setting)
 - **Locked:** You can't change it while she's active
 
 ### 4.4 Photo proof
@@ -145,7 +146,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Ask permission for guarded apps | Off | Adds "Ask her" outside her blocks |
 | Bedtime | Off | Start and end time. No way in until it ends. Check-ins are quiet inside it. Bedtime screen (on by default): her full-screen "Locked out" screen |
 | Quiet hours | **On**, 23:00 to 07:00 | Start and end time. Silent check-ins, nothing due inside. No locks |
-| Wallpaper control | Off | Set only / Set and lock |
+| Wallpaper control | Off | Set only / Set and lock. Cycle backgrounds (on, every 2 min). Backgrounds screen: hide her designs, add your own |
 | Chastity mode | Off | Shortest and longest picked lock (default 1h to 4h) |
 | Chastity: she can add time | Off | Amount per addition, hard cap (default 24h) |
 | Photo proof requests | Off | Occasional / Frequent |
@@ -457,6 +458,14 @@ Choices made while building, where the spec left room:
 - **Changed:** debug mode no longer skips Lock guard (`LockGuard.guarding` ignores it again). Slow switch off, the loosen screen, frozen settings, blocked Settings pages and tamper detection all work as usual
 - **Kept:** the **Debug: shut down** button next to every Quit for now. It ends everything and switches her off instantly, never a failure. Debug mode still only changes while she's off
 
+### v0.20.0 (round 59, the background update)
+- **Asked:** more femdom backgrounds, a way to add your own in the app, and she cycles them every 2 minutes or so
+- **Her designs (12):** drawn on the phone at screen size, no image files (`data/Backgrounds.kt`, drawing in `core/WallpaperController.kt`). Each is a gradient (gold, burgundy, violet, rose or midnight), a soft glow, a gold emblem (halo, padlock, crown, locked heart, key or collar) and her words: "Be good, pet.", "Property of my Angel", "Kneel.", "Obey.", "Locked & obedient", "Good pets ask first.", "Denied.", "Eyes down, pet.", "Hers.", "Her favorite toy", "Yes, Mistress.", "Kept.", each with a smaller line under it
+- **Yours:** Settings > Wallpaper > **Backgrounds** opens a new screen. **Add your own** uses the Android photo picker (up to 20 at a time). Each image is downscaled, turned upright and copied into private app storage (`CustomBackgrounds`). Tap one to remove it. Her designs show as previews; tap to hide or bring one back, or switch all of hers off. Images in `assets/wallpapers` still join the cycle
+- **Cycling:** new **Cycle backgrounds** switch (on) and **Every** stepper (1 to 60 minutes, default 2). Her watch checks about every 20 to 30 seconds, so a change lands within about 30 seconds of being due. Order: her designs you kept, bundled images, then yours, wrapping round. **Next background now** on the Backgrounds screen skips ahead. Set and lock still puts the current one back if you change it
+- **Battery:** setting a full-screen wallpaper every 2 minutes uses a little more battery. A longer interval helps
+- **Tests:** `BackgroundsTest.kt` (pool order, hiding, never empty, wrap, due, older saves)
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -679,3 +688,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 56, v0.19.2):** User asked for a debug mode. Built: a Debug mode switch that only changes while she's off, adding an instant Debug: shut down button next to every Quit for now and skipping Lock guard. Details in section 8
 - **2026-10-06 (round 57, v0.19.3):** User wants Lock guard to keep working in debug mode, with debug mode only adding the shut down button. Debug mode no longer skips Lock guard. Details in section 8
 - **2026-10-06 (round 58):** No code changes. User confirmed v0.19.3 works perfectly (debug mode with Lock guard). Recorded in TESTING.md
+- **2026-10-06 (round 59, v0.20.0):** The background update. 12 built-in femdom backgrounds drawn on the phone, your own images added from the app (private storage), hide or keep each of hers, and she cycles them every 2 minutes (a setting). Details in section 8

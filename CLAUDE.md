@@ -55,6 +55,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `core/PhotoCheck.kt`, `core/PhotoVerifier.kt` | Photo quality and explicit checks |
 | `data/Tasks.kt`, `core/TaskChecks.kt` | Rules & Tasks list, active task, lines and stillness checks (tested in `TaskChecksTest.kt`) |
 | `ui/BedtimeActivity.kt` | Bedtime screen: her full-screen "Locked out" screen during bedtime, only Always-allowed apps and the phone (rule in `Rules.bedtimeScreen`) |
+| `data/Backgrounds.kt`, `core/WallpaperController.kt`, `ui/BackgroundsScreen.kt` | Backgrounds: her 12 built-in designs (drawn on the phone), your own images (`CustomBackgrounds` in `core/Files.kt`, private storage), the cycle (tested in `BackgroundsTest.kt`) |
 | `data/ShowsUp.kt`, `ui/ShowUpActivity.kt` | Shows up: questions, the pending summons, her full-screen visit |
 | `data/Sites.kt`, `core/SiteOpener.kt`, `ui/SiteActivity.kt` | Open sites: your site list, the visit, browser choice, her 10 second warning |
 | `core/Rating.kt`, `ui/RateActivity.kt` | Rate me: percentiles from published size data, presentation score from the photo, her scorecard (tested in `RatingTest.kt`). Photos are deleted after rating |

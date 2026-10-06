@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import java.io.File
 
@@ -19,11 +20,11 @@ object AssetImages {
             ?.firstOrNull { it.startsWith("angel.") && isImage(it) }
             ?.let { decode(context, it) }
 
-    fun randomWallpaper(context: Context): Bitmap? =
-        context.assets.list("wallpapers")
-            ?.filter(::isImage)
-            ?.randomOrNull()
-            ?.let { decode(context, "wallpapers/$it") }
+    /** Images bundled in assets/wallpapers, in name order. Part of her cycle (round 59). */
+    fun wallpaperNames(context: Context): List<String> =
+        context.assets.list("wallpapers")?.filter(::isImage)?.sorted().orEmpty()
+
+    fun wallpaper(context: Context, name: String): Bitmap? = decode(context, "wallpapers/$name")
 
     private fun decode(context: Context, path: String): Bitmap? =
         runCatching { context.assets.open(path).use { BitmapFactory.decodeStream(it) } }.getOrNull()
@@ -80,4 +81,34 @@ object ProofFiles {
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         }
     }.getOrNull()
+}
+
+/** Your own backgrounds (round 59): copied into private app storage, downscaled and turned upright. */
+object CustomBackgrounds {
+    const val DIR = "backgrounds"
+    private const val MAX_DIM = 2560
+
+    fun list(context: Context): List<File> =
+        File(context.filesDir, DIR).listFiles()
+            ?.filter { it.extension == "jpg" }
+            ?.sortedBy { it.name }
+            .orEmpty()
+
+    fun file(context: Context, name: String): File = File(File(context.filesDir, DIR), name)
+
+    /** Copies one picked image in. Returns false if it couldn't be read. Call off the main thread. */
+    fun add(context: Context, uri: Uri): Boolean = runCatching {
+        val temp = File.createTempFile("pick", ".img", context.cacheDir)
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input -> temp.outputStream().use { input.copyTo(it) } }
+                ?: return false
+            val bitmap = ProofFiles.load(temp, MAX_DIM) ?: return false
+            val dir = File(context.filesDir, DIR).apply { mkdirs() }
+            val out = File(dir, "bg_${System.currentTimeMillis()}_${(1000..9999).random()}.jpg")
+            out.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+            true
+        } finally {
+            temp.delete()
+        }
+    }.getOrDefault(false)
 }

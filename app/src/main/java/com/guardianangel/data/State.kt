@@ -17,6 +17,9 @@ data class GuardianState(
     val moodUntil: Long = 0,
     val lastLine: String = "",
     val wallpaperId: Int = -1,
+    /** Which background in her cycle is up (round 59), and when she set it. */
+    val wallpaperIndex: Int = -1,
+    val wallpaperChangedAt: Long = 0,
     val nextCheckInAt: Long = 0,
     val checkInPending: Boolean = false,
     /** When she last denied a beg for release. Begging again waits for the cooldown. */
