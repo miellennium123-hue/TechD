@@ -19,6 +19,13 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.HOME" />
         </intent>
+        <!-- Open sites: find Chrome, or the default browser when Chrome isn't installed. -->
+        <package android:name="com.android.chrome" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
     </queries>
 
     <application
@@ -52,6 +59,13 @@
             android:exported="false"
             android:launchMode="singleTask"
             android:taskAffinity="com.guardianangel.showup" />
+
+        <activity
+            android:name=".ui.SiteActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.guardianangel.site" />
 
         <activity
             android:name=".ui.ProofActivity"

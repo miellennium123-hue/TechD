@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.7.0 (adds Quiet hours and harder Shows up questions). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 18)
+> **Status:** v0.8.0 (adds Open sites). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 19)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -86,7 +86,7 @@ Two lockout scopes:
 - Only while she's **enabled**
 - A few times a day, **at least once every 2 hours**
 - **Discreet notifications** (neutral wording, nothing explicit on the lock screen)
-- A check-in can become a task (9.4), a summons (9.5), a photo request, or a plain "report in"
+- A check-in can become a site visit (9.7), a task (9.4), a summons (9.5), a photo request, or a plain "report in"
 - **No hidden deadlines (round 14):** if notifications are off, check-ins never set a task, summons or photo deadline
 - **Quiet at bedtime (round 14):** with Bedtime on, check-ins inside the bedtime window are silent (no notification, no demands)
 - **Quiet hours (round 16):** its own setting, on by default (23:00 to 07:00). Check-ins inside are silent, and she never sets anything due inside it. It doesn't lock apps
@@ -97,6 +97,10 @@ Two lockout scopes:
 
 ### 4.8 Bluetooth toy control
 - **Later phase.** Likely via the open Buttplug.io / Intiface protocol
+
+### 4.9 Open sites (v0.8.0)
+- She opens one of **your own sites** in Chrome after a 10 second warning, and you stay for a set time
+- Details in 9.7 and section 8 (v0.8.0)
 
 ---
 
@@ -117,7 +121,7 @@ User wants **a list of individual settings**, each toggled on/off.
 
 *"Quit for now" overrides every level.*
 
-**Current settings (v0.7.0):** one toggle each, plus details.
+**Current settings (v0.8.0):** one toggle each, plus details.
 
 | Setting | Default | Details |
 |---|---|---|
@@ -135,6 +139,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Check-in frequency | Every 2 hours | 30 min to 2 hours |
 | Rules & Tasks | Off | Editable list, 12 starters |
 | Shows up | Off | Editable question list, 8 starters (5 multiple choice with 4 wrong answers each, 3 phrases) |
+| Open sites | Off | Your own site list (empty to start). Stay for 5 min (1 to 30) |
 | Degradation on failure | Off | Mild / Harsh |
 | Lockout as punishment | Off | Short (30 min) / Long (3h) |
 | Discreet notifications | On | On / Off |
@@ -257,11 +262,29 @@ Choices made while building, where the spec left room:
 - **Upgrade:** saved starter questions get the new wrong answers automatically. A question you wrote, or whose wrong answers you changed, is left alone
 - **Question editor** warns when a multiple choice question has fewer than 3 wrong answers
 
+### v0.8.0 (round 19, builds 9.7 Open sites)
+- **Toggle "Open sites"**, off by default, with your own list (add, edit, delete). The list starts empty; nothing is bundled. Only web addresses: `https://` is added if missing, other schemes are refused
+- **Chance:** at **9 in 10 check-ins** ("almost every single time"). It's rolled **first**, so with sites on, tasks, summons and photos only come from the other 1 in 10
+- **Ask her:** "Ask her to open a site" on the home screen and "Ask her now" in Settings. Like the other "ask her" buttons, this ignores quiet hours (you chose it)
+- **Warning:** her full-screen screen with a 10 second countdown. Back doesn't close it; **Quit for now** does, never penalized. Going home or to another app during the countdown brings the warning back
+- **Discreet on:** the warning says only "Reminder, opening a page in 10" with no angel, line or site name. Discreet off: her line and the site name
+- **Browser:** Chrome. If Chrome isn't installed or is disabled, the default browser
+- **Stay time:** default **5 minutes**, 1 to 30 in Settings. Only time with the browser in front counts
+- **Leaving early is a failure on the first leave** (-5 merit, plus the usual failure settings) and ends the visit. Leaving means going home, opening recents, or switching to any other app (including Always-allowed ones, and an app a site link opens)
+- **Pauses, not failures:** her own app (so Quit for now stays reachable), phone calls, Android Settings and other never-blocked system screens, and the screen turning off. The timer stops until you're back. Unlocking the phone brings you back to the page. For the first 3 seconds after the page opens, nothing counts as leaving (the hand-off from her warning)
+- **Stayed the full time:** +3 merit and her "you may go" line as a notification
+- **Phone locked at check-in:** she waits and shows the warning when you next unlock, within 30 minutes, if you're not in a call and it wouldn't run into quiet hours or bedtime. Otherwise it's dropped with no penalty
+- **Never:** on the lock screen, with the screen off, during a call (or while ringing), or in or running into quiet hours or bedtime
+- **No notification needed:** the warning shows itself, so visits happen even with notifications off. They do need the Accessibility permission (to see the browser and time the stay)
+- **While she's opened it,** nothing blocks her browser (lockouts, bedtime, rules, punishment)
+- **One at a time,** and never on top of a pending summons (and no summons during a visit)
+- **Off:** turning the toggle off, turning her off, or Quit for now ends a visit with no penalty. A visit left far past its time (the service stopped mid-visit) is dropped with no penalty
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
 
-**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). **9.7 Open sites is planned (round 18), not built yet.**
+**Build status:** 9.1 to 9.5 built (v0.3.0 to v0.5.0, reviewed in v0.6.0). 9.7 Open sites built in v0.8.0 (round 19).
 
 ### 9.1 Simpler settings (built, v0.3.0)
 - **Remove the 1 to 4 intensity levels** (Gentle, Firm, Strict, Absolute) from every setting
@@ -299,15 +322,15 @@ Agreed in round 12 and built one release at a time. Kept as the record of what w
 ### 9.6 Dropped
 - **Porn and website popups:** dropped in round 12. Opening sites comes back in a narrower form as 9.7
 
-### 9.7 Open sites (planned round 18, not built)
-Build next, as v0.8.0. Only this feature in that release.
+### 9.7 Open sites (planned round 18, built v0.8.0)
+Built as v0.8.0, the only feature in that release.
 - **New toggle "Open sites"**, off by default, with an editable list of URLs the user adds themselves (add, edit, delete). Nothing is bundled in the app
 - **When:** at some check-ins (random, like tasks and summons), plus an **"Ask her"** button that opens one now
 - **Warning first:** a full-screen screen with a **10 second countdown**, then she opens a random site from the list in **Chrome** (the default browser if Chrome isn't installed)
 - **Stay for a set time:** if you leave the browser before the time is up, she brings you back. The length is a setting
 - **Never:** on the lock screen or with the screen off, during a phone call, or during quiet hours or bedtime
 - **Quit for now** stays on the warning screen and ends it, never penalized. Discreet wording on the warning when Discreet notifications are on
-- **To decide when building:** default and range for the stay time, chance per check-in, and whether leaving early also counts as a failure
+- **Decided in round 19:** stay 5 minutes by default (1 to 30), almost every check-in (9 in 10), and leaving early is a failure on the first leave. A locked phone at check-in waits for the next unlock (up to 30 minutes). See section 8, v0.8.0
 
 ---
 
@@ -320,6 +343,7 @@ Build next, as v0.8.0. Only this feature in that release.
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
 ### Answered
+- **Open sites details (round 19):** 5 minute stay (1 to 30), 9 in 10 check-ins, first leave is a failure, waits for unlock up to 30 minutes
 - **Night check-ins without Bedtime:** a separate Quiet hours setting (round 16)
 - **Multiple choice couldn't be failed:** more wrong answers on the starter questions (round 16)
 - **Proof subject outside chastity:** an editable prompt list she picks from at random (round 8)
@@ -360,3 +384,4 @@ Build next, as v0.8.0. Only this feature in that release.
 - **2026-10-06 (round 16, v0.7.0):** User chose a Quiet hours setting (on by default, 23:00 to 07:00: silent check-ins, nothing due inside) and more wrong answers for the starter multiple choice questions (4 each, saved starters upgraded). Both open questions answered. Details in section 8
 - **2026-10-06 (round 17):** No design changes. User asked what content is off limits for Claude and whether there are workarounds. Explained the limits, and offered editable dialogue as an open question
 - **2026-10-06 (round 18):** A build attempt was stopped by a safety filter; nothing changed. The user will continue in a new chat with only one feature: opening sites from their own list, written up as 9.7 (planned, not built)
+- **2026-10-06 (round 19, v0.8.0):** Built 9.7 Open sites. User chose a 5 minute stay (1 to 30), almost every check-in (9 in 10, rolled first), failure on the first leave, and waiting for unlock when the phone is locked. Details in section 8

@@ -27,6 +27,13 @@ data class GuardianConfig(
     /** Shows up: at some check-ins she wants you, and asks a question from [questions]. */
     val showsUpOn: Boolean = false,
     val questions: List<Question> = Questions.DEFAULTS,
+    /**
+     * Open sites (round 19): at almost every check-in she opens one of [siteList] in Chrome after a
+     * 10 second warning, and you stay [siteMinutes]. The list is yours; nothing is bundled.
+     */
+    val sitesOn: Boolean = false,
+    val siteList: List<String> = emptyList(),
+    val siteMinutes: Int = Sites.DEFAULT_MINUTES,
     val checkInMinutes: Int = 120,
     val degradation: DegradationSettings = DegradationSettings(),
     val punishment: PunishmentSettings = PunishmentSettings(),

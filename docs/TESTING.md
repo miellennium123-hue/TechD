@@ -1,9 +1,27 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.7.0 (adds Quiet hours, harder Shows up questions). Section 0 covers what 0.6.0 and 0.7.0 changed
+> **Version under test:** 0.8.0 (adds Open sites). Sections 0 to 0b cover what 0.6.0, 0.7.0 and 0.8.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0b. New in 0.8.0: Open sites
+- [ ] Settings > About shows **Version 0.8.0**
+- [ ] Settings has an **Open sites** card, off, Stay for **5m**. The stepper goes 1m to 30m
+- [ ] **Your sites:** starts empty. Add `example.com`: it's saved as `https://example.com`. Edit and Delete work. `not a site` and `mailto:...` can't be added
+- [ ] **Ask her now** (or **Ask her to open a site** on home) shows the warning with a 10 second countdown, then opens the site in Chrome
+- [ ] **Back** doesn't close the warning. Pressing **Home** during the countdown brings the warning back within a few seconds
+- [ ] **Quit for now** on the warning ends it, no merit lost
+- [ ] **Discreet on:** the warning shows only "Reminder, opening a page in". **Discreet off:** her picture, a line and the site name
+- [ ] **Stay the full time** (set 1m to test): +3 merit and a "you may go" notification
+- [ ] **Leave early** (Home, recents, or another app): counts as a failure right away (-5 merit) and the visit ends
+- [ ] **Pauses, no failure:** open Guardian Angel during a visit (home shows "Back to the site" and the time left, not counting down), take a call, or turn the screen off. Unlocking takes you back to the page
+- [ ] **Lockouts on Everything:** Chrome isn't blocked while she has a site open
+- [ ] **Locked phone:** lock the phone before a check-in. The warning appears after you unlock (within 30 minutes), never on the lock screen
+- [ ] **Quiet hours:** no visits inside quiet hours or bedtime, or within about 6 minutes before they start
+- [ ] **Chance:** with sites on, nearly every check-in opens a site; tasks, summons and photos become rare
+- [ ] **No Chrome:** with Chrome disabled, she uses your default browser and Settings says so
+- [ ] **Watch for:** a site link that opens another app (YouTube, Play Store) counts as leaving. Tell me if that happens a lot
 
 ## 0a. New in 0.7.0 (quick checks)
 - [ ] Settings has a **Quiet hours** card, on, 23:00 to 07:00
@@ -29,7 +47,7 @@
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.7.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.8.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 

@@ -14,6 +14,8 @@ import com.guardianangel.data.ProofReason
 import com.guardianangel.data.ProofRequest
 import com.guardianangel.data.Questions
 import com.guardianangel.data.RuleEnforcement
+import com.guardianangel.data.SiteVisit
+import com.guardianangel.data.Sites
 import com.guardianangel.data.Store
 import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
@@ -28,6 +30,7 @@ enum class Failure(val merit: Int) {
     MISSED_TASK(8),
     TASK_FAILED(5),
     WRONG_ANSWERS(5),
+    LEFT_SITE(5),
 }
 
 sealed interface AskResult {
@@ -122,7 +125,9 @@ object Guardian {
         } else {
             val proofs = state.value.proofs
             config.update { it.copy(enabled = false) }
-            state.update { it.copy(proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null) }
+            state.update {
+                it.copy(proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null, visit = null)
+            }
             Scheduler.cancelAll(appContext, proofs)
             Notifier.cancelAll(appContext)
             say(Line.OFF)
@@ -144,6 +149,7 @@ object Guardian {
                 lastBegAt = 0,
                 task = null,
                 summons = null,
+                visit = null,
             )
         }
         Scheduler.cancelAll(appContext, proofs)
@@ -158,6 +164,7 @@ object Guardian {
         if (before.chastity.on && !after.chastity.on) endChastity()
         if (before.tasksOn && !after.tasksOn) clearTasks()
         if (before.showsUpOn && !after.showsUpOn && state.value.summons != null) clearSummons()
+        if (before.sitesOn && !after.sitesOn) clearVisit()
         if (!after.enabled) return
         if (after.checkInMinutes != before.checkInMinutes) Scheduler.scheduleNextCheckIn(appContext)
         val wallpaperChanged = after.wallpaper.on &&
@@ -375,12 +382,15 @@ object Guardian {
         val c = config.value
         if (!c.enabled) return
         addMerit(2) // for keeping her enabled
+        checkVisit()
         val st = state.value
         val lock = st.chastity
-        val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble())
-        val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls)
+        val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble())
+        val canOpenSites = Permissions.accessibility(appContext) && SiteOpener.browserPackage(appContext) != null
+        val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls, canOpenSites)
         val handled = when (action) {
             CheckInAction.QUIET -> true // bedtime: let her pet sleep
+            CheckInAction.SITE -> startVisit(asked = false)
             CheckInAction.TASK -> issueTask(fitQuiet = true)
             CheckInAction.SUMMONS -> summon()
             CheckInAction.PROOF -> {
@@ -552,5 +562,106 @@ object Guardian {
         state.update { it.copy(summons = null) }
         Scheduler.cancelSummons(appContext)
         Notifier.cancel(appContext, Notifier.ID_SUMMON)
+    }
+
+    // ---- Open sites --------------------------------------------------------------------------
+
+    /**
+     * Picks one of your sites and shows her 10 second warning, or waits for the phone to be
+     * unlocked (up to [Rules.SITE_SHOW_WITHIN_MINUTES]). [asked]: you pressed "Ask her", so it
+     * shows straight away and quiet hours don't stop it.
+     */
+    fun startVisit(asked: Boolean): Boolean {
+        val c = config.value
+        if (!c.enabled || !c.sitesOn || state.value.visit != null) return false
+        // Without the accessibility service she can't time your stay or see you leave.
+        if (!Permissions.accessibility(appContext)) return false
+        val url = c.siteList.randomOrNull(random) ?: return false
+        val browser = SiteOpener.browserPackage(appContext) ?: return false
+        val t = now()
+        val visit = SiteVisit(
+            id = t, url = url, browser = browser, createdAt = t,
+            showBy = t + Rules.SITE_SHOW_WITHIN_MINUTES * MINUTE,
+            stayMs = c.siteMinutes.coerceIn(Sites.MIN_MINUTES, Sites.MAX_MINUTES) * MINUTE,
+            asked = asked,
+        )
+        state.update { it.copy(visit = visit) }
+        if (asked) SiteOpener.showWarning(appContext) else showVisitIfReady()
+        return true
+    }
+
+    /** A visit waiting for the phone: shown once it's unlocked, not in a call, and not running into quiet time. */
+    fun showVisitIfReady(): Boolean {
+        val visit = state.value.visit ?: return false
+        if (!visit.pending || !config.value.enabled) return false
+        if (Rules.visitExpired(visit, now()) || !Rules.canShowVisit(config.value, visit, minuteOfDay())) {
+            clearVisit()
+            return false
+        }
+        if (!SiteOpener.phoneReady(appContext)) return false
+        SiteOpener.showWarning(appContext)
+        return true
+    }
+
+    /** Her warning screen is up. The countdown runs from the first time it shows. */
+    fun visitWarned() {
+        state.update { st -> st.copy(visit = st.visit?.let { if (it.pending) it.copy(warnedAt = now()) else it }) }
+    }
+
+    /** Countdown over: open the page and start timing. A browser that won't open it just ends the visit. */
+    fun openVisit() {
+        val visit = state.value.visit?.takeIf { it.warning } ?: return
+        val t = now()
+        state.update { it.copy(visit = visit.copy(openedAt = t, onSiteSince = t)) }
+        if (!SiteOpener.open(appContext, visit.url, visit.browser)) clearVisit()
+    }
+
+    /** The app in front changed during an open visit. Leaving is a failure; her app, calls and system screens pause. */
+    fun onVisitMove(move: SiteMove) {
+        val visit = state.value.visit?.takeIf { it.open } ?: return
+        val t = now()
+        when (move) {
+            SiteMove.ON_SITE -> if (visit.onSiteSince == 0L) {
+                state.update { it.copy(visit = visit.copy(onSiteSince = t)) }
+            }
+            SiteMove.PAUSE -> pauseVisit()
+            SiteMove.LEFT -> {
+                if (Rules.visitDone(visit, t)) {
+                    finishVisit()
+                } else {
+                    clearVisit()
+                    if (config.value.enabled) fail(Failure.LEFT_SITE)
+                }
+            }
+            SiteMove.NONE -> Unit
+        }
+    }
+
+    /** Screen off, or a pause from [onVisitMove]: time stops until you're back on the site. */
+    fun pauseVisit() {
+        val visit = state.value.visit?.takeIf { it.open && it.onSiteSince > 0 } ?: return
+        val t = now()
+        state.update { it.copy(visit = visit.copy(stayedMs = Rules.stayedMs(visit, t), onSiteSince = 0)) }
+    }
+
+    /** Called every second during a visit: finishes it when you've stayed long enough, drops stale ones. */
+    fun checkVisit() {
+        val visit = state.value.visit ?: return
+        val t = now()
+        when {
+            !config.value.enabled -> clearVisit()
+            Rules.visitDone(visit, t) -> finishVisit()
+            Rules.visitExpired(visit, t) -> clearVisit()
+        }
+    }
+
+    private fun finishVisit() {
+        clearVisit()
+        addMerit(3)
+        Notifier.message(appContext, say(Line.SITE_DONE))
+    }
+
+    private fun clearVisit() {
+        state.update { it.copy(visit = null) }
     }
 }

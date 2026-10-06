@@ -1,6 +1,6 @@
 # Guardian Angel
 
-Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5 built, **9.7 Open sites planned next**), section 10 the open questions.
+Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the design doc before changing behavior. It is the source of truth and records every decision so far. Section 8 has the build decisions per version, section 9 the plans (9.1 to 9.5 and 9.7 built), section 10 the open questions.
 
 ## Design doc rule (always)
 
@@ -54,6 +54,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `core/PhotoCheck.kt`, `core/PhotoVerifier.kt` | Photo quality and explicit checks |
 | `data/Tasks.kt`, `core/TaskChecks.kt` | Rules & Tasks list, active task, lines and stillness checks (tested in `TaskChecksTest.kt`) |
 | `data/ShowsUp.kt`, `ui/ShowUpActivity.kt` | Shows up: questions, the pending summons, her full-screen visit |
+| `data/Sites.kt`, `core/SiteOpener.kt`, `ui/SiteActivity.kt` | Open sites: your site list, the visit, browser choice, her 10 second warning |
 | `core/Voice.kt` | Her lines |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen |
 | `ui/` | Compose screens and the Block and Proof activities |
