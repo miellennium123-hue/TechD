@@ -301,5 +301,6 @@ Use **Try it now** in Settings to summon her.
 | Date | Version | Item | Result |
 |---|---|---|---|
 | 2026-10-06 | 0.6.0 | General use | User: "Looks like it works." No specific checklist items reported yet |
+| 2026-10-06 | 0.19.3 | Debug mode with Lock guard | User: "Works perfectly" |
 | 2026-10-06 | 0.19.0 | Bedtime screen | User couldn't reach her app to change bedtime hours (Lock guard off): the screen hid it. Fixed in 0.19.1 |
 | 2026-10-06 | 0.17.0 | Quickshot button | User couldn't see it (hidden while her or Guided sessions were off). Fixed in 0.17.1 |

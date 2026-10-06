@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 57)
+> **Last updated:** 2026-10-06 (round 58)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -678,3 +678,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 55, v0.19.1):** User couldn't reach bedtime hours during bedtime with Lock guard off: the bedtime screen hid her app. Added an Open Guardian Angel button to the bedtime screen. Details in section 8
 - **2026-10-06 (round 56, v0.19.2):** User asked for a debug mode. Built: a Debug mode switch that only changes while she's off, adding an instant Debug: shut down button next to every Quit for now and skipping Lock guard. Details in section 8
 - **2026-10-06 (round 57, v0.19.3):** User wants Lock guard to keep working in debug mode, with debug mode only adding the shut down button. Debug mode no longer skips Lock guard. Details in section 8
+- **2026-10-06 (round 58):** No code changes. User confirmed v0.19.3 works perfectly (debug mode with Lock guard). Recorded in TESTING.md
