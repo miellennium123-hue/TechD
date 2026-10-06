@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.14.0 (Lock guard works whenever she is on; Quit for now takes about 10 minutes). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 44)
+> **Status:** v0.14.1 (black, white and gold theme). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 45)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -388,6 +388,11 @@ Choices made while building, where the spec left room:
 - **Settings, Home, Lock guard row, permissions and her lines** reworded for "whenever she's on"
 - **Battery:** with Lock guard on, she now gets screen-change events all the time (she still only looks inside Settings and uninstall screens)
 
+### v0.14.1 (round 45, black, white and gold)
+- **Asked:** change the theme from purple to white, gold and black
+- **App colors (`ui/theme/Theme.kt`):** near-black backgrounds and cards, gold (#D4AF37) for buttons, switches and highlights, champagne white as the second color, white text. Red stays for Quit for now and errors so they still stand out
+- **Her picture, app icon and placeholder wallpaper:** white wings, black dress and hair with gold outlines (so she shows on black), gold eyes and halo. Placeholder wallpaper fades from black to dark gold. App window and icon background black
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -575,3 +580,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 42):** No code changes. User asked for a detailed explanation of every Lock guard part. Explained from section 8 (v0.13.0)
 - **2026-10-06 (round 43, v0.14.0):** User asked for Lock guard without needing a lock, very tedious loosening of settings like app lockouts, and a 10 minute Quit for now. Built: guarding whenever Lock guard and she are on, a 30 minute slow screen for switching off any of her controls, and Quit for now at about 10 minutes. Restarts still only count during a lock. Details in section 8
 - **2026-10-06 (round 44):** No code changes. User asked how tamper detection works again. Explained the v0.14.0 rules (section 8, v0.13.0 and v0.14.0)
+- **2026-10-06 (round 45, v0.14.1):** Theme changed from purple to black, white and gold: app colors, her picture, the app icon and the placeholder wallpaper. Red kept for Quit for now and errors. Details in section 8

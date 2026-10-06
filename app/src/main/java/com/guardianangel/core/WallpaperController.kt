@@ -69,7 +69,7 @@ object WallpaperController {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.shader = LinearGradient(
             0f, 0f, 0f, h.toFloat(),
-            intArrayOf(0xFF140B1A.toInt(), 0xFF4A1442.toInt(), 0xFF8E2459.toInt()),
+            intArrayOf(0xFF0A0A0A.toInt(), 0xFF2A2210.toInt(), 0xFF6B5418.toInt()),
             null,
             Shader.TileMode.CLAMP,
         )
