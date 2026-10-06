@@ -92,6 +92,13 @@ class PeekTest {
     }
 
     @Test
+    fun commentShowsOnScreenUnlessOffOrQuiet() {
+        assertTrue(Peek.showsComment(on, quiet = false))
+        assertFalse(Peek.showsComment(on, quiet = true))
+        assertFalse(Peek.showsComment(on.copy(peek = PeekSettings(on = true, showComment = false)), quiet = false))
+    }
+
+    @Test
     fun switchingPeeksOffLoosens() {
         assertTrue(LockGuard.loosens(on, on.copy(peek = PeekSettings(on = false))))
         assertFalse(LockGuard.loosens(GuardianConfig(enabled = true), on))

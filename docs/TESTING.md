@@ -1,7 +1,7 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.21.0 (her mark and she peeks). Sections 0 to 0q cover what 0.6.0 to 0.21.0 changed
+> **Version under test:** 0.21.1 (her mark and she peeks, peek comments visible). Sections 0 to 0q cover what 0.6.0 to 0.21.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
@@ -18,6 +18,10 @@
 - [ ] With Lock guard on, switching Her mark or the tint off opens the 30 minute screen; moving the corner is instant
 
 **She peeks (Android 11 or later)**
+- [ ] 0.21.1: right after a peek, her comment pops up on screen for a few seconds
+- [ ] 0.21.1: open a peek in the gallery: her comment shows at the top in a card, with the screenshot and Delete below it
+- [ ] 0.21.1: older peeks show their comments too
+- [ ] 0.21.1: Show her comment off: no pop-up, still in the gallery
 - [ ] Settings > Phone control > **She peeks** on, then open any ordinary app and wait about 5 minutes
 - [ ] A silent notification with her comment arrives, naming the app (Discreet off to see the words)
 - [ ] Gallery shows the screenshot with a **Peek** tag; opening it shows the app, time and her line
@@ -335,6 +339,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-06 | 0.21.0 | She peeks comments | User: screenshots save but no comments shown. Gallery pushed them off screen, Discreet hid them in notifications. Fixed in 0.21.1 |
 | 2026-10-06 | 0.21.0 | Her mark and She peeks | User: "Seems to work" |
 | 2026-10-06 | 0.6.0 | General use | User: "Looks like it works." No specific checklist items reported yet |
 | 2026-10-06 | 0.19.3 | Debug mode with Lock guard | User: "Works perfectly" |

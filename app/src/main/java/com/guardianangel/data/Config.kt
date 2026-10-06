@@ -153,6 +153,8 @@ data class MarkSettings(
 @Serializable
 data class PeekSettings(
     val on: Boolean = false,
+    /** Round 64: right after she peeks, her comment pops up on screen for a few seconds. */
+    val showComment: Boolean = true,
 )
 
 enum class MarkCorner(val label: String, val top: Boolean, val left: Boolean) {

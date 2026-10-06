@@ -94,6 +94,9 @@ object Peek {
         else -> PeekKind.OTHER
     }
 
+    /** Her comment pops up on screen after a peek (round 64), unless it's off or it's quiet time. */
+    fun showsComment(config: GuardianConfig, quiet: Boolean): Boolean = config.peek.showComment && !quiet
+
     /** Adds a peek, newest last. Returns the list she keeps and the ones whose screenshots go. */
     fun add(peeks: List<PeekRecord>, record: PeekRecord): Pair<List<PeekRecord>, List<PeekRecord>> {
         val all = peeks + record
