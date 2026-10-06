@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.7.0 (adds Quiet hours and harder Shows up questions). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 16, v0.7.0)
+> **Last updated:** 2026-10-06 (round 17)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -303,7 +303,7 @@ Agreed in round 12 and built one release at a time. Kept as the record of what w
 
 ## 10. Open questions
 
-None right now.
+- **Editable lines (round 17):** make her dialogue editable in Settings (like prompts, tasks and questions), so the user writes the spiciest lines themselves and Claude builds the mechanics. Offered, waiting on the user
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -347,3 +347,4 @@ None right now.
 - **2026-10-06 (round 14, v0.6.0):** Full review of every version so far. Fixed app-in-front tracking, hidden deadlines with notifications off, demands at bedtime, stillness and lines edge cases, and Shows up wording. Added a reset confirmation and faster chastity steppers. Two open questions in section 10. Details in section 8
 - **2026-10-06 (round 15):** No design changes. User reports v0.6.0 looks like it works (logged in `docs/TESTING.md`). Confirmed `CLAUDE.md` still requires a design doc update after every message. The two open questions in section 10 are still open
 - **2026-10-06 (round 16, v0.7.0):** User chose a Quiet hours setting (on by default, 23:00 to 07:00: silent check-ins, nothing due inside) and more wrong answers for the starter multiple choice questions (4 each, saved starters upgraded). Both open questions answered. Details in section 8
+- **2026-10-06 (round 17):** No design changes. User asked what content is off limits for Claude and whether there are workarounds. Explained the limits, and offered editable dialogue as an open question
