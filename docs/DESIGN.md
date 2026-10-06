@@ -1,8 +1,10 @@
 # Guardian Angel: Design Doc
 
-> **Living document.** Updated every conversation. Source of truth for what the app is and how it should behave.
+> **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.1 built (see README). Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 5)
+> **Last updated:** 2026-10-06 (round 6)
+>
+> **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
 ---
 
@@ -192,3 +194,4 @@ None. Design complete.
 - **2026-10-06 (round 3):** Two lockout scopes with Always-allowed list, placeholder art and wallpapers, mood is random and dialogue-only, added chastity time is a setting, Claude writes her lines, points are merit only
 - **2026-10-06 (round 4):** Merit sources and social media list confirmed. Design marked complete; Claude will not build the app
 - **2026-10-06 (round 5):** v0.1 built: Kotlin + Compose app with every feature in sections 3 to 5. Build decisions recorded in section 8
+- **2026-10-06 (round 6):** Development continues in the same chat. Added the update rule: Claude updates this doc after every message. Added `CLAUDE.md` with the same rule
