@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 51)
+> **Last updated:** 2026-10-06 (round 52)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -544,6 +544,14 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
     4. **Bedtime:** same rules as lockouts, or no way in at all until morning?
     5. **Earned access:** should merit buy time in (for example, spend merit for 10 minutes)? This ties in with the round 39 screen time allowance idea
     6. **Lock guard:** switching lockouts off already takes the 30 minute slow screen. Keep that as the only way to loosen them?
+  - **Answered in round 52:**
+    1. **Timed blocks:** lockouts become timed blocks instead of always-on
+    2. **Wait 60 seconds:** removed
+    3. **Send a photo and Ask her:** both removed for lockouts
+    4. **Bedtime:** no way in at all until the bedtime window ends
+    5. **Merit buys time in:** yes, for lockouts (not bedtime)
+    6. **Lock guard:** the user asked what this means. Explained in round 52, waiting on their pick
+  - **Still open (Claude's proposal, waiting on the user):** who starts a timed block and how long it lasts, what merit buys and costs, and whether bedtime and lockout details (times, scope, Always-allowed) get guarded too
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -625,3 +633,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 49, v0.17.0):** User asked for a quickshot in Guided sessions that always ends ruined and films the ruin. Built: a Quickshot button, about 2 minutes, always ruined, camera always on to film it. Works during a lock (unlock, ruin, relock). Details in section 8
 - **2026-10-06 (round 50, v0.17.1):** User couldn't see the quickshot. It was hidden unless she and Guided sessions were both on. Both Start buttons now always show, greyed out with the reason until they're usable. Details in section 8
 - **2026-10-06 (round 51):** No code changes. User wants app locks they can't get out of by waiting, sending a photo or asking her. Noted for the next update in section 10, with six questions to settle before building (lockouts have no end time today, so removing every way in would block apps for as long as lockouts are on)
+- **2026-10-06 (round 52):** No code changes. User answered the app lock questions: timed blocks, no wait, no photo or Ask her, bedtime locked until morning, merit buys time in. Asked what question 6 (Lock guard) means; explained. Recorded in section 10
