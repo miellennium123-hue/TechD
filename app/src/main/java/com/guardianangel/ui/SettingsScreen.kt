@@ -135,6 +135,11 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                     pickTime(config.bedtime.endMinute) { m -> update { it.copy(bedtime = it.bedtime.copy(endMinute = m)) } }
                 }) { Text("To ${formatMinuteOfDay(config.bedtime.endMinute)}") }
             }
+            SwitchRow(
+                "Bedtime screen",
+                "Her full-screen \"Locked out\" screen covers your home screen during bedtime. Only Always-allowed apps and the phone open from it.",
+                config.bedtime.screen,
+            ) { v -> update { it.copy(bedtime = it.bedtime.copy(screen = v)) } }
         }
 
         FoldCard("Quiet hours", config.quietHours.on) {

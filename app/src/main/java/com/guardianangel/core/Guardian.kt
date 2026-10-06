@@ -303,6 +303,10 @@ object Guardian {
     fun decide(pkg: String, protectedPackages: Set<String> = emptySet()): Decision =
         Rules.decide(pkg, config.value, state.value, now(), minuteOfDay(), protectedPackages)
 
+    /** Whether her bedtime screen should cover this app or the home screen right now (round 54). */
+    fun bedtimeScreen(decision: Decision, launcher: Boolean): Boolean =
+        Rules.bedtimeScreen(config.value, minuteOfDay(), decision, launcher)
+
     fun grant(pkg: String, minutes: Int, bought: Boolean = false) {
         val t = now()
         state.update { st ->

@@ -187,6 +187,24 @@ class RulesTest {
     }
 
     @Test
+    fun bedtimeScreenCoversHomeAndBlockedApps() {
+        val c = GuardianConfig(enabled = true, bedtime = BedtimeSettings(on = true), alwaysAllowed = setOf(bank))
+        val game = Rules.decide("com.example.game", c, GuardianState(), now, 0)
+        val allowed = Rules.decide(bank, c, GuardianState(), now, 0)
+        // Home screen and a blocked app: covered. An Always-allowed app: not.
+        assertTrue(Rules.bedtimeScreen(c, 0, Decision.Allow, launcher = true))
+        assertTrue(Rules.bedtimeScreen(c, 0, game, launcher = false))
+        assertFalse(Rules.bedtimeScreen(c, 0, allowed, launcher = false))
+        // Outside bedtime, with the screen off, or with her off: never.
+        assertFalse(Rules.bedtimeScreen(c, noon, Decision.Allow, launcher = true))
+        assertFalse(Rules.bedtimeScreen(c.copy(bedtime = c.bedtime.copy(screen = false)), 0, game, launcher = true))
+        assertFalse(Rules.bedtimeScreen(c.copy(enabled = false), 0, Decision.Allow, launcher = true))
+        // A summons isn't bedtime's block: her Shows up screen handles it.
+        val summonsBlock = Decision.Block(RestrictionKind.SUMMONS, askAllowed = false)
+        assertFalse(Rules.bedtimeScreen(c, 0, summonsBlock, launcher = false))
+    }
+
+    @Test
     fun bedtimeHasNoWayInUntilMorning() {
         val c = GuardianConfig(enabled = true, bedtime = BedtimeSettings(on = true), askPermission = AskPermissionSettings(on = true))
         val st = GuardianState(grants = listOf(Grant("com.example.game", now + HOUR, bought = true)))

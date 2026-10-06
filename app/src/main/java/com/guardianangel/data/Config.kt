@@ -111,6 +111,8 @@ data class BedtimeSettings(
     val on: Boolean = false,
     val startMinute: Int = 23 * 60,
     val endMinute: Int = 7 * 60,
+    /** Her full-screen bedtime screen (round 54): covers the home screen, only Always-allowed apps open. */
+    val screen: Boolean = true,
 )
 
 @Serializable

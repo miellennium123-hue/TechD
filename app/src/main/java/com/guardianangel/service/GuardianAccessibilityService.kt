@@ -19,6 +19,7 @@ import com.guardianangel.core.Rules
 import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
+import com.guardianangel.ui.BedtimeActivity
 import com.guardianangel.ui.BlockActivity
 import com.guardianangel.ui.MainActivity
 
@@ -72,6 +73,8 @@ class GuardianAccessibilityService : AccessibilityService() {
     /** Screen off pauses a visit. Unlocking brings you back to the page, or shows a visit that was waiting. */
     private val screen = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            // Unlocking during bedtime brings her bedtime screen back over whatever was in front.
+            if (intent.action == Intent.ACTION_USER_PRESENT) currentPackage?.let { evaluate(it) }
             val visit = Guardian.state.value.visit ?: return
             when (intent.action) {
                 Intent.ACTION_SCREEN_OFF -> Guardian.pauseVisit()
@@ -205,12 +208,14 @@ class GuardianAccessibilityService : AccessibilityService() {
     private fun evaluate(pkg: String) {
         if (pkg == packageName) return
         val decision = Guardian.decide(pkg, protectedPackages)
-        if (decision !is Decision.Block) return
+        // Bedtime screen (round 54): covers the home screen and bedtime's blocked apps.
+        val bedtime = Guardian.bedtimeScreen(decision, pkg in launchers)
+        if (decision !is Decision.Block && !bedtime) return
         val t = Guardian.now()
         if (pkg == lastBlockedPackage && t - lastBlockAt < 1_500) return
         lastBlockedPackage = pkg
         lastBlockAt = t
-        startActivity(BlockActivity.intent(this, pkg))
+        startActivity(if (bedtime) BedtimeActivity.intent(this) else BlockActivity.intent(this, pkg))
     }
 
     override fun onInterrupt() = Unit

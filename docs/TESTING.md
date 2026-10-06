@@ -1,9 +1,24 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.18.0 (timed app blocks). Sections 0 to 0m cover what 0.6.0 to 0.18.0 changed
+> **Version under test:** 0.19.0 (bedtime screen). Sections 0 to 0n cover what 0.6.0 to 0.19.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0n. New in 0.19.0: bedtime screen
+Bedtime on, set to start 2 minutes from now. Settings > Bedtime > **Bedtime screen** on (default).
+- [ ] Settings > About shows **Version 0.19.0**
+- [ ] On the home screen when bedtime starts: within about 30 seconds her full-screen "Locked out" screen appears
+- [ ] It shows her picture, her line, "Locked out until HH:MM" and the time left
+- [ ] Buttons for your installed Always-allowed apps open them. **Phone** opens the dialer
+- [ ] Back does nothing. Home brings her screen back
+- [ ] Opening a blocked app (from recents or a notification) brings her screen, not the old block screen
+- [ ] Lock the phone and unlock it: her screen is back
+- [ ] When bedtime ends, the screen closes and you're on the home screen
+- [ ] Quit for now on her screen works and closes it
+- [ ] **Bedtime screen off:** bedtime uses the normal block screen again
+- [ ] **Lock guard on:** switching Bedtime screen off outside bedtime opens the 30 minute screen. During bedtime it says "Not now"
+- [ ] Her lines > Asking and locks has **Bedtime screen**, and editing it changes what she says
 
 ## 0m. New in 0.18.0: timed app blocks, no easy way in
 Set check-ins to 30 min, App lockouts on (Social media), Shortest block 30m, Longest block 1h.
