@@ -1,9 +1,20 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.16.0 (Chastity screen, tidier Settings). Sections 0 to 0k cover what 0.6.0 to 0.16.0 changed
+> **Version under test:** 0.17.0 (Quickshot). Sections 0 to 0l cover what 0.6.0 to 0.17.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0l. New in 0.17.0: Quickshot
+- [ ] Settings > About shows **Version 0.17.0**
+- [ ] Guided sessions screen: under **Start a session** there's **Quickshot (always ruined)**
+- [ ] Its setup says about 2 minutes, always ruined, always filmed. Start stays greyed out until the camera is allowed
+- [ ] With **She watches (camera)** off in settings, the quickshot still uses the camera and films the ruin
+- [ ] Order: her quickshot line, fast stroking, faster, edge (tap "I'm at the edge"), 3 second countdown, ruin with REC showing
+- [ ] After "Ruined, as ordered": +5 merit, and the clip is in Photos. "I couldn't stop" counts as a failure
+- [ ] During a chastity lock: unlock first, cage back on after, then a cage photo
+- [ ] History shows "quickshot ruined"
+- [ ] Her lines > Guided sessions has **Quickshot starts**, and editing it changes what she says
 
 ## 0k. New in 0.16.0: Chastity screen and tidier Settings
 - [ ] Settings > About shows **Version 0.16.0**

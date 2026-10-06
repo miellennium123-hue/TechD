@@ -72,6 +72,8 @@ data class SessionRecord(
     val caught: Int,
     val skipped: Int,
     val outcome: SessionOutcome,
+    /** A quickshot (round 49). */
+    val quick: Boolean = false,
 )
 
 enum class SessionOutcome {
