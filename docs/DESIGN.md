@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.10.0 (adds Rate me). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 27)
+> **Last updated:** 2026-10-06 (round 28)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -460,3 +460,4 @@ A JOI-style "virtual succubus" idea. **Concept only:** not scheduled, no code. T
 - **2026-10-06 (round 25):** No code changes. User asked whether she could really rate the photo. Answered: not the body itself, but she could score real photo signals and your measurements. Added to the rating question in section 10
 - **2026-10-06 (round 26):** No code changes. Ran a deep-research brainstorm on the rating idea. Findings and a ranked list of designs added to the rating question in section 10
 - **2026-10-06 (round 27, v0.10.0):** Built 9.10 Rate me: your measurements become percentiles from Veale et al. 2015, the photo must pass the on-device detector and gives a presentation score, and her taste setting decides which way the score runs. Score out of 10 with her verdict in 4 tiers (editable in Her lines). The photo is deleted straight after; only numbers are kept. Details in section 8
+- **2026-10-06 (round 28):** No code changes. User wants to start building the guided sessions (9.9) and asked whether Claude knows Virtual Succubus. Claude knows it only roughly; the user will describe what they want before anything is coded
