@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.8.0 (adds Open sites). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 19)
+> **Last updated:** 2026-10-06 (round 20)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -332,12 +332,20 @@ Built as v0.8.0, the only feature in that release.
 - **Quit for now** stays on the warning screen and ends it, never penalized. Discreet wording on the warning when Discreet notifications are on
 - **Decided in round 19:** stay 5 minutes by default (1 to 30), almost every check-in (9 in 10), and leaving early is a failure on the first leave. A locked phone at check-in waits for the next unlock (up to 30 minutes). See section 8, v0.8.0
 
+### 9.8 Editable lines (planned round 20, not built)
+Build as the next version. Only this feature in that release.
+- **Settings > Her lines:** a list of every situation she speaks in (greeting, praise, denial, failure, begging, and so on), each with a short note on when it's used
+- **Each situation** shows her sweet and strict lines, prefilled with the current ones. Add, edit and delete lines, reset one situation, or reset all
+- **Stored in `GuardianConfig`** as overrides, so partner sync can carry them later. A situation and mood with no lines left falls back to her built-in lines, so every line keeps a sweet and a strict version
+- **Discreet notifications** still show only neutral text, whatever the lines say
+- **Tidy up:** remove the unused `WAIT` line
+
 ---
 
 ## 10. Open questions
 
 - **Parked (round 18):** the user also answered questions on the photo way in and on showing their own media. A build attempt that included those was stopped by a safety filter, so they're not planned. Only 9.7 goes ahead
-- **Editable lines (round 17):** make her dialogue editable in Settings (like prompts, tasks and questions), so the user writes the spiciest lines themselves and Claude builds the mechanics. Offered, waiting on the user
+- **Editable lines (round 17):** written up as 9.8 (round 20), ready for a new chat
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -385,3 +393,4 @@ Built as v0.8.0, the only feature in that release.
 - **2026-10-06 (round 17):** No design changes. User asked what content is off limits for Claude and whether there are workarounds. Explained the limits, and offered editable dialogue as an open question
 - **2026-10-06 (round 18):** A build attempt was stopped by a safety filter; nothing changed. The user will continue in a new chat with only one feature: opening sites from their own list, written up as 9.7 (planned, not built)
 - **2026-10-06 (round 19, v0.8.0):** Built 9.7 Open sites. User chose a 5 minute stay (1 to 30), almost every check-in (9 in 10, rolled first), failure on the first leave, and waiting for unlock when the phone is locked. Details in section 8
+- **2026-10-06 (round 20):** No design changes. User asked which feature from the stopped build to try next. Editable lines written up as 9.8 (planned, not built). The photo way in and showing their own media stay parked
