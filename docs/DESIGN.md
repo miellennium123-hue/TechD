@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.13.0 (adds Lock guard and the slow Quit for now). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 42)
+> **Status:** v0.14.0 (Lock guard works whenever she is on; Quit for now takes about 10 minutes). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-06 (round 43)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -39,8 +39,8 @@
 
 These are always available, no matter what she's doing.
 
-- **On/off switch:** You can disable her yourself at any time. With **Lock guard** on during a lock, it takes 30 minutes and counts as a failure (round 41)
-- **"Quit for now" button:** Ends every active lock, timer, and restriction. Always visible, never blocked, never punished, and it always finishes. **Slow by the user's choice (round 41):** hold 10 seconds, type her sentence exactly, then wait 2.5 minutes with the screen open, about 3 minutes in all. Leaving the screen starts it over. No separate instant emergency exit (user's choice); calls and the dialer are never blocked
+- **On/off switch:** You can disable her yourself at any time. With **Lock guard** on, it takes 30 minutes and counts as a failure (rounds 41 and 43)
+- **"Quit for now" button:** Ends every active lock, timer, and restriction. Always visible, never blocked, never punished, and it always finishes. **Slow by the user's choice (rounds 41 and 43):** hold 10 seconds, type her sentence exactly, then wait 9.5 minutes with the screen open, about 10 minutes in all. Leaving the screen starts it over. No separate instant emergency exit (user's choice); calls and the dialer are never blocked
 - **Never blocked:** Phone dialer and emergency calls, the Guardian Angel app itself (so Quit is always reachable), plus the **Always-allowed list** (see 4.1)
 
 ---
@@ -378,6 +378,16 @@ Choices made while building, where the spec left room:
 - **Honest limits:** safe mode, ADB, a factory reset and Quit for now still get you out. A crash of her watch during a lock would count as tampering
 - **New lines (5):** Talking you out of quitting, Slow switch off, Removing her admin, Lock guard, Tampering. Sweet and strict
 
+### v0.14.0 (round 43, Lock guard always on, 10 minute Quit for now)
+- **Asked:** Lock guard shouldn't need a lock: with it on and her on, switching her off and loosening settings (like app lockouts) should be very tedious. Quit for now should take 10 minutes
+- **Quit for now:** hold 10 seconds, type her sentence, wait 9.5 minutes with the screen open (was 2.5). About 10 minutes. Still always reachable, always finishes, never punished
+- **Guarding = Lock guard on and she's on.** No lock needed any more for the slow switch off, the blocked screens or her watch being off
+- **Loosening her settings (new, replaces "can't be switched off during a lock"):** while guarding, a change that loosens her control opens a full-screen "Loosen her control" screen: 10 second hold, type "I am asking my angel to loosen her control over me, and I will wait as long as she wants.", then 30 minutes with the screen open (new line "Loosening her settings"). Then the change is made. Not a failure. Cancel or leave the app and nothing changes
+- **What counts as loosening:** switching off Lock guard, App lockouts, Ask permission, Bedtime, Wallpaper, Chastity, Photo proof, Rules & Tasks, Shows up, Open sites, Degradation or Punishments; switching Quiet hours on; adding an always-allowed app. Making her stricter and every other detail change instantly (Claude's call; details like times and lists of prompts aren't guarded yet)
+- **Restarts still only count during a lock (Claude's call):** phones restart for updates and flat batteries, so a restart is tampering only when Lock guard is on and a lock is running. Her watch switched off counts any time Lock guard is on
+- **Settings, Home, Lock guard row, permissions and her lines** reworded for "whenever she's on"
+- **Battery:** with Lock guard on, she now gets screen-change events all the time (she still only looks inside Settings and uninstall screens)
+
 ## 9. Round 12 plan (built)
 
 Agreed in round 12 and built one release at a time. Kept as the record of what was asked for.
@@ -563,3 +573,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 40):** No code changes. User asked for a lock that feels real and a tedious way to turn her off. Proposed a slow off switch, a tamper guard and tamper detection, with Quit for now kept instant. Recorded in section 10, waiting on the user's picks
 - **2026-10-06 (round 41, v0.13.0):** User chose a slow Quit for now (about 3 minutes: hold, type, wait), no emergency exit, and all of Lock guard. Built: slow Quit for now everywhere, Lock guard with a 30 minute switch off that counts as a failure, blocked settings and uninstall screens, optional device admin, and tamper detection. Section 3 and `CLAUDE.md` updated. Details in section 8
 - **2026-10-06 (round 42):** No code changes. User asked for a detailed explanation of every Lock guard part. Explained from section 8 (v0.13.0)
+- **2026-10-06 (round 43, v0.14.0):** User asked for Lock guard without needing a lock, very tedious loosening of settings like app lockouts, and a 10 minute Quit for now. Built: guarding whenever Lock guard and she are on, a 30 minute slow screen for switching off any of her controls, and Quit for now at about 10 minutes. Restarts still only count during a lock. Details in section 8

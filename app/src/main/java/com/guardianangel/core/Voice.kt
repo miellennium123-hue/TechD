@@ -14,10 +14,11 @@ enum class Line(val group: String, val label: String, val note: String) {
     OFF("On and off", "Switched off", "You switch her off"),
     QUIT("On and off", "Quit for now", "You pressed Quit for now. Never a punishment"),
     QUIT_TALK("On and off", "Talking you out of quitting", "While you wait out Quit for now. Never a punishment"),
-    OFF_TALK("On and off", "Slow switch off", "While you wait 30 minutes to switch her off during a lock (Lock guard)"),
+    OFF_TALK("On and off", "Slow switch off", "While you wait 30 minutes to switch her off (Lock guard)"),
+    LOOSEN_TALK("On and off", "Loosening her settings", "While you wait 30 minutes to switch off one of her controls (Lock guard)"),
     ADMIN_OFF("On and off", "Removing her admin", "Android's warning when you try to remove her device admin"),
-    GUARDED("Asking and locks", "Lock guard", "You opened her settings or uninstall screen during a lock, so she sent you back"),
-    TAMPERED("Failures", "Tampering", "Her watch was switched off or restarted during a lock (Lock guard)"),
+    GUARDED("Asking and locks", "Lock guard", "You opened her settings or uninstall screen (Lock guard), so she sent you back"),
+    TAMPERED("Failures", "Tampering", "Her watch was switched off, or restarted during a lock (Lock guard)"),
     GRANT("Asking and locks", "Yes", "\"Ask her\" says yes. Also the block screen once you're let in"),
     DENY("Asking and locks", "No", "\"Ask her\" says no"),
     BLOCKED("Asking and locks", "Blocked app", "Block screen for a locked app"),
@@ -419,6 +420,11 @@ object Voice {
             "I'll let you go. But I'll miss being in charge of you.",
             "Every second you wait, you could change your mind.",
         ),
+        Line.LOOSEN_TALK to listOf(
+            "You want me to go easier on you? Then wait for it, pet.",
+            "Every minute here is a minute you could spend obeying.",
+            "I'm still here. Stop now and nothing changes.",
+        ),
         Line.OFF_TALK to listOf(
             "Half an hour of thinking about what you're doing, sweetheart.",
             "You know this counts against you, don't you?",
@@ -428,8 +434,8 @@ object Voice {
             "Taking away my hold on your phone, pet? I'll remember that.",
         ),
         Line.GUARDED to listOf(
-            "Not those settings, pet. You're locked, remember?",
-            "Nice try, sweetheart. My settings stay closed while you're locked.",
+            "Not those settings, pet. You're mine, remember?",
+            "Nice try, sweetheart. My settings stay closed.",
             "Back you come. Quit for now is always there if you really need it.",
         ),
         Line.TAMPERED to listOf(
@@ -773,6 +779,11 @@ object Voice {
             "You'll come crawling back. You always do.",
             "Still going? Pathetic. But you may.",
         ),
+        Line.LOOSEN_TALK to listOf(
+            "You want less of me? Sit there and earn it.",
+            "Thirty minutes of begging for an easier life. Pathetic.",
+            "Stop now and I'll pretend you never asked.",
+        ),
         Line.OFF_TALK to listOf(
             "Thirty minutes. Sit there and think about disobeying me.",
             "This is a failure, and it's going on your record.",
@@ -782,9 +793,9 @@ object Voice {
             "You're trying to remove me. That will cost you.",
         ),
         Line.GUARDED to listOf(
-            "No. My settings are closed while you're locked.",
+            "No. My settings are closed to you.",
             "Did you think I wouldn't see that? Back.",
-            "Locked means locked. Out of my settings.",
+            "Out of my settings. Now.",
         ),
         Line.TAMPERED to listOf(
             "You switched off my watch during a lock. Failure.",

@@ -24,6 +24,7 @@ import com.guardianangel.data.Sites
 import com.guardianangel.data.Store
 import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 import java.util.Calendar
 import kotlin.math.max
@@ -168,13 +169,14 @@ object Guardian {
         say(Line.QUIT)
     }
 
-    // ---- Lock guard (round 41) ----------------------------------------------------------------
+    // ---- Lock guard (rounds 41 and 43) -------------------------------------------------------
 
     fun locked(): Boolean = LockGuard.locked(config.value, state.value, now())
 
-    fun guarding(): Boolean = LockGuard.guarding(config.value, state.value, now())
+    /** Lock guard on and she's on. No lock needed (round 43). */
+    fun guarding(): Boolean = LockGuard.guarding(config.value)
 
-    /** Switching her off now needs the slow way (Lock guard on, a lock running). */
+    /** Switching her off now needs the slow way. */
     fun offNeedsWait(): Boolean = guarding()
 
     /** The slow switch off is done: it counts as a failure, then she's off. */
@@ -183,15 +185,33 @@ object Guardian {
         setEnabled(false)
     }
 
+    /**
+     * A settings change that loosens her control while guarding, waiting for the slow way.
+     * The screen that shows it lives in MainActivity. Not saved: leaving the app drops it.
+     */
+    val pendingLoosen = MutableStateFlow<((GuardianConfig) -> GuardianConfig)?>(null)
+
+    /** The slow way is done: apply the change, on top of whatever changed meanwhile. */
+    fun applyLoosen() {
+        val change = pendingLoosen.value ?: return
+        pendingLoosen.value = null
+        applyConfig(change)
+    }
+
+    fun cancelLoosen() {
+        pendingLoosen.value = null
+    }
+
     /** Her watch (the accessibility service) started. A start during a lock that isn't an update is tampering. */
     fun onWatchStarted(version: Int) {
         val st = state.value
-        val tamper = LockGuard.tamperOnStart(guarding(), st.guardVersion, version, st.tamperOffNoticed)
+        val duringLock = config.value.lockGuard && locked()
+        val tamper = LockGuard.tamperOnStart(duringLock, st.guardVersion, version, st.tamperOffNoticed)
         state.update { it.copy(guardVersion = version, tamperOffNoticed = false) }
         if (tamper) tampered()
     }
 
-    /** Checked when you open the app and at check-ins: her watch switched off during a lock. */
+    /** Checked when you open the app and at check-ins: her watch switched off while guarding. */
     fun checkWatch() {
         if (!::appContext.isInitialized) return
         val watchOn = Permissions.accessibility(appContext)
@@ -205,11 +225,22 @@ object Guardian {
         Notifier.message(appContext, say(Line.TAMPERED))
     }
 
-    /** For every setting except the on/off switch, which uses [setEnabled]. Lock guard stays on during a lock. */
+    /**
+     * For every setting except the on/off switch, which uses [setEnabled]. With Lock guard on, a
+     * change that loosens her control waits in [pendingLoosen] for the slow way instead.
+     */
     fun updateConfig(transform: (GuardianConfig) -> GuardianConfig) {
         val before = config.value
-        val guarded = guarding()
-        val after = config.update { LockGuard.keepGuard(it, transform(it).copy(enabled = it.enabled), guarded) }
+        if (guarding() && LockGuard.loosens(before, transform(before))) {
+            pendingLoosen.value = transform
+            return
+        }
+        applyConfig(transform)
+    }
+
+    private fun applyConfig(transform: (GuardianConfig) -> GuardianConfig) {
+        val before = config.value
+        val after = config.update { transform(it).copy(enabled = it.enabled) }
         if (before.chastity.on && !after.chastity.on) endChastity()
         if (before.tasksOn && !after.tasksOn) clearTasks()
         if (before.showsUpOn && !after.showsUpOn && state.value.summons != null) clearSummons()

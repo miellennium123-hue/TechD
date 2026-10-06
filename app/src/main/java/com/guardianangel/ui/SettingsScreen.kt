@@ -71,12 +71,11 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
     ) {
         SectionCard("Guardian Angel") {
             EnabledSwitch("Enabled", "Master on/off. Quit for now is always available too.", config.enabled)
-            val guarding = Guardian.guarding()
             SwitchRow(
                 "Lock guard",
-                "During a lock: switching her off takes 30 minutes and is a failure, her settings and uninstall " +
-                    "screens are blocked, and switching off or restarting her watch is a failure." +
-                    if (guarding) " You're locked: this, chastity, punishments, Rules & Tasks and Shows up can't be turned off until it ends." else "",
+                "While she's on: Quit for now and switching her off are slow, switching off any of her controls " +
+                    "takes 30 minutes, her settings and uninstall screens are blocked, and switching off her watch is a " +
+                    "failure. Turning it on is instant; turning it off takes 30 minutes too.",
                 config.lockGuard,
             ) { v -> update { it.copy(lockGuard = v) } }
             if (config.lockGuard) Muted("Also make her device admin in Permissions, so uninstalling her takes extra steps.")

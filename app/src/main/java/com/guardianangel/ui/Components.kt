@@ -22,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -101,7 +102,7 @@ fun SpeechBubble(text: String, modifier: Modifier = Modifier) {
 /** The safety exit. Shown on every screen and never disabled. */
 @Composable
 fun QuitButton(modifier: Modifier = Modifier, onQuit: () -> Unit) {
-    // Always here and always finishes, never punished. The user chose a slow way out (round 41): about 3 minutes.
+    // Always here and always finishes, never punished. The user chose a slow way out (rounds 41 and 43): about 10 minutes.
     var open by remember { mutableStateOf(false) }
     if (open) {
         SlowExitDialog(
@@ -132,8 +133,8 @@ fun QuitButton(modifier: Modifier = Modifier, onQuit: () -> Unit) {
 }
 
 /**
- * Her master on/off switch. With Lock guard on during a lock, switching her off takes the slow way
- * (30 minutes) and counts as a failure. Switching her on is always instant.
+ * Her master on/off switch. With Lock guard on, switching her off takes the slow way (30 minutes)
+ * and counts as a failure. Switching her on is always instant.
  */
 @Composable
 fun EnabledSwitch(title: String, subtitle: String?, checked: Boolean) {
@@ -145,7 +146,7 @@ fun EnabledSwitch(title: String, subtitle: String?, checked: Boolean) {
             sentence = LockGuard.OFF_SENTENCE,
             waitSeconds = LockGuard.OFF_WAIT_SECONDS,
             talk = Line.OFF_TALK,
-            warning = "You're locked and Lock guard is on. This counts as a failure.",
+            warning = "Lock guard is on. Switching her off counts as a failure.",
             finishLabel = "Switch her off",
             onFinished = {
                 slowOff = false
@@ -157,6 +158,27 @@ fun EnabledSwitch(title: String, subtitle: String?, checked: Boolean) {
     SwitchRow(title, subtitle, checked) { on ->
         if (!on && Guardian.offNeedsWait()) slowOff = true else Guardian.setEnabled(on)
     }
+}
+
+/**
+ * Lock guard: a settings change that loosens her control waits here for the slow way
+ * (30 minutes, not a failure). Cancelling keeps the setting as it was.
+ */
+@Composable
+fun LoosenHost() {
+    val pending by Guardian.pendingLoosen.collectAsState()
+    if (pending == null) return
+    SlowExitDialog(
+        title = "Loosen her control",
+        holdSeconds = LockGuard.OFF_HOLD_SECONDS,
+        sentence = LockGuard.LOOSEN_SENTENCE,
+        waitSeconds = LockGuard.OFF_WAIT_SECONDS,
+        talk = Line.LOOSEN_TALK,
+        warning = "Lock guard is on. Switching off one of her controls takes 30 minutes.",
+        finishLabel = "Make the change",
+        onFinished = { Guardian.applyLoosen() },
+        onCancel = { Guardian.cancelLoosen() },
+    )
 }
 
 @Composable

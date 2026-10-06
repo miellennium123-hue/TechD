@@ -58,7 +58,7 @@ fun SetupScreen() {
         PermissionCard(
             "Accessibility",
             "Lets her see which app is open so she can lock apps. She reads the app's name. With Lock guard on " +
-                "during a lock, she also looks for her own name on Settings and uninstall screens, nowhere else.",
+                "she also looks for her own name on Settings and uninstall screens, nowhere else.",
             accessibility,
         ) { open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         if (!accessibility && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -91,7 +91,7 @@ fun SetupScreen() {
 
         PermissionCard(
             "Device admin (optional)",
-            "For Lock guard: Android won't uninstall her until you remove this first, and during a lock she blocks that " +
+            "For Lock guard: Android won't uninstall her until you remove this first, and with Lock guard on she blocks that " +
                 "screen. She asks for no other powers. Quit for now still always works.",
             admin,
         ) {
