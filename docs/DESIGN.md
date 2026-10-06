@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.16.0 (Chastity settings on the Chastity screen, tidier Settings). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 59)
+> **Last updated:** 2026-10-06 (round 60)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -601,6 +601,18 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
     6. **Lock guard:** the user asked what this means. Explained in round 52, waiting on their pick
   - **Decided in round 53:** option C for Lock guard, and yes to Claude's three proposals: she starts blocks at check-ins (default 1h to 4h), 15 merit buys 10 minutes in one app (lockouts only), and the freeze only applies while Lock guard is on
 
+- **More techdom ideas with accessibility and device admin (round 60, proposed, nothing picked yet):** the user likes v0.20.0 and asked what else these two can do
+  - **Phone down (device admin `lockNow`):** she locks the screen at random or as a punishment. Unlocking before her timer ends counts as a failure
+  - **Kicked out (accessibility Back/Home):** a per-visit limit in an app (say 10 minutes of Instagram), then she sends you home
+  - **Her mark (accessibility overlay):** a small always-on badge or collar icon over every app, and a dark tint during her blocks
+  - **Screen time allowance:** daily minutes for the lockout scope, spent down as you use them, merit buys more (from round 39)
+  - **Pay to enter:** type a line ("I am wasting her time") before a social app opens
+  - **Word watch (reads screen text, on the phone only):** words you choose seen in a browser or search box close it and count as a failure. Matches only, nothing saved
+  - **Failed unlock (device admin password events):** a wrong PIN or pattern earns a reprimand or added chastity time
+  - **She peeks (accessibility screenshot, Android 11+):** at a check-in she captures what's on screen into her private gallery and comments on it
+  - **Obedience ping (volume keys):** press volume down 5 times within 10 seconds when she pings, or it's a failure
+  - **Honest limits:** Android doesn't let a normal app block power off, safe mode or a factory reset, change your PIN, or turn off the camera (device admin lost those in Android 8 to 10). Wipe is never used. Quit for now and Debug mode stay as they are
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -689,3 +701,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 57, v0.19.3):** User wants Lock guard to keep working in debug mode, with debug mode only adding the shut down button. Debug mode no longer skips Lock guard. Details in section 8
 - **2026-10-06 (round 58):** No code changes. User confirmed v0.19.3 works perfectly (debug mode with Lock guard). Recorded in TESTING.md
 - **2026-10-06 (round 59, v0.20.0):** The background update. 12 built-in femdom backgrounds drawn on the phone, your own images added from the app (private storage), hide or keep each of hers, and she cycles them every 2 minutes (a setting). Details in section 8
+- **2026-10-06 (round 60):** No code changes. User likes the background update and asked for more techdom ideas using accessibility and device admin. Nine ideas proposed with honest limits, recorded in section 10. Waiting on picks
