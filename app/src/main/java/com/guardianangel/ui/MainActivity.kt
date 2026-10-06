@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.Line
 import com.guardianangel.ui.theme.GuardianTheme
 
 enum class Screen(val title: String) {
@@ -44,6 +45,8 @@ enum class Screen(val title: String) {
     TASKS("Rules & Tasks"),
     QUESTIONS("Her questions"),
     SITES("Your sites"),
+    LINES("Her lines"),
+    LINE("Her lines"),
     SETUP("Permissions"),
 }
 
@@ -83,6 +86,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainContent(requested: MutableState<Screen?>) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
+    var line by rememberSaveable { mutableStateOf(Line.GREETING) }
     LaunchedEffect(requested.value) {
         requested.value?.let {
             screen = it
@@ -92,7 +96,11 @@ private fun MainContent(requested: MutableState<Screen?>) {
     val config by Guardian.config.flow.collectAsState()
     val state by Guardian.state.flow.collectAsState()
     val back = {
-        screen = if (screen == Screen.ALLOWED || screen == Screen.PROMPTS || screen == Screen.TASKS || screen == Screen.QUESTIONS || screen == Screen.SITES) Screen.SETTINGS else Screen.HOME
+        screen = when (screen) {
+            Screen.LINE -> Screen.LINES
+            Screen.ALLOWED, Screen.PROMPTS, Screen.TASKS, Screen.QUESTIONS, Screen.SITES, Screen.LINES -> Screen.SETTINGS
+            else -> Screen.HOME
+        }
     }
 
     BackHandler(enabled = screen != Screen.HOME) { back() }
@@ -115,7 +123,7 @@ private fun MainContent(requested: MutableState<Screen?>) {
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (screen) {
                 Screen.HOME -> HomeScreen(config, state) { screen = it }
-                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS }, { screen = Screen.QUESTIONS }, { screen = Screen.SITES })
+                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS }, { screen = Screen.QUESTIONS }, { screen = Screen.SITES }, { screen = Screen.LINES })
                 Screen.CHASTITY -> ChastityScreen(config, state)
                 Screen.GALLERY -> GalleryScreen()
                 Screen.ALLOWED -> AllowedAppsScreen(config)
@@ -125,6 +133,11 @@ private fun MainContent(requested: MutableState<Screen?>) {
                 Screen.TASKS -> TasksListScreen(config)
                 Screen.QUESTIONS -> QuestionsScreen(config)
                 Screen.SITES -> SitesScreen(config)
+                Screen.LINES -> LinesScreen(config) {
+                    line = it
+                    screen = Screen.LINE
+                }
+                Screen.LINE -> LineScreen(config, line)
             }
         }
     }

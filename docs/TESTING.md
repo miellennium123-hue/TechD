@@ -1,12 +1,25 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.8.0 (adds Open sites). Sections 0 to 0b cover what 0.6.0, 0.7.0 and 0.8.0 changed
+> **Version under test:** 0.9.0 (adds Her lines). Sections 0 to 0c cover what 0.6.0 to 0.9.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
 
+## 0c. New in 0.9.0: Her lines
+- [ ] Settings > About shows **Version 0.9.0**
+- [ ] Settings > Presentation has a **Her lines** button. It opens a list of situations in groups (On and off, Asking and locks, Photo proof, and so on), each with a short note on when it's used
+- [ ] Open **Praise**: Sweet shows her 3 sweet lines, Strict her 3 strict lines
+- [ ] **Add** a line, **Edit** one, **Delete** one. The list in Settings now shows **Edited** next to Praise, and the Settings button says "(1 edited)"
+- [ ] **Your lines are used:** delete all but one sweet greeting, set Mood to Sweet, switch her off and on. She says your line
+- [ ] **Empty falls back:** delete every sweet line in a situation. The screen says she uses her built-in ones, and she still says one of hers
+- [ ] **Reset this situation** puts her lines back and removes the Edited mark
+- [ ] **Reset all** (on the list) asks first, then clears every edit
+- [ ] **Discreet notifications on:** a check-in notification still says only "Time to check in." whatever you wrote
+- [ ] **Before you switch her on:** on a fresh install the home screen shows a line from that situation (hard to test on an existing install; skip if so)
+- [ ] **Reset all settings** also resets your lines
+- [ ] Updating keeps your edited lines
+
 ## 0b. New in 0.8.0: Open sites
-- [ ] Settings > About shows **Version 0.8.0**
 - [ ] Settings has an **Open sites** card, off, Stay for **5m**. The stepper goes 1m to 30m
 - [ ] **Your sites:** starts empty. Add `example.com`: it's saved as `https://example.com`. Edit and Delete work. `not a site` and `mailto:...` can't be added
 - [ ] **Ask her now** (or **Ask her to open a site** on home) shows the warning with a 10 second countdown, then opens the site in Chrome
@@ -47,7 +60,7 @@
 
 ## 1. Install and setup (start here)
 - [ ] Install over the old version from the [latest release](https://github.com/miellennium123-hue/TechD/releases/latest/download/guardian-angel.apk)
-- [ ] Settings > About shows **Version 0.8.0**, and your old settings are still there
+- [ ] Settings > About shows **Version 0.9.0**, and your old settings are still there
 - [ ] Settings has no Gentle / Firm / Strict / Absolute choices anywhere
 - [ ] Permissions screen: all four show **Granted** (Accessibility may need App info > ⋮ > Allow restricted settings first)
 

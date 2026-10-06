@@ -40,6 +40,19 @@ data class GuardianConfig(
     val discreetNotifications: Boolean = true,
     val mood: Mood = Mood.SWITCHING,
     val meritOn: Boolean = true,
+    /**
+     * Her lines (round 21): your versions of the situations you edited, keyed by situation name
+     * (`Line.name`). Situations you never touched aren't stored, so they keep getting her newest
+     * built-in lines. See Voice.
+     */
+    val lineOverrides: Map<String, LineSet> = emptyMap(),
+)
+
+/** One situation's lines, as you edited them. An empty mood falls back to her built-in lines. */
+@Serializable
+data class LineSet(
+    val sweet: List<String> = emptyList(),
+    val strict: List<String> = emptyList(),
 )
 
 @Serializable

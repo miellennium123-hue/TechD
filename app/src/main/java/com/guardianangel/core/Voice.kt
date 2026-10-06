@@ -1,19 +1,59 @@
 package com.guardianangel.core
 
+import com.guardianangel.data.LineSet
 import com.guardianangel.data.Mood
 import kotlin.random.Random
 
-enum class Line {
-    GREETING, PRAISE, GRANT, DENY, DEMAND_PROOF, WARNING, BLOCKED, BEDTIME, WAIT,
-    FAIL_NEUTRAL, DEGRADE_MILD, DEGRADE_HARSH, CHASTITY_START, TIME_ADDED, CHECK_IN,
-    RELEASED, TIMER_DONE, EARLY_DENIED, BEG_GRANTED, BEG_TIME_ADDED, PROOF_REJECTED, OFF, QUIT,
-    TASK_ISSUED, RULE_REPORT, MOVED, TYPO, SUMMON, IGNORED, WRONG_ANSWER,
-    SITE_WARNING, SITE_DONE,
+/**
+ * Every situation she speaks in, in the order Settings > Her lines shows them.
+ * [group] heads a section there, [note] says when the line is used.
+ */
+enum class Line(val group: String, val label: String, val note: String) {
+    HOME_OFF("On and off", "Before you switch her on", "Home screen, before she has said anything (like right after installing)"),
+    GREETING("On and off", "Greeting", "You switch her on"),
+    OFF("On and off", "Switched off", "You switch her off"),
+    QUIT("On and off", "Quit for now", "You pressed Quit for now. Never a punishment"),
+    GRANT("Asking and locks", "Yes", "\"Ask her\" says yes. Also the block screen once you're let in"),
+    DENY("Asking and locks", "No", "\"Ask her\" says no"),
+    BLOCKED("Asking and locks", "Blocked app", "Block screen for a locked app"),
+    BEDTIME("Asking and locks", "Bedtime", "Block screen during bedtime"),
+    DEMAND_PROOF("Photo proof", "Wants a photo", "\"Ask her\" or a check-in wants photo proof"),
+    PRAISE("Photo proof", "Praise", "Proof accepted, a check-in answered, a task done, a right answer"),
+    WARNING("Photo proof", "Sent anyway", "A photo sent anyway after failed checks (no merit)"),
+    PROOF_REJECTED("Photo proof", "Photo rejected", "A photo fails her checks"),
+    CHECK_IN("Check-ins", "Check-in", "Check-in notification"),
+    FAIL_NEUTRAL("Failures", "Failure", "Any failure with Degradation off. Also when you admit you broke a rule"),
+    DEGRADE_MILD("Failures", "Degradation, mild", "Any failure with Degradation on Mild"),
+    DEGRADE_HARSH("Failures", "Degradation, harsh", "Any failure with Degradation on Harsh"),
+    CHASTITY_START("Chastity", "Lock starts", "She sets a chastity lock"),
+    TIME_ADDED("Chastity", "Time added", "She adds time to your lock on a whim"),
+    TIMER_DONE("Chastity", "Timer done", "Notification when the lock's time is up"),
+    RELEASED("Chastity", "Released", "You're released when time is up"),
+    EARLY_DENIED("Chastity", "Begging denied", "You beg early and she says no (or you beg again too soon)"),
+    BEG_GRANTED("Chastity", "Begging granted", "You beg early and she lets you out"),
+    BEG_TIME_ADDED("Chastity", "Begging punished", "You beg early, she says no and adds time"),
+    TASK_ISSUED("Rules & Tasks", "New task", "She gives you a rule or task"),
+    RULE_REPORT("Rules & Tasks", "Report in", "An honor rule's time is up"),
+    MOVED("Rules & Tasks", "Moved", "You moved during a stillness task"),
+    TYPO("Rules & Tasks", "Typo", "A typo in a lines task (back to line 1)"),
+    SUMMON("Shows up", "Summons", "She shows up and wants you"),
+    IGNORED("Shows up", "Ignored", "You ignored her for 10 minutes and everything locks"),
+    WRONG_ANSWER("Shows up", "Wrong answer", "A wrong answer to her question"),
+    SITE_WARNING("Open sites", "Site warning", "The 10 second warning before she opens a site (only with Discreet off)"),
+    SITE_DONE("Open sites", "Site done", "You stayed on her site the full time"),
 }
 
-/** Everything she says. Edit freely; every line needs a sweet and a strict version. */
+/**
+ * Everything she says. These are her built-in lines; every line needs a sweet and a strict version.
+ * Your edits from Settings > Her lines live in GuardianConfig.lineOverrides and replace a whole
+ * situation. A mood you emptied falls back to the built-in lines here.
+ */
 object Voice {
     private val sweet: Map<Line, List<String>> = mapOf(
+        Line.HOME_OFF to listOf(
+            "Switch me on when you're ready to be watched over, pet.",
+            "I'm right here, pet. Turn me on when you want me.",
+        ),
         Line.GREETING to listOf(
             "There you are, pet. I've been watching over you.",
             "Hello, my sweet pet. Be good for me today.",
@@ -53,11 +93,6 @@ object Voice {
             "It's bedtime, pet. Phone down, eyes closed.",
             "Time to sleep. I'll watch over you.",
             "Bed, pet. Your angel insists.",
-        ),
-        Line.WAIT to listOf(
-            "Patience, pet. Wait for me.",
-            "Count it out with me. Then we'll see.",
-            "Good things come to pets who wait.",
         ),
         Line.FAIL_NEUTRAL to listOf(
             "Oh, pet. You let me down.",
@@ -171,6 +206,10 @@ object Voice {
     )
 
     private val strict: Map<Line, List<String>> = mapOf(
+        Line.HOME_OFF to listOf(
+            "Switch me on, pet. Then you're mine.",
+            "Off for now. Turn me on when you're ready to obey.",
+        ),
         Line.GREETING to listOf(
             "Pet. Phone down unless I say otherwise.",
             "I'm watching. Don't make me remind you who's in charge.",
@@ -210,11 +249,6 @@ object Voice {
             "Bedtime. Phone down. Now.",
             "You're supposed to be asleep.",
             "It's late. Put me down and go to bed.",
-        ),
-        Line.WAIT to listOf(
-            "Wait. Then we'll see.",
-            "You'll wait as long as I say.",
-            "Sit still and wait.",
         ),
         Line.FAIL_NEUTRAL to listOf(
             "Failure noted.",
@@ -327,11 +361,46 @@ object Voice {
         ),
     )
 
-    fun pick(line: Line, mood: Mood, random: Random = Random.Default): String {
-        val pool = (if (mood == Mood.STRICT) strict else sweet)[line].orEmpty()
+    /** Her built-in lines. Switching counts as sweet. */
+    fun builtIn(line: Line, mood: Mood): List<String> =
+        (if (mood == Mood.STRICT) strict else sweet)[line].orEmpty()
+
+    /** What Settings shows: your lines for a situation you edited (maybe none left), otherwise hers. */
+    fun shown(line: Line, mood: Mood, overrides: Map<String, LineSet>): List<String> =
+        overrides[line.name]?.let { if (mood == Mood.STRICT) it.strict else it.sweet } ?: builtIn(line, mood)
+
+    /** What she picks from. A mood with no lines left falls back to her built-in lines. */
+    fun lines(line: Line, mood: Mood, overrides: Map<String, LineSet> = emptyMap()): List<String> =
+        shown(line, mood, overrides).filter { it.isNotBlank() }.ifEmpty { builtIn(line, mood) }
+
+    fun pick(line: Line, mood: Mood, random: Random = Random.Default, overrides: Map<String, LineSet> = emptyMap()): String {
+        val pool = lines(line, mood, overrides)
         return if (pool.isEmpty()) "" else pool[random.nextInt(pool.size)]
     }
 
-    fun hasLines(line: Line, mood: Mood): Boolean =
-        (if (mood == Mood.STRICT) strict else sweet)[line].orEmpty().isNotEmpty()
+    fun hasLines(line: Line, mood: Mood): Boolean = builtIn(line, mood).isNotEmpty()
+
+    fun isEdited(line: Line, overrides: Map<String, LineSet>): Boolean = line.name in overrides
+
+    /**
+     * Changes one mood of a situation. The first edit copies her current lines for both moods, so the
+     * other mood stays as it was. Lines are trimmed and blanks dropped. Editing a situation back to
+     * exactly her built-in lines stops storing it, so it follows future updates again.
+     */
+    fun edit(
+        overrides: Map<String, LineSet>,
+        line: Line,
+        mood: Mood,
+        change: (List<String>) -> List<String>,
+    ): Map<String, LineSet> {
+        val strictMood = mood == Mood.STRICT
+        val current = LineSet(shown(line, Mood.SWEET, overrides), shown(line, Mood.STRICT, overrides))
+        val changed = change(if (strictMood) current.strict else current.sweet).map { it.trim() }.filter { it.isNotEmpty() }
+        val next = if (strictMood) current.copy(strict = changed) else current.copy(sweet = changed)
+        val builtIns = LineSet(builtIn(line, Mood.SWEET), builtIn(line, Mood.STRICT))
+        return if (next == builtIns) overrides - line.name else overrides + (line.name to next)
+    }
+
+    /** Back to her built-in lines for one situation. */
+    fun reset(overrides: Map<String, LineSet>, line: Line): Map<String, LineSet> = overrides - line.name
 }

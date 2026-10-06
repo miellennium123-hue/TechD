@@ -88,12 +88,15 @@ object Guardian {
 
     // ---- Voice -------------------------------------------------------------------------------
 
-    /** Picks a line in her current mood and remembers it. */
+    /** Picks a line in her current mood (your edited lines if you have any) and remembers it. */
     fun say(line: Line): String =
         state.update { st ->
             val next = withMood(st)
-            next.copy(lastLine = Voice.pick(line, next.currentMood, random))
+            next.copy(lastLine = Voice.pick(line, next.currentMood, random, config.value.lineOverrides))
         }.lastLine
+
+    /** Like [say], but doesn't replace what she said last. For lines shown only while nothing else was said. */
+    fun line(line: Line): String = Voice.pick(line, withMood(state.value).currentMood, random, config.value.lineOverrides)
 
     /** Her mood right now (Sweet or Strict). Only dialogue and begging use it. */
     fun mood(): Mood = state.update { withMood(it) }.currentMood

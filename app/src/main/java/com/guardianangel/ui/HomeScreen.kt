@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.Line
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.Rules
 import com.guardianangel.core.SiteOpener
@@ -48,7 +49,8 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AngelImage(Modifier.size(180.dp).align(Alignment.CenterHorizontally))
-        SpeechBubble(state.lastLine.ifBlank { "Switch me on when you're ready to be watched over, pet." })
+        val offLine = remember(config.lineOverrides) { Guardian.line(Line.HOME_OFF) }
+        SpeechBubble(state.lastLine.ifBlank { offLine })
 
         SectionCard("Master switch") {
             SwitchRow(
