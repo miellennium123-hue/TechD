@@ -190,10 +190,20 @@ class SessionTest {
     }
 
     @Test
-    fun caughtMeansAnExtraEdge() {
-        val free = Session.caughtSteps(caged = false).map { it.kind }
-        assertEquals(listOf(StepKind.CAUGHT, StepKind.EDGE, StepKind.EDGE_HOLD), free)
-        assertTrue(Session.caughtSteps(caged = true).none { it.kind.stroking })
+    fun watchBreakOnlyWhenAsked() {
+        repeat(30) { seed ->
+            val plain = Session.build(all, false, Random(seed))
+            assertTrue(plain.steps.none { it.kind == StepKind.WATCH })
+            val watched = Session.build(all, false, Random(seed), soundingReady = true, watchClip = true)
+            val at = watched.steps.indexOfFirst { it.kind == StepKind.WATCH }
+            assertEquals(1, watched.steps.count { it.kind == StepKind.WATCH })
+            assertTrue(at > 0)
+            // Never inside sounding, never right after a countdown, never in the ending.
+            val before = watched.steps[at - 1].kind
+            assertTrue("$before", before != StepKind.SOUND_IN && before != StepKind.SOUND_HOLD && before != StepKind.COUNTDOWN)
+            val endingAt = watched.steps.size - Session.endingSteps(watched.ending, false, Session.kinks(all, false), Random(0)).size
+            assertTrue(at < endingAt)
+        }
     }
 
     @Test

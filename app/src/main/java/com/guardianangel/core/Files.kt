@@ -30,18 +30,21 @@ object AssetImages {
         runCatching { context.assets.open(path).use { BitmapFactory.decodeStream(it) } }.getOrNull()
 }
 
-/** Proof photos and ruin clips live in private app storage only: no gallery, no backups. */
+/**
+ * Proof photos and her peeks live in private app storage only: no gallery, no backups. Since round 77
+ * session videos have their own place (SessionClips), so Photos only shows photos.
+ */
 object ProofFiles {
     const val DIR = "proof"
 
     fun list(context: Context): List<File> =
         File(context.filesDir, DIR).listFiles()
-            ?.filter { it.extension == "jpg" || it.extension == "mp4" }
+            ?.filter { it.extension == "jpg" }
             ?.sortedByDescending { it.lastModified() }
             .orEmpty()
 
     fun deleteAll(context: Context) {
-        File(context.filesDir, DIR).listFiles()?.forEach { it.delete() }
+        File(context.filesDir, DIR).listFiles()?.filter { it.extension == "jpg" }?.forEach { it.delete() }
     }
 
     fun isVideo(file: File): Boolean = file.extension == "mp4"
@@ -81,6 +84,43 @@ object ProofFiles {
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         }
     }.getOrNull()
+}
+
+/**
+ * Her videos (round 77): ruins, edges and CBT she filmed during sessions, with sound. Private app
+ * storage only, apart from proof photos. She keeps the newest Clips.KEEP. Rules in core/Clips.
+ */
+object SessionClips {
+    fun dir(context: Context): File = File(context.filesDir, Clips.DIR).apply { mkdirs() }
+
+    /** A new file for her to film into. */
+    fun newFile(context: Context, kind: ClipKind): File = File(dir(context), Clips.name(kind, System.currentTimeMillis()))
+
+    fun file(context: Context, name: String): File = File(dir(context), name)
+
+    /** Her clips, newest first. */
+    fun infos(context: Context): List<ClipInfo> =
+        Clips.sorted(dir(context).listFiles()?.mapNotNull { f -> Clips.parse(f.name)?.takeIf { f.length() > 0 } }.orEmpty())
+
+    fun list(context: Context): List<File> = infos(context).map { file(context, it.name) }
+
+    /** After a new clip: deletes the oldest past her limit. */
+    fun prune(context: Context) {
+        Clips.overflow(infos(context)).forEach { file(context, it.name).delete() }
+    }
+
+    fun deleteAll(context: Context) {
+        dir(context).listFiles()?.forEach { it.delete() }
+    }
+
+    /** Ruin clips from before round 77 sat with the proof photos. Moves them here, once. */
+    fun migrate(context: Context) {
+        File(context.filesDir, ProofFiles.DIR).listFiles()?.forEach { f ->
+            val name = Clips.fromLegacy(f.name) ?: return@forEach
+            val target = file(context, name)
+            if (!f.renameTo(target)) runCatching { f.copyTo(target, overwrite = true); f.delete() }
+        }
+    }
 }
 
 /** Your own backgrounds (round 59): copied into private app storage, downscaled and turned upright. */

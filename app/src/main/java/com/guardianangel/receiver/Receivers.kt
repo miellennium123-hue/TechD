@@ -15,6 +15,7 @@ class AlarmReceiver : BroadcastReceiver() {
             Scheduler.ACTION_CHASTITY_END -> Guardian.onChastityEnd()
             Scheduler.ACTION_TASK -> Guardian.onTaskAlarm()
             Scheduler.ACTION_SUMMONS -> Guardian.onSummonsAlarm()
+            Scheduler.ACTION_WATCH -> Guardian.onWatchDeadline()
         }
     }
 }

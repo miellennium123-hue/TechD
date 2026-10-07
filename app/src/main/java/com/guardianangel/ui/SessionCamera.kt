@@ -1,11 +1,9 @@
 package com.guardianangel.ui
 
-import android.graphics.Bitmap
-import android.graphics.Matrix
+import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
@@ -20,53 +18,46 @@ import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.guardianangel.core.ExplicitDetector
-import com.guardianangel.core.ExplicitScore
-import com.guardianangel.core.Motion
-import com.guardianangel.core.MotionTracker
-import com.guardianangel.core.ProofFiles
+import com.guardianangel.core.ClipKind
+import com.guardianangel.core.Permissions
+import com.guardianangel.core.SessionClips
 import java.io.File
-import java.util.concurrent.Executors
 
-enum class CameraMode { WATCH, RECORD }
+/** Film one step: [id] changes for every new clip, [maxSeconds] is the longest it runs. */
+data class ClipRequest(val id: Int, val kind: ClipKind, val maxSeconds: Int)
 
 /**
- * The camera during a session (front by default, [back] for the back one). WATCH runs the on-device detector about every 1.5 seconds and
- * reports whether she can see you (null when the detector can't run), and feeds every frame to
- * [motion] as a tiny brightness grid for the beat and stop checks. RECORD films [recordSeconds]
- * of silent video into the private proof folder and reports the file (null if it failed).
- * Frames are never saved, except the clip.
+ * The camera during a session (round 77: on for every session, so you see yourself). Front by
+ * default, [back] for the back one. It stays on the whole session; while [record] is set it films that
+ * step into Her videos, with sound if the microphone is allowed, and reports the file (null if it
+ * failed). Nothing else is ever saved. No more checks of what it sees.
  */
 @Composable
 fun SessionCamera(
-    mode: CameraMode,
-    recordSeconds: Int,
-    onSeen: (Boolean?) -> Unit,
-    onClip: (File?) -> Unit,
+    record: ClipRequest?,
+    onClip: (ClipKind, File?) -> Unit,
     modifier: Modifier = Modifier,
-    motion: MotionTracker? = null,
     back: Boolean = false,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val seen by rememberUpdatedState(onSeen)
     val clip by rememberUpdatedState(onClip)
     val previewView = remember { PreviewView(context) }
+    var capture by remember { mutableStateOf<VideoCapture<Recorder>?>(null) }
 
-    DisposableEffect(mode, lifecycleOwner, back) {
-        val executor = Executors.newSingleThreadExecutor()
+    DisposableEffect(lifecycleOwner, back) {
         val main = ContextCompat.getMainExecutor(context)
-        val handler = Handler(Looper.getMainLooper())
         val future = ProcessCameraProvider.getInstance(context)
         var provider: ProcessCameraProvider? = null
-        var recording: Recording? = null
         var disposed = false
         future.addListener({
             if (disposed) return@addListener
@@ -78,75 +69,59 @@ fun SessionCamera(
                 val wanted = if (back) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
                 val other = if (back) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
                 val selector = if (runCatching { p.hasCamera(wanted) }.getOrDefault(false)) wanted else other
+                val recorder = Recorder.Builder()
+                    .setQualitySelector(QualitySelector.from(Quality.SD, FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)))
+                    .setTargetVideoEncodingBitRate(VIDEO_BITRATE)
+                    .build()
+                val videoCapture = VideoCapture.withOutput(recorder)
                 p.unbindAll()
-                when (mode) {
-                    CameraMode.WATCH -> {
-                        val analysis = ImageAnalysis.Builder()
-                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                            .build()
-                        var last = 0L
-                        var lastMotion = 0L
-                        analysis.setAnalyzer(executor) { image ->
-                            val now = System.currentTimeMillis()
-                            if (motion != null && now - lastMotion >= 30) {
-                                lastMotion = now
-                                runCatching {
-                                    val plane = image.planes[0]
-                                    motion.add(Motion.grid(plane.buffer, image.width, image.height, plane.rowStride, plane.pixelStride), now)
-                                }
-                            }
-                            if (now - last >= 1_500) {
-                                last = now
-                                val result = runCatching {
-                                    val bitmap = upright(image.toBitmap(), image.imageInfo.rotationDegrees)
-                                    ExplicitDetector.output(context, bitmap)?.let { out ->
-                                        (ExplicitScore.best(out, ExplicitScore.MALE_GENITALIA)?.score ?: 0f) >= ExplicitScore.THRESHOLD
-                                    }
-                                }.getOrNull()
-                                main.execute { if (!disposed) seen(result) }
-                            }
-                            image.close()
-                        }
-                        p.bindToLifecycle(lifecycleOwner, selector, preview, analysis)
-                    }
-                    CameraMode.RECORD -> {
-                        val recorder = Recorder.Builder()
-                            .setQualitySelector(QualitySelector.from(Quality.SD, FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)))
-                            .build()
-                        val capture = VideoCapture.withOutput(recorder)
-                        p.bindToLifecycle(lifecycleOwner, selector, preview, capture)
-                        val dir = File(context.filesDir, ProofFiles.DIR).apply { mkdirs() }
-                        val file = File(dir, "proof_${System.currentTimeMillis()}_ruin.mp4")
-                        recording = capture.output
-                            .prepareRecording(context, FileOutputOptions.Builder(file).build())
-                            .start(main) { event ->
-                                if (event is VideoRecordEvent.Finalize) {
-                                    val ok = file.exists() && file.length() > 0
-                                    if (!ok) file.delete()
-                                    clip(if (ok) file else null)
-                                }
-                            }
-                        handler.postDelayed({ recording?.stop() }, recordSeconds * 1_000L)
-                    }
-                }
-            }.onFailure { if (mode == CameraMode.RECORD) clip(null) else seen(null) }
+                p.bindToLifecycle(lifecycleOwner, selector, preview, videoCapture)
+                capture = videoCapture
+            }
         }, main)
         onDispose {
             disposed = true
+            capture = null
+            provider?.unbindAll()
+        }
+    }
+
+    DisposableEffect(record?.id, capture) {
+        val request = record
+        val output = capture
+        if (request == null || output == null) return@DisposableEffect onDispose { }
+        val handler = Handler(Looper.getMainLooper())
+        val file = SessionClips.newFile(context, request.kind)
+        val recording = runCatching { start(context, output, file, request.kind) { kind, ok -> clip(kind, ok) } }.getOrNull()
+        if (recording == null) clip(request.kind, null)
+        handler.postDelayed({ recording?.stop() }, request.maxSeconds * 1_000L)
+        onDispose {
             handler.removeCallbacksAndMessages(null)
             recording?.stop()
-            provider?.unbindAll()
-            executor.shutdown()
         }
     }
 
     AndroidView(factory = { previewView }, modifier = modifier)
 }
 
-private fun upright(bitmap: Bitmap, degrees: Int): Bitmap =
-    if (degrees == 0) {
-        bitmap
-    } else {
-        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, Matrix().apply { postRotate(degrees.toFloat()) }, true)
+@SuppressLint("MissingPermission")
+private fun start(
+    context: android.content.Context,
+    capture: VideoCapture<Recorder>,
+    file: File,
+    kind: ClipKind,
+    done: (ClipKind, File?) -> Unit,
+): Recording {
+    val pending = capture.output.prepareRecording(context, FileOutputOptions.Builder(file).build())
+    if (Permissions.microphone(context)) pending.withAudioEnabled()
+    return pending.start(ContextCompat.getMainExecutor(context)) { event ->
+        if (event is VideoRecordEvent.Finalize) {
+            val ok = file.exists() && file.length() > 0
+            if (ok) SessionClips.prune(context) else file.delete()
+            done(kind, if (ok) file else null)
+        }
     }
+}
+
+/** About 1.5 Mbit/s: a 3 minute edge is roughly 35 MB. */
+private const val VIDEO_BITRATE = 1_500_000

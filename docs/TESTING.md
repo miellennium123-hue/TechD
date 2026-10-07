@@ -1,9 +1,29 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.23.1 (porn block additions). Sections 0 to 0t cover what 0.6.0 to 0.23.1 changed
+> **Version under test:** 0.24.0 (sessions: camera, her videos, watching). Sections 0 to 0u cover what 0.6.0 to 0.24.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0u. New in 0.24.0: sessions, her videos, watching
+- [ ] Settings > About shows **Version 0.24.0**
+- [ ] Guided sessions no longer has "She watches (camera)", "She checks your motion" or Motion sensitivity
+- [ ] Old ruin clips are gone from **Photos** and show up in Guided sessions > **Her videos** tagged Ruin
+- [ ] Starting a session asks for camera and microphone. Start stays greyed out without the camera
+- [ ] You see yourself the whole session. She never scolds you for being out of view or off beat
+- [ ] **Edges:** a red REC mark shows. Tap "I'm at the edge": the clip stops. It's in Her videos tagged Edge, with sound
+- [ ] **CBT:** filmed for the whole count, tagged CBT, with sound (you hear the slaps)
+- [ ] **Ruin:** filmed as before, now in Her videos. The ruin screen says so
+- [ ] **She films your edges and CBT** off: only ruins are filmed
+- [ ] Microphone denied: clips still save, silently
+- [ ] Switching camera works between steps (hidden while filming)
+- [ ] **During sessions:** with clips saved, about every other session she stops and plays one full size, you small in the corner. It moves on when it ends
+- [ ] **At check-ins** (set check-ins to 30 min to test): sometimes a notification says to open within a minute. Opening it plays the clip with sound, no controls, and **Done** after. Not opening within a minute is a failure. A Home card shows it until watched
+- [ ] **On her lock screens:** bedtime or Caught screen sometimes opens with a clip. Phone, your apps and Quit for now are still there
+- [ ] Her videos: tap plays with sound and controls, Delete and Delete all work, screenshots are blocked
+- [ ] Her lines: **Watch yourself** in Guided sessions, and a **Her videos** group
+- [ ] **Lock guard on:** switching check-in or lock screen clips off takes 30 minutes; the other two switches are instant
+- [ ] Quit for now clears a waiting clip
 
 ## 0t. New in 0.23.1: adult apps, hours, app list, check rate
 Settings > Phone control > **Porn block**. Keep **Locked for** at 15 minutes and **A catch is a failure** off while testing.

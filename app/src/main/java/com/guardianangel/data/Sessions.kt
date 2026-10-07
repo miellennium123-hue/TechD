@@ -18,21 +18,18 @@ data class SessionSettings(
     val denialWeight: Int = 40,
     /** A tick sound on every beat, as well as the on-screen pulse. */
     val beatSound: Boolean = true,
-    /** Front camera on: she checks she can see you, and films the ruin as proof. */
-    val camera: Boolean = true,
-    /** With the camera: she checks you keep her beat and stop when she says (9.9 part 2). */
-    val motionChecks: Boolean = true,
-    val motionSensitivity: MotionSensitivity = MotionSensitivity.NORMAL,
-    /** Which camera watches: front by default, back if you'd rather (switch on the session screen). */
+    /**
+     * Round 77: the camera is on for every session, so you see yourself. Front by default, back if
+     * you'd rather (switch on the session screen). Motion checks and "out of view" were removed.
+     */
     val backCamera: Boolean = false,
+    /** Round 77: she films your edges and CBT, with sound. Ruins are always filmed. Clips go to Her videos. */
+    val filmTasks: Boolean = true,
+    /** Round 77: she makes you watch one of your clips: mid-session, at check-ins, on her lock screens. */
+    val watchInSessions: Boolean = true,
+    val watchAtCheckIns: Boolean = true,
+    val watchOnLockScreens: Boolean = true,
 )
-
-/** How much movement counts. [threshold] is the change between frames (0 until 1); tune on a real phone. */
-enum class MotionSensitivity(val label: String, val threshold: Float) {
-    LOW("Low", 0.02f),
-    NORMAL("Normal", 0.012f),
-    HIGH("High", 0.007f),
-}
 
 /** One kink in the kink menu. [cageSafe] runs during a lock; [uncaged] runs without one. */
 enum class Kink(val label: String, val note: String, val cageSafe: Boolean, val uncaged: Boolean = true) {
@@ -69,7 +66,8 @@ data class SessionRecord(
     val minutes: Int,
     val ending: SessionEnding,
     val caged: Boolean,
-    val caught: Int,
+    /** Times she caught you out of view or off beat. Always 0 since round 77 (no more catching). */
+    val caught: Int = 0,
     val skipped: Int,
     val outcome: SessionOutcome,
     /** A quickshot (round 49). */

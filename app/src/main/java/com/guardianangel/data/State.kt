@@ -46,6 +46,8 @@ data class GuardianState(
     val caughtUntil: Long = 0,
     /** Her catches, newest last. No screenshots, just when and where. Quit for now keeps them. */
     val catches: List<CatchRecord> = emptyList(),
+    /** Round 77: a check-in wants you to watch one of your clips. Quit for now clears it. */
+    val watch: WatchRequest? = null,
     /** Lock guard: the app version when her watch last started, to tell a restart from an update. */
     val guardVersion: Int = 0,
     /** Lock guard: she already punished her watch being off; cleared when it starts again. */
@@ -59,6 +61,18 @@ data class PeekRecord(
     val file: String,
     val app: String,
     val line: String,
+)
+
+/**
+ * A check-in made you watch [clip] (round 77). Open it by [dueAt] or it's a failure. Once [started],
+ * the deadline is met; watching to the end clears it.
+ */
+@Serializable
+data class WatchRequest(
+    val clip: String,
+    val createdAt: Long,
+    val dueAt: Long,
+    val started: Boolean = false,
 )
 
 /**

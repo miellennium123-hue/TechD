@@ -55,18 +55,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.guardianangel.core.ClipKind
+import com.guardianangel.core.Clips
 import com.guardianangel.core.Guardian
-import com.guardianangel.core.Line
-import com.guardianangel.core.MotionCheck
-import com.guardianangel.core.MotionJudge
-import com.guardianangel.core.MotionTracker
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.Session
+import com.guardianangel.core.SessionClips
 import com.guardianangel.core.SessionScript
 import com.guardianangel.core.Step
 import com.guardianangel.core.StepKind
 import com.guardianangel.data.Kink
-import com.guardianangel.data.MotionSensitivity
 import com.guardianangel.data.SessionEnding
 import com.guardianangel.data.SessionOutcome
 import com.guardianangel.data.SessionRecord
@@ -76,7 +74,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.random.Random
 
-/** A guided session: her commands, her beat, the front camera watching, and her ending. */
+/** A guided session: her commands, her beat, the camera showing you yourself and filming, and her ending. */
 class SessionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,20 +108,22 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
     var phase by remember { mutableStateOf(SessionPhase.SETUP) }
     var soundingReady by remember { mutableStateOf(false) }
     var hasCamera by remember { mutableStateOf(Permissions.camera(context)) }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasCamera = it }
+    var hasMic by remember { mutableStateOf(Permissions.microphone(context)) }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        hasCamera = Permissions.camera(context)
+        hasMic = Permissions.microphone(context)
+    }
     var script by remember { mutableStateOf<SessionScript?>(null) }
     var steps by remember { mutableStateOf<List<Step>>(emptyList()) }
     var index by remember { mutableIntStateOf(0) }
-    var caught by remember { mutableIntStateOf(0) }
     var skipped by remember { mutableIntStateOf(0) }
     var finalLine by remember { mutableStateOf("") }
     var relockProof by remember { mutableStateOf<Long?>(null) }
     var clip by remember { mutableStateOf<File?>(null) }
     var clipFailed by remember { mutableStateOf(false) }
-
-    // A quickshot always films its ruin, whatever the camera setting.
-    val wantsCamera = settings.camera || quick
-    val watching = wantsCamera && hasCamera
+    var filmed by remember { mutableIntStateOf(0) }
+    // Round 77: the clip she plays mid-session, picked when it starts.
+    var watchFile by remember { mutableStateOf<File?>(null) }
 
     fun end(outcome: SessionOutcome) {
         val s = script ?: return
@@ -133,9 +133,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 if (s.quick) (s.estimate + 59) / 60 else settings.minutes,
                 s.ending,
                 caged,
-                caught,
-                skipped,
-                outcome,
+                skipped = skipped,
+                outcome = outcome,
                 quick = s.quick,
             ),
         )
@@ -172,14 +171,21 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 phase == SessionPhase.SETUP -> Setup(
                     quick = quick,
                     hasCamera = hasCamera,
+                    hasMic = hasMic,
                     caged = caged,
                     soundingReady = soundingReady,
                     onSoundingReady = { soundingReady = it },
-                    needsCamera = wantsCamera && !hasCamera,
-                    onAllowCamera = { permission.launch(Manifest.permission.CAMERA) },
+                    onAllowCamera = { permission.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)) },
                     modifier = Modifier.weight(1f),
                     onStart = {
-                        val built = if (quick) Session.quickshot(caged, Random.Default) else Session.build(settings, caged, Random.Default, soundingReady)
+                        val clips = SessionClips.infos(context)
+                        val built = if (quick) {
+                            Session.quickshot(caged, Random.Default)
+                        } else {
+                            val watch = Clips.inSession(settings, clips.size, Random.Default.nextDouble())
+                            Session.build(settings, caged, Random.Default, soundingReady, watchClip = watch)
+                        }
+                        watchFile = Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }
                         script = built
                         steps = built.steps
                         index = 0
@@ -190,11 +196,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     steps = steps,
                     index = index,
                     caged = caged,
-                    watching = watching,
                     beatSound = settings.beatSound,
-                    canCatch = watching && caught < Session.CAUGHT_LIMIT,
-                    motionChecks = settings.motionChecks,
-                    sensitivity = settings.motionSensitivity,
+                    watchFile = watchFile,
                     backCamera = settings.backCamera,
                     onSwitchCamera = { Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) } },
                     modifier = Modifier.weight(1f),
@@ -203,14 +206,12 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                         skipped++
                         advance()
                     },
-                    onCaught = { why ->
-                        caught++
-                        steps = steps.take(index + 1) + Session.caughtSteps(caged, why) + steps.drop(index + 1)
-                        index++
-                    },
-                    onClip = { file ->
-                        clip = file
-                        clipFailed = file == null
+                    onClip = { kind, file ->
+                        if (file != null) filmed++
+                        if (kind == ClipKind.RUIN) {
+                            clip = file
+                            clipFailed = file == null
+                        }
                     },
                 )
                 phase == SessionPhase.HONOR -> Column(
@@ -221,9 +222,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     AngelImage(Modifier.size(160.dp))
                     Text("Did you ruin it like she ordered?", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                     when {
-                        clip != null -> Muted("She filmed it. The clip is in Photos, private to this app.")
+                        clip != null -> Muted("She filmed it. The clip is in Guided sessions > Her videos, private to this app.")
                         clipFailed -> Muted("The clip couldn't be saved. She'll take your word for it.")
-                        !watching -> Muted("The camera was off, so she takes your word for it.")
                     }
                     Button(onClick = { end(SessionOutcome.RUINED) }, modifier = Modifier.fillMaxWidth()) { Text("Ruined, as ordered") }
                     OutlinedButton(onClick = { end(SessionOutcome.RUIN_FAILED) }, modifier = Modifier.fillMaxWidth()) {
@@ -237,7 +237,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 ) {
                     AngelImage(Modifier.size(160.dp))
                     SpeechBubble(finalLine)
-                    script?.let { Muted("Ending: ${it.ending.label}. Caught: $caught. Skipped: $skipped.") }
+                    script?.let { Muted("Ending: ${it.ending.label}. Skipped: $skipped.") }
+                    if (filmed > 0) Muted("She filmed $filmed ${if (filmed == 1) "clip" else "clips"}. They're in Guided sessions > Her videos.")
                     val proof = relockProof
                     if (proof != null) {
                         Button(onClick = {
@@ -264,10 +265,10 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
 private fun Setup(
     quick: Boolean,
     hasCamera: Boolean,
+    hasMic: Boolean,
     caged: Boolean,
     soundingReady: Boolean,
     onSoundingReady: (Boolean) -> Unit,
-    needsCamera: Boolean,
     onAllowCamera: () -> Unit,
     modifier: Modifier,
     onStart: () -> Unit,
@@ -276,62 +277,29 @@ private fun Setup(
     val s = config.session
     val kinks = Session.kinks(s, caged)
     val (p, r, d) = Session.endingShares(s, caged)
-    if (quick) {
-        QuickshotSetup(caged, hasCamera, needsCamera, onAllowCamera, modifier, onStart)
-        return
-    }
     Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Guided session", style = MaterialTheme.typography.headlineSmall)
-        Text("About ${s.minutes} minutes. Endings: permission $p%, ruined $r%, denied $d%.")
-        if (caged) Muted("You're locked, so only cage-safe commands until the end, and no permission.")
-        Text("Kinks: " + kinks.joinToString(", ") { it.label }.ifEmpty { "none (just her basics)" })
-        Muted(
-            "Prop the phone up so the camera sees you (front by default, switch below). She checks it on the phone; nothing is " +
-                "saved except a ruin clip, which goes to Photos, private to this app. Stop or Quit for now any time.",
-        )
-        if (Kink.CBT in kinks) Muted("CBT (${s.cbt.label.lowercase()}): stop if it ever hurts sharply. \"Too much\" skips with no penalty.")
-        if (Kink.SOUNDING in kinks) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = soundingReady, onCheckedChange = onSoundingReady)
-                Text("My sound and lube are sterile and ready. I'll never force it.")
-            }
-            if (!soundingReady) Muted("Without this tick, she leaves sounding out.")
-        }
-        if (s.camera) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Camera: ${if (s.backCamera) "back" else "front"}", Modifier.weight(1f))
-                TextButton(onClick = {
-                    Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) }
-                }) { Text("Switch") }
+        if (quick) {
+            Text("Quickshot", style = MaterialTheme.typography.headlineSmall)
+            Text("About 2 minutes, fast to her beat. It always ends ruined, and she films the ruin.")
+            if (caged) Muted("You're locked: she has you take the cage off first, and put it back on after.")
+        } else {
+            Text("Guided session", style = MaterialTheme.typography.headlineSmall)
+            Text("About ${s.minutes} minutes. Endings: permission $p%, ruined $r%, denied $d%.")
+            if (caged) Muted("You're locked, so only cage-safe commands until the end, and no permission.")
+            Text("Kinks: " + kinks.joinToString(", ") { it.label }.ifEmpty { "none (just her basics)" })
+            if (Kink.CBT in kinks) Muted("CBT (${s.cbt.label.lowercase()}): stop if it ever hurts sharply. \"Too much\" skips with no penalty.")
+            if (Kink.SOUNDING in kinks) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = soundingReady, onCheckedChange = onSoundingReady)
+                    Text("My sound and lube are sterile and ready. I'll never force it.")
+                }
+                if (!soundingReady) Muted("Without this tick, she leaves sounding out.")
             }
         }
-        if (needsCamera) {
-            Muted("She needs the camera to watch you and film a ruin.")
-            OutlinedButton(onClick = onAllowCamera) { Text("Allow camera") }
-        }
-        Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) { Text("Start") }
-    }
-}
-
-/** A quickshot's setup: no kink menu or endings, and Start waits for the camera, since she always films it. */
-@Composable
-private fun QuickshotSetup(
-    caged: Boolean,
-    hasCamera: Boolean,
-    needsCamera: Boolean,
-    onAllowCamera: () -> Unit,
-    modifier: Modifier,
-    onStart: () -> Unit,
-) {
-    val config by Guardian.config.flow.collectAsState()
-    val s = config.session
-    Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Quickshot", style = MaterialTheme.typography.headlineSmall)
-        Text("About 2 minutes, fast to her beat. It always ends ruined, and she films the ruin.")
-        if (caged) Muted("You're locked: she has you take the cage off first, and put it back on after.")
         Muted(
-            "Prop the phone up so the camera sees you. The ruin clip goes to Photos, private to this app. " +
-                "Stop or Quit for now any time.",
+            "Prop the phone up where the camera sees you: you'll watch yourself the whole time. She films your ruin" +
+                (if (s.filmTasks && !quick) ", edges and CBT" else "") +
+                " into Guided sessions > Her videos, private to this app. Stop or Quit for now any time.",
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Camera: ${if (s.backCamera) "back" else "front"}", Modifier.weight(1f))
@@ -339,9 +307,11 @@ private fun QuickshotSetup(
                 Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) }
             }) { Text("Switch") }
         }
-        if (needsCamera) {
-            Muted("A quickshot needs the camera. She always films the ruin.")
-            OutlinedButton(onClick = onAllowCamera) { Text("Allow camera") }
+        if (!hasCamera || !hasMic) {
+            Muted(
+                if (!hasCamera) "Every session needs the camera. Allow the microphone too, so her videos have sound." else "Allow the microphone so her videos have sound. Without it she films silently.",
+            )
+            OutlinedButton(onClick = onAllowCamera) { Text(if (!hasCamera) "Allow camera and microphone" else "Allow microphone") }
         }
         Button(onClick = onStart, enabled = hasCamera, modifier = Modifier.fillMaxWidth()) { Text("Start") }
     }
@@ -352,32 +322,28 @@ private fun Running(
     steps: List<Step>,
     index: Int,
     caged: Boolean,
-    watching: Boolean,
     beatSound: Boolean,
-    canCatch: Boolean,
-    motionChecks: Boolean,
-    sensitivity: MotionSensitivity,
+    watchFile: File?,
     backCamera: Boolean,
     onSwitchCamera: () -> Unit,
     modifier: Modifier,
     onNext: () -> Unit,
     onSkip: () -> Unit,
-    onCaught: (Line) -> Unit,
-    onClip: (File?) -> Unit,
+    onClip: (ClipKind, File?) -> Unit,
 ) {
     val step = steps[index]
     val now = rememberNow(250)
     var startedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var lastSeenAt by remember { mutableLongStateOf(0L) }
     var ticks by remember { mutableIntStateOf(0) }
     var line by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf<String?>(null) }
-    var sees by remember { mutableStateOf<String?>(null) }
-    val tracker = remember { MotionTracker() }
-    LaunchedEffect(backCamera) { tracker.reset() }
     val pulse = remember { Animatable(1f) }
     val tone = remember { runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 70) }.getOrNull() }
     DisposableEffect(Unit) { onDispose { tone?.release() } }
+    val config by Guardian.config.flow.collectAsState()
+    // A clip she plays mid-session; if it's gone, she moves straight on.
+    val playing = step.kind == StepKind.WATCH
+    val clipToPlay = watchFile?.takeIf { playing && it.exists() }
 
     // Each command: her line, then wait its time (a tap step moves on when you tap, or when time runs out).
     LaunchedEffect(index, steps) {
@@ -385,6 +351,10 @@ private fun Running(
         ticks = 0
         line = Guardian.say(step.line)
         comment = step.comment?.let { Guardian.line(it) }
+        if (step.kind == StepKind.WATCH && watchFile?.exists() != true) {
+            onNext()
+            return@LaunchedEffect
+        }
         delay(step.seconds * 1_000L)
         onNext()
     }
@@ -406,46 +376,14 @@ private fun Running(
         }
     }
 
-    // She catches you when she can't see you for a while during a stroking command (never during a lock).
-    LaunchedEffect(index, steps, canCatch) {
-        if (!canCatch || caged || !step.kind.stroking || !step.kind.watched) return@LaunchedEffect
-        while (true) {
-            delay(1_000)
-            val since = maxOf(lastSeenAt, startedAt)
-            if (System.currentTimeMillis() - since > Session.UNSEEN_SECONDS * 1_000L) {
-                onCaught(Line.SESSION_CAUGHT)
-                return@LaunchedEffect
-            }
-        }
-    }
-
-    // Motion checks: her beat on stroking commands, stillness after "stop". No frames, no judging.
-    LaunchedEffect(index, steps, watching, motionChecks, canCatch, sensitivity) {
-        sees = null
-        val check = if (watching && motionChecks) Session.motionCheck(step) else MotionCheck.NONE
-        if (check == MotionCheck.NONE) return@LaunchedEffect
-        val start = System.currentTimeMillis()
-        val judge = MotionJudge(check, step.bpm, start)
-        while (true) {
-            delay(500)
-            val now = System.currentTimeMillis()
-            val reading = tracker.reading(start, now, sensitivity)
-            sees = when {
-                !reading.live -> null
-                check == MotionCheck.STILL -> if (reading.moving) "She sees you moving" else "She sees you still"
-                !reading.moving -> "She sees you stopped"
-                reading.rate != null -> "She sees about ${reading.rate} per minute"
-                else -> "She sees you moving"
-            }
-            if (judge.update(now, reading) && canCatch) {
-                onCaught(if (check == MotionCheck.BEAT) Line.SESSION_OFF_BEAT else Line.SESSION_MOVED)
-                return@LaunchedEffect
-            }
-        }
+    // What she films on this step: the ruin always, edges and CBT if you let her. Index keeps each step its own clip.
+    val films = Clips.films(step.kind, config.session)
+    val record = films?.let {
+        ClipRequest(index, it, if (it == ClipKind.RUIN) Session.RUIN_CLIP_SECONDS - 1 else step.seconds)
     }
 
     val left = ((startedAt + step.seconds * 1_000L - now) / 1_000).coerceAtLeast(0)
-    val totalLeft = left + steps.drop(index + 1).sumOf { it.estimate }
+    val totalLeft = (if (playing) 0 else left) + steps.drop(index + 1).sumOf { it.estimate }
 
     Column(
         modifier.fillMaxWidth(),
@@ -455,16 +393,19 @@ private fun Running(
         Muted("About ${(totalLeft + 59) / 60} min left" + if (caged) " · locked" else "")
         SpeechBubble(listOfNotNull(line.ifBlank { null }, comment).joinToString("\n"))
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            if (watching) {
-                SessionCamera(
-                    mode = if (step.kind == StepKind.RUIN) CameraMode.RECORD else CameraMode.WATCH,
-                    recordSeconds = Session.RUIN_CLIP_SECONDS - 1,
-                    onSeen = { seen -> if (seen != false) lastSeenAt = System.currentTimeMillis() },
-                    onClip = onClip,
-                    modifier = Modifier.fillMaxSize(),
-                    motion = if (motionChecks) tracker else null,
-                    back = backCamera,
-                )
+            // You see yourself the whole session. While she plays a clip, you shrink to the corner.
+            SessionCamera(
+                record = record,
+                onClip = onClip,
+                modifier = if (clipToPlay != null) {
+                    Modifier.align(Alignment.BottomEnd).size(110.dp, 150.dp).clip(MaterialTheme.shapes.medium)
+                } else {
+                    Modifier.fillMaxSize()
+                },
+                back = backCamera,
+            )
+            if (clipToPlay != null) {
+                ClipPlayer(clipToPlay, Modifier.fillMaxSize().padding(bottom = 160.dp), onEnd = onNext)
             }
             if (step.bpm > 0) {
                 Box(
@@ -472,13 +413,19 @@ private fun Running(
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)),
                 )
             }
-            when (step.kind) {
-                StepKind.COUNTDOWN -> Text("$left", style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.Bold)
-                StepKind.RUIN -> Text("REC", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+            when {
+                step.kind == StepKind.COUNTDOWN -> Text("$left", style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.Bold)
+                record != null -> Text(
+                    "REC",
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+                )
                 else -> Unit
             }
         }
         val detail = when {
+            playing -> "Watch yourself"
             step.kind == StepKind.CBT -> "Count: ${ticks.coerceAtMost(step.reps)} of ${step.reps}"
             step.bpm > 0 -> "Follow the beat · ${step.bpm} per minute"
             step.kind.still -> "Hands off · ${left}s"
@@ -486,8 +433,7 @@ private fun Running(
             else -> "${left}s"
         }
         Text(detail, style = MaterialTheme.typography.titleMedium)
-        sees?.let { Muted(it) }
-        if (watching && step.kind != StepKind.RUIN) {
+        if (record == null && !playing) {
             TextButton(onClick = onSwitchCamera) { Text(if (backCamera) "Use front camera" else "Use back camera") }
         }
         step.kind.tap?.let { label -> Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(label) } }

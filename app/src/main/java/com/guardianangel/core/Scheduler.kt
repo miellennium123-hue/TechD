@@ -17,12 +17,14 @@ object Scheduler {
     const val ACTION_CHASTITY_END = "com.guardianangel.action.CHASTITY_END"
     const val ACTION_TASK = "com.guardianangel.action.TASK"
     const val ACTION_SUMMONS = "com.guardianangel.action.SUMMONS"
+    const val ACTION_WATCH = "com.guardianangel.action.WATCH"
     const val EXTRA_ID = "id"
 
     private const val RC_CHECK_IN = 1
     private const val RC_CHASTITY = 2
     private const val RC_TASK = 3
     private const val RC_SUMMONS = 4
+    private const val RC_WATCH = 5
 
     fun scheduleAll(context: Context) {
         val st = Guardian.state.value
@@ -31,6 +33,7 @@ object Scheduler {
         st.proofs.filter { it.reason.penalized }.forEach { scheduleProofDeadline(context, it) }
         st.task?.let { scheduleTask(context, Guardian.nextTaskAlarm(it, Guardian.now())) }
         st.summons?.let { scheduleSummons(context, it.lockAt) }
+        st.watch?.takeIf { !it.started }?.let { scheduleWatch(context, it.dueAt) }
     }
 
     /** Next check-in lands somewhere between 60% and 100% of the interval, so never later than it. */
@@ -68,8 +71,16 @@ object Scheduler {
     fun cancelSummons(context: Context) =
         cancel(context, pending(context, ACTION_SUMMONS, RC_SUMMONS))
 
+    /** Round 77: a check-in's clip has to be opened by [at]. */
+    fun scheduleWatch(context: Context, at: Long) =
+        set(context, pending(context, ACTION_WATCH, RC_WATCH), max(at, Guardian.now() + 5_000))
+
+    fun cancelWatch(context: Context) =
+        cancel(context, pending(context, ACTION_WATCH, RC_WATCH))
+
     fun cancelAll(context: Context, proofs: List<ProofRequest>) {
         cancelSummons(context)
+        cancelWatch(context)
         cancel(context, pending(context, ACTION_CHECK_IN, RC_CHECK_IN))
         cancelChastityEnd(context)
         cancelTask(context)

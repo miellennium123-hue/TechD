@@ -14,20 +14,21 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Session
+import com.guardianangel.core.SessionClips
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
-import com.guardianangel.data.MotionSensitivity
 import com.guardianangel.data.Sessions
 import kotlin.math.roundToInt
 
 /** Guided sessions (round 46): her own screen from Home, with Start, the kink menu and every session setting. */
 @Composable
-fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -> Unit) {
+fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -> Unit, openClips: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
 
@@ -51,9 +52,11 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
             when {
                 !config.enabled -> "Switch her on (Settings, top card) to start either one."
                 !config.session.on -> "Switch Guided sessions on below to start either one."
-                else -> "Quickshot: about 2 minutes. Always a ruin, and she always films it, even with the camera setting off."
+                else -> "Quickshot: about 2 minutes. Always a ruin, and she always films it."
             },
         )
+        val clips = remember(state.sessions) { SessionClips.list(context).size }
+        OutlinedButton(onClick = openClips, modifier = Modifier.fillMaxWidth()) { Text("Her videos ($clips)") }
 
         SectionCard("Settings") {
             SwitchRow(
@@ -85,25 +88,34 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
             SwitchRow("Beat sound", "A tick on every beat, as well as the pulse.", config.session.beatSound) { v ->
                 update { it.copy(session = it.session.copy(beatSound = v)) }
             }
+            Muted(
+                "The camera is on for every session, so you watch yourself the whole time. She always films a ruin. " +
+                    "Clips have sound if you allow the microphone, and stay private to this app.",
+            )
             SwitchRow(
-                "She watches (camera)",
-                "Front camera on: if she can't see you while you should be stroking, she scolds you and adds an edge. " +
-                    "She films a ruin as proof. Checked on your phone; only the ruin clip is saved, privately.",
-                config.session.camera,
-            ) { v -> update { it.copy(session = it.session.copy(camera = v)) } }
+                "She films your edges and CBT",
+                "Every edge, until you tap \"I'm at the edge\" (up to 3 minutes), and every CBT count.",
+                config.session.filmTasks,
+            ) { v -> update { it.copy(session = it.session.copy(filmTasks = v)) } }
+            Text("She makes you watch your clips", style = MaterialTheme.typography.titleSmall)
             SwitchRow(
-                "She checks your motion",
-                "With the camera on: she checks you keep her beat when stroking and stop when she says. " +
-                    "Off beat or moving too long: she scolds you and adds an edge. Only numbers are kept, never frames.",
-                config.session.motionChecks,
-            ) { v -> update { it.copy(session = it.session.copy(motionChecks = v)) } }
-            if (config.session.camera && config.session.motionChecks) {
-                Text("Motion sensitivity")
-                ChoiceChips(MotionSensitivity.entries, config.session.motionSensitivity, { it.label }) { level ->
-                    update { it.copy(session = it.session.copy(motionSensitivity = level)) }
-                }
-                Muted("Caught when still? Try Low. Moving and she doesn't notice? Try High.")
-            }
+                "During sessions",
+                "About every other session she stops and plays one of your clips. You see yourself in the corner.",
+                config.session.watchInSessions,
+            ) { v -> update { it.copy(session = it.session.copy(watchInSessions = v)) } }
+            SwitchRow(
+                "At check-ins",
+                "Some check-ins send a clip. Open it within a minute or it's a failure. Never in quiet time, and only " +
+                    "when she can send notifications.",
+                config.session.watchAtCheckIns,
+            ) { v -> update { it.copy(session = it.session.copy(watchAtCheckIns = v)) } }
+            SwitchRow(
+                "On her lock screens",
+                "Her bedtime and Caught screens sometimes open by playing a clip, with sound. Phone, Always-allowed apps " +
+                    "and Quit for now stay right there.",
+                config.session.watchOnLockScreens,
+            ) { v -> update { it.copy(session = it.session.copy(watchOnLockScreens = v)) } }
+            if (config.lockGuard) Muted("Lock guard: switching check-ins or lock screens off takes 30 minutes.")
             if (state.sessions.isNotEmpty()) {
                 Muted("Last sessions: " + state.sessions.takeLast(5).joinToString(", ") {
                     (if (it.quick) "quickshot " else "") + it.outcome.name.lowercase().replace('_', ' ')

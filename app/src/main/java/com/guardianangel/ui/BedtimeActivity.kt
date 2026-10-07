@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -27,18 +28,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.guardianangel.core.Clips
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.SessionClips
 import com.guardianangel.core.InstalledApps
 import com.guardianangel.core.Line
 import com.guardianangel.core.Rules
 import com.guardianangel.ui.theme.GuardianTheme
+import java.io.File
+import kotlin.random.Random
 
 /**
  * Her bedtime screen (round 54): full screen over the home screen and every app bedtime blocks.
@@ -89,7 +96,25 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
         detail = "${formatDuration(untilEnd(config.bedtime.endMinute, now))} left. No way in until then.",
         noApps = "None. Add some in Settings > App lockouts > Always-allowed apps, outside bedtime.",
         onOpen = onOpen,
+        clip = rememberLockScreenClip(),
     )
+}
+
+/**
+ * Round 77: sometimes her lock screen opens by playing one of your clips (see Clips.onLockScreen).
+ * Picked once each time the screen opens; null most of the time.
+ */
+@Composable
+fun rememberLockScreenClip(): File? {
+    val context = LocalContext.current
+    return remember {
+        val clips = SessionClips.infos(context)
+        if (Clips.onLockScreen(Guardian.config.value, clips.size, Random.nextDouble())) {
+            Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }
+        } else {
+            null
+        }
+    }
 }
 
 /**
@@ -104,9 +129,12 @@ fun LockedOutScreen(
     noApps: String,
     onOpen: (Intent) -> Unit,
     hidden: Set<String> = emptySet(),
+    clip: File? = null,
 ) {
     val context = LocalContext.current
     val config by Guardian.config.flow.collectAsState()
+    var watching by remember(clip) { mutableStateOf(clip != null) }
+    val watchLine = remember(clip) { if (clip != null) Guardian.line(Line.WATCH_LOCKED) else "" }
     val apps = remember(config.alwaysAllowed, hidden) {
         InstalledApps.launchable(context).filter { it.packageName in config.alwaysAllowed && it.packageName !in hidden }
     }
@@ -117,7 +145,13 @@ fun LockedOutScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            AngelImage(Modifier.size(180.dp))
+            // Her clip first, with sound. Phone, your apps and Quit for now stay below it the whole time.
+            if (clip != null && watching) {
+                SpeechBubble(watchLine)
+                ClipPlayer(clip, Modifier.fillMaxWidth().height(320.dp), onEnd = { watching = false })
+            } else {
+                AngelImage(Modifier.size(180.dp))
+            }
             if (line.isNotBlank()) SpeechBubble(line)
             Text(
                 title,

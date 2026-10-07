@@ -73,5 +73,6 @@ private fun CaughtScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
         onOpen = onOpen,
         // Your adult apps stay locked even if Always-allowed (round 74).
         hidden = config.pornBlock.adultApps,
+        clip = rememberLockScreenClip(),
     )
 }
