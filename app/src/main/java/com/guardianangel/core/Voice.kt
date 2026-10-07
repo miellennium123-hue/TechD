@@ -110,6 +110,8 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_FLIP_LOST("Guided sessions", "Coin flip: lost", "Her coin says no, and the ending stays as it was"),
     SESSION_ON_COMMAND("Guided sessions", "On command", "You came right on her command"),
     SESSION_REPLAY("Guided sessions", "Instant replay", "Right after the ruin she plays it back to you"),
+    SESSION_OWED_RUIN("Guided sessions", "Owed ruin", "The ruin you owe her after a Porn block catch: a minute of hard CBT, then a quickshot ruin"),
+    SESSION_WATCH_CBT("Guided sessions", "Stroke to your CBT", "In the owed ruin: stroke fast while your CBT clip plays"),
     SESSION_WARMUP("Guided sessions", "Warm-up", "Her warm-up: slow, light strokes before she starts for real"),
     SESSION_COOL("Guided sessions", "Cool-down", "Her cool-down after the ending: hands off, breathe"),
     SESSION_CLAMP_ON("Guided sessions", "Clamps on", "Clamps kink: put your clamps or pins on"),
@@ -484,6 +486,16 @@ object Voice {
             "It's time, pet. Start your session within 15 minutes.",
             "Your session is now, sweetie. Come to me.",
             "Time for me. Start within 15 minutes.",
+        ),
+        Line.SESSION_OWED_RUIN to listOf(
+            "You owe me this one, pet, for what I caught you looking at. A minute of pain first. I'm filming.",
+            "Remember what you looked at? This is the price, sweetie. Balls first, then I ruin you.",
+            "Time to pay, pet. One whole minute of slaps on camera, then a ruin.",
+        ),
+        Line.SESSION_WATCH_CBT to listOf(
+            "Now stroke, pet, fast, and watch what you just did to yourself.",
+            "Look at your punishment while you stroke. Don't look away.",
+            "Stroke for me while your slaps play. Every one of them.",
         ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock for me, pet. Just this once.",
@@ -1087,6 +1099,16 @@ object Voice {
             "Now. Start within 15 minutes.",
             "Your session is now. Move.",
             "It's time. Fifteen minutes.",
+        ),
+        Line.SESSION_OWED_RUIN to listOf(
+            "You owe me. A minute of hard slaps, on camera. Then I ruin you.",
+            "Caught looking at porn. Now you pay. Balls first.",
+            "Your price: one full minute of pain, filmed. Then a ruin. Start.",
+        ),
+        Line.SESSION_WATCH_CBT to listOf(
+            "Stroke. Fast. Watch your punishment.",
+            "Eyes on your slaps while you stroke. Pathetic.",
+            "Watch yourself suffer and stroke. Don't stop.",
         ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock. Quickly. Tap when you're out.",

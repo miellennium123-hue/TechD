@@ -432,4 +432,34 @@ class SessionTest {
         val with = seeds.map { Session.build(sph, false, Random(it), sizeKnown = true) }.flatMap { it.steps }
         assertTrue(with.any { it.comment == Line.SESSION_SPH })
     }
+
+    // ---- Round 85 ---------------------------------------------------------------------------
+
+    @Test
+    fun owedRuinIsAMinuteOfCbtThenAQuickshotWatchingIt() {
+        seeds.take(50).forEach { seed ->
+            val script = Session.owedRuin(caged = false, Random(seed))
+            assertTrue(script.quick)
+            assertEquals(SessionEnding.RUINED, script.ending)
+            val kinds = script.steps.map { it.kind }
+            assertEquals(Line.SESSION_OWED_RUIN, script.steps.first().line)
+            // A full minute of hard CBT first, every slap counted, "Too much" still there.
+            val cbt = script.steps[1]
+            assertEquals(StepKind.CBT, cbt.kind)
+            assertEquals(Line.SESSION_CBT_HARD, cbt.line)
+            assertEquals(Session.OWED_CBT_SECONDS * Session.OWED_CBT_BPM / 60, cbt.reps)
+            assertTrue(cbt.seconds >= Session.OWED_CBT_SECONDS)
+            assertTrue(cbt.kind.skippable)
+            // Then strokes, edge, countdown and ruin, all with your CBT on screen, then the replay.
+            val withCbt = script.steps.filter { it.showCbt }.map { it.kind }
+            assertEquals(listOf(StepKind.STROKE, StepKind.FASTER, StepKind.EDGE, StepKind.COUNTDOWN, StepKind.RUIN), withCbt)
+            assertEquals(listOf(StepKind.RUIN, StepKind.REPLAY), kinds.takeLast(2))
+            assertFalse(script.steps.last().showCbt)
+        }
+        // Locked: CBT with the cage on, then unlock, and back on after.
+        val locked = Session.owedRuin(caged = true, Random(1)).steps.map { it.kind }
+        assertTrue(locked.indexOf(StepKind.CBT) < locked.indexOf(StepKind.UNLOCK))
+        assertTrue(locked.indexOf(StepKind.UNLOCK) < locked.indexOf(StepKind.STROKE))
+        assertEquals(StepKind.RELOCK, locked.last())
+    }
 }

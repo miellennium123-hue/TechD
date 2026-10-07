@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.27.0 (Sessions part 2: themes, training, owed and booked sessions, clamps, size remarks, layout). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 84)
+> **Status:** v0.27.1 (The ruin you owe after a Porn block catch: a minute of filmed CBT, then a quickshot watching it). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 85)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -718,6 +718,13 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Lock guard:** switching off her training, punishment sessions, the ruin after a catch or booked sessions takes the 30 minute screen. Themes and her length change instantly
 - **Tests:** `SessionPlanTest.kt` (themes keep to your kinks, endings and lengths, CBT discipline, training weeks, what you owe comes first, her length, bookings clear of quiet time, the booking window, Lock guard, older saves), `SessionTest.kt` (warm-up, cool-down and chapters, clamps, size remarks). 229 unit tests passed locally
 
+### v0.27.1 (round 85, hotfix: the owed ruin)
+- **Asked:** the ruin owed after a Porn block catch should be a quickshot that first has a full minute of harsh CBT she films, then shows you that CBT while you jerk and ruin, while you can still see yourself
+- **Changed (`Session.owedRuin`):** while you owe her a ruin, **any** session you start (Start or Quickshot) is her owed ruin: her opening line, a full minute of hard CBT (30 slaps at 30 a minute, counted aloud, always filmed even with "She films your edges and CBT" off), then fast strokes, faster, the edge, a countdown and the ruin. During all of those your CBT clip loops above you and the live camera shows you below. Then her instant replay of the ruin. The CBT clip and the ruin go to Her videos as usual
+- **Kept:** "Too much" still skips the CBT with no penalty. During a lock: the CBT with the cage on, then unlock, and the cage back on after. Ending ruined pays the debt; "I couldn't stop" is a failure and the ruin stays owed
+- **Her lines:** new in Guided sessions: Owed ruin, Stroke to your CBT. Both moods, editable
+- **Tests:** `SessionTest.kt` (the owed ruin's minute of CBT, what plays during it, the lock order). 230 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -986,3 +993,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 82):** No code changes. User asked if she could control their DG-Lab Coyote 3.0 e-stim box eventually. Answer: very likely, straight over Bluetooth with DG-Lab's published protocol. Plan, ideas and fixed safety rules in section 10 (and a note in 4.8). Waiting until the user has the box to test
 - **2026-10-07 (round 83, v0.26.0):** Sessions part 1. Her voice (whispering late at night) and big text, beat patterns, exact counts, grip commands, an edge goal with shrinking rests, balance at the edge, edge timing and an edge face photo, her deal (a sure ruin or 5 edges and a coin flip), cruel countdowns, cum on command, keep going, instant replay, stroking while you watch with then vs now, a ruin reel, captions, look into the lens, and session history. Part 2 is next; the release day idea waits for the calendar. Details in section 8
 - **2026-10-07 (round 84, v0.27.0):** Sessions part 2. Themes (tease night, edge marathon, punishment, reward, ruin training, CBT discipline), she decides the length, a training program, warm-up and cool-down with chapters, booked sessions, punishment sessions after failures, a ruin owed after a Porn block catch, a clamps kink, small-size remarks from your Rate me result, a framing preview, landscape, dark mode and a torch. Details in section 8
+- **2026-10-07 (round 85, v0.27.1):** Hotfix. The ruin you owe after a Porn block catch is now always her CBT quickshot: a full minute of hard CBT she films, then fast strokes, the edge and the ruin while that CBT loops above you and you watch yourself below, then the replay. Details in section 8
