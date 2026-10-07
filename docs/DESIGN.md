@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.24.1 (She plays a clip every session, and about every other check-in and lock screen). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 79)
+> **Last updated:** 2026-10-07 (round 80)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -927,3 +927,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 77, v0.24.0):** Sessions rework. Motion checks and "out of view" catching removed. The camera is on for every session so you watch yourself. She films your ruins, edges and CBT with sound into a new Her videos area under Guided sessions (old ruin clips move there, out of Photos). She makes you watch a clip mid-session, at some check-ins (open it within a minute or it's a failure), and on her bedtime and Caught screens. Release calendar saved for later. Details in section 8
 - **2026-10-07 (round 78, v0.24.1):** More clips. She plays one every session (quickshots too), about every other time her bedtime or Caught screen opens, and about every other check-in (now before sites, tasks and summons). Details in section 8
 - **2026-10-07 (round 79):** No code changes. User asked for many creative ideas to improve guided sessions (kink and quality of life) to pick from. Listed them in section 10, waiting on the user's picks. A started draft was set aside unmerged
+- **2026-10-07 (round 80):** No code changes. User asked where proof photos and session clips (ruins) are stored. Answer: private app storage (`files/proof` for photos and peeks, the clips folder for videos), not visible to file managers or the Gallery app. Reachable from a computer with `adb ... run-as com.guardianangel`, because the published APK is a debug build. Offered a Save to phone button, which would change the private storage rule, waiting on the user
