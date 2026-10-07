@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.24.1 (She plays a clip every session, and about every other check-in and lock screen). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 78)
+> **Last updated:** 2026-10-07 (round 79)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -804,6 +804,21 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Questions for the user:** how she picks the day, whether you see it, what release day looks like, what moves the day, what Quit for now does to the day, and how strict confessing is
   - **Round 77:** the user said to save this for later and fix sessions first. Waiting until after v0.24.0
 
+- **JOI session ideas (round 79, proposed, nothing picked yet):** the user asked for lots of creative ideas to improve guided sessions, kink wise and quality of life wise, to pick from. No code: Claude had started a draft (her voice, pause, beg to cum, faster and faster, keep going, stroke while you watch, session history), set aside unmerged when the user said ideas only. Nothing that relies on motion detection
+  - **Her voice and presence:** spoken commands and CBT counts (phone's own voice); a whisper mode late at night; cruel spoken countdowns ("3... 2... not yet"); her line on screen big enough to read from across the room
+  - **Hands-free controls:** volume button or headphone button for "I'm at the edge"; tap anywhere on screen; pause and auto-pause when you leave the app
+  - **Rhythm:** faster and faster ramps; beat patterns (heartbeat, stutter, every other beat); exact stroke counts ("give me 50"); grip and style commands (tip only, two fingers, off hand, full length); lube rules (more, none)
+  - **Edging:** an edge goal shown at the start; hold right at the edge for 10 seconds; shorter and shorter rests between edges; edge speed timed and mocked; an edge snapshot photo the moment you tap
+  - **Begging and deals:** beg to cum (yes, ruin it, another edge, or a laugh); her deal at the end (a sure ruin now, or 5 more edges for a coin flip at a full one); a countdown that stops at 1
+  - **Endings:** keep going (post-orgasm); cum on her exact command; instant replay of your ruin while you're still in it; a hands-off order after a denial (honor rule with report)
+  - **Camera and clips:** stroke while you watch your old clip; you now beside you then; a highlight reel of your ruins; captions on clips; say lines out loud to the camera (recorded); "look into the lens" commands
+  - **Structure:** session themes (tease night, edge marathon, punishment, reward, ruin training, CBT discipline); she decides the length; a training program that gets harder week by week; warm-up and cool-down; chapters on screen
+  - **Her schedule:** surprise sessions at check-ins (start within 10 minutes); sessions she books for a set time; ties to the release calendar
+  - **Rewards and punishments:** punishment sessions after failures (CBT-heavy, ruin only); a ruin session after a Porn block catch; better odds after a good daily report; edges that take time off your chastity lock
+  - **New kinks (opt-in):** counted spanks (like CBT), clamps and pins on a timer, ice and temperature, prostate and plug tease, dress-up commands, small-size humiliation that uses your Rate me result, a clean-up order after you finish
+  - **Quality of life:** session history and stats; live edge counter; framing preview before Start; a big-text far-away layout and landscape; dark mode with only the beat; torch for the back camera; a headphones mode; resume after a crash; haptic beat with the phone in your lap
+  - **Rules that stay:** Quit for now everywhere, mood only changes her words, nothing leaves the phone, CBT and every kink stay opt-in with "Too much" to skip
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -911,3 +926,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 76):** No code changes. User asked for a Release calendar screen like Chastity and Guided sessions, and to brainstorm how it looks and works. Proposed the screen, how she sets and moves the release day, release day, history and links to chastity and sessions in section 10, with questions for the user
 - **2026-10-07 (round 77, v0.24.0):** Sessions rework. Motion checks and "out of view" catching removed. The camera is on for every session so you watch yourself. She films your ruins, edges and CBT with sound into a new Her videos area under Guided sessions (old ruin clips move there, out of Photos). She makes you watch a clip mid-session, at some check-ins (open it within a minute or it's a failure), and on her bedtime and Caught screens. Release calendar saved for later. Details in section 8
 - **2026-10-07 (round 78, v0.24.1):** More clips. She plays one every session (quickshots too), about every other time her bedtime or Caught screen opens, and about every other check-in (now before sites, tasks and summons). Details in section 8
+- **2026-10-07 (round 79):** No code changes. User asked for many creative ideas to improve guided sessions (kink and quality of life) to pick from. Listed them in section 10, waiting on the user's picks. A started draft was set aside unmerged
