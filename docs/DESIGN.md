@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.23.1 (Porn block: adult apps list, set hours, your own app list and check rate). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 74)
+> **Last updated:** 2026-10-07 (round 75)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -748,6 +748,20 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Round 73 (v0.23.0):** the user asked again for A, and it's built as **Porn block** (section 4.15 and section 8). Checks every 5 seconds (not 15 to 60), and the lock is her own Caught screen plus Android's screen lock, not the device admin lockdown. Still open: D (adult app list), B and C
   - **Round 74 (v0.23.1):** D is built as the **Adult apps** list (you pick them; opening one is a catch). B and C are still open
 
+- **More hot ideas (round 75, proposed, nothing picked yet):** the user asked for more ideas, **nothing built around stillness** (no holds, kneels or motion checks). New ideas, not repeats of rounds 38, 62, 69 and 70
+  - **Hidden timer:** a chastity setting where she hides your time left. You only see "?" (or a vague "a while yet") until she lets you out. She can still add time, and you never know how much
+  - **Her wheel:** at check-ins or when you beg, she spins a wheel on screen. Slices like release, ruined session, +12 hours, a task, denied, or spin again. You set the slices and how big each is
+  - **Beg out loud:** to ask for early release or to buy time in a blocked app, you record yourself begging for 20 seconds. She checks on the phone that you really spoke the whole time (loudness only, no speech to text), then deletes it
+  - **Her texts:** while you're locked she sends teasing messages at random times, more often the longer you've been locked. Silent in quiet time, neutral wording with Discreet on
+  - **Wagers:** bet merit with her. "I'll get a B or better tonight", "She won't catch me this week". Win and you get double. Lose and she takes the merit and adds chastity time
+  - **Orgasm budget:** she gives you a number of releases a month. Permission endings in guided sessions spend it. At zero, sessions can only end ruined or denied until next month. Catches and F grades can cost you one
+  - **Confession after a catch:** when Porn block catches you, her Caught screen makes you type a confession (at least 30 words, her opening line given) before your Always-allowed apps show. Saved with the catch
+  - **Tally marks:** every failure adds a mark to her wallpaper, drawn on the phone like her backgrounds. Lock screen only, or home screen too. Anyone who sees your screen can see them, so off by default
+  - **Good boy chime:** a vibration and sound pattern only she uses, every time she praises you. Over time it plays at random during sessions and check-ins, so you feel it before she says anything
+  - **Her weekly letter:** every Sunday she writes you a letter about your week: chastity days, catches, grades, sessions, failures, and what she expects next week. Kept in her record
+  - **Rules that stay:** Quit for now on every screen, calls and emergency use never blocked, quiet hours respected, nothing she does reaches other people, recordings and photos never leave the phone
+  - **Claude's top 3:** Hidden timer, Her wheel, Wagers. They build on chastity, check-ins and merit, which already work
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -851,3 +865,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 72):** No code changes. User picked A (screen check) and D (adult apps) for the porn blocker. Claude's response was stopped by a safety filter, so it's not planned. Recorded in section 10
 - **2026-10-07 (round 73, v0.23.0):** Porn block (option A from round 71). Every 5 seconds in a browser or social app (X, Reddit and more) she checks the screen with her on-device nudity detector. Porn, or a private tab hiding the screen for about 15 seconds, locks your phone: home, screen locked, her Caught screen over everything but Always-allowed apps and the phone for 1 hour (a setting), and a failure (a setting). Nothing she scans is saved. New Porn block card in Settings, guarded by Lock guard. Details in section 8
 - **2026-10-07 (round 74, v0.23.1):** Porn block additions. An Adult apps list you pick (opening one is a catch, even if Always-allowed), Only at set hours (porn off limits only inside your hours, for both checks and adult apps), Apps she checks (tick any app, games included, or untick hers) and Check every (3 to 60 seconds). Claude asked three questions first. Details in section 8
+- **2026-10-07 (round 75):** No code changes. User asked for more hot ideas, nothing about stillness. Proposed ten in section 10 (hidden timer, her wheel, beg out loud, her texts, wagers, orgasm budget, confession after a catch, tally marks, good boy chime, her weekly letter), waiting on the user's picks
