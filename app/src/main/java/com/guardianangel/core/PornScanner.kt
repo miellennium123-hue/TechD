@@ -31,15 +31,17 @@ class PornScanner(private val service: AccessibilityService) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || busy) return
         val info = pkg?.let { runCatching { service.packageManager.getApplicationInfo(it, 0) }.getOrNull() }
         val browser = pkg != null && pkg in browsers
+        val config = Guardian.config.value
         val watched = pkg != null && !launcher &&
-            PornBlock.watches(pkg, info?.category ?: ApplicationInfo.CATEGORY_UNDEFINED, browser)
+            PornBlock.watches(pkg, info?.category ?: ApplicationInfo.CATEGORY_UNDEFINED, browser, config.pornBlock)
         val power = service.getSystemService(Context.POWER_SERVICE) as PowerManager
         val keyguard = service.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         val may = PornBlock.mayScan(
             pkg,
-            Guardian.config.value,
+            config,
             Guardian.state.value,
             Guardian.now(),
+            Guardian.minuteOfDay(),
             ownApp = pkg == service.packageName,
             screenOn = power.isInteractive,
             screenLocked = keyguard.isKeyguardLocked,
@@ -55,12 +57,12 @@ class PornScanner(private val service: AccessibilityService) {
         capture { scan ->
             busy = false
             if (scan == null) return@capture
-            val config = Guardian.config.value
-            blindScans = PornBlock.nextBlind(blindScans, scan.blind, browser, config)
+            val latest = Guardian.config.value
+            blindScans = PornBlock.nextBlind(blindScans, scan.blind, browser, latest)
             val porn = scan.score != null && PornBlock.porn(scan.score)
-            if (!porn && !PornBlock.hiding(blindScans)) return@capture
+            if (!porn && !PornBlock.hiding(blindScans, PornBlock.scanSeconds(latest.pornBlock))) return@capture
             blindScans = 0
-            Guardian.caught(app, hiding = !porn)
+            Guardian.caught(app, if (porn) CatchKind.PORN else CatchKind.HIDING)
             // She may have been switched off while she looked.
             if (PornBlock.locked(Guardian.config.value, Guardian.state.value, Guardian.now())) onCaught()
         }

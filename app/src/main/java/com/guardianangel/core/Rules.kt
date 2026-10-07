@@ -124,6 +124,12 @@ object Rules {
         minuteOfDay: Int,
         protectedPackages: Set<String>,
     ): List<Restriction> {
+        // Porn block (round 74): your adult apps stay locked during her lock, even if Always-allowed.
+        if (PornBlock.locked(config, state, now) && pkg in config.pornBlock.adultApps &&
+            pkg !in protectedPackages && pkg !in AppLists.NEVER_BLOCK
+        ) {
+            return listOf(Restriction(RestrictionKind.CAUGHT, false))
+        }
         if (!config.enabled || isExempt(pkg, config, protectedPackages)) return emptyList()
         // She sent you there, so nothing blocks her browser while you stay.
         val visit = state.visit

@@ -34,18 +34,23 @@ class PornBlockTest {
         screenLocked: Boolean = false,
         watched: Boolean = true,
         protectedPackages: Set<String> = emptySet(),
-    ) = PornBlock.mayScan(pkg, config, state, now, ownApp, screenOn, screenLocked, watched, protectedPackages)
+        minute: Int = noon,
+    ) = PornBlock.mayScan(pkg, config, state, now, minute, ownApp, screenOn, screenLocked, watched, protectedPackages)
+
+    private val defaults = PornBlockSettings(on = true)
+    private fun watches(pkg: String, category: Int = -1, browser: Boolean = false, settings: PornBlockSettings = defaults) =
+        PornBlock.watches(pkg, category, browser, settings)
 
     @Test
     fun watchesBrowsersAndSocialApps() {
-        assertTrue(PornBlock.watches("com.android.chrome", -1, browser = true))
-        assertTrue(PornBlock.watches("com.twitter.android", -1, browser = false))
-        assertTrue(PornBlock.watches("com.reddit.frontpage", -1, browser = false))
-        assertTrue(PornBlock.watches("com.tumblr", -1, browser = false))
+        assertTrue(watches("com.android.chrome", browser = true))
+        assertTrue(watches("com.twitter.android"))
+        assertTrue(watches("com.reddit.frontpage"))
+        assertTrue(watches("com.tumblr"))
         // Anything Android tags as social.
-        assertTrue(PornBlock.watches("com.example.social", 4, browser = false))
-        assertFalse(PornBlock.watches("com.example.notes", -1, browser = false))
-        assertFalse(PornBlock.watches("com.example.game", 0, browser = false))
+        assertTrue(watches("com.example.social", category = 4))
+        assertFalse(watches("com.example.notes"))
+        assertFalse(watches("com.example.game", category = 0))
     }
 
     @Test
@@ -109,10 +114,15 @@ class PornBlockTest {
     @Test
     fun onlyABrowserBlindForAboutFifteenSecondsIsHiding() {
         var count = 0
-        repeat(PornBlock.BLIND_SCANS - 1) { count = PornBlock.nextBlind(count, blind = true, browser = true, config = on) }
-        assertFalse(PornBlock.hiding(count))
+        repeat(2) { count = PornBlock.nextBlind(count, blind = true, browser = true, config = on) }
+        assertFalse(PornBlock.hiding(count, scanSeconds = 5))
         count = PornBlock.nextBlind(count, blind = true, browser = true, config = on)
-        assertTrue(PornBlock.hiding(count))
+        assertTrue(PornBlock.hiding(count, scanSeconds = 5))
+        // About 15 seconds at any check rate, and never a single black frame.
+        assertEquals(5, PornBlock.blindScansNeeded(3))
+        assertEquals(3, PornBlock.blindScansNeeded(5))
+        assertEquals(2, PornBlock.blindScansNeeded(10))
+        assertEquals(2, PornBlock.blindScansNeeded(60))
         // One normal screen starts it over.
         assertEquals(0, PornBlock.nextBlind(count, blind = false, browser = true, config = on))
         // Social apps never count, and neither does anything with Private tabs off.
@@ -211,5 +221,104 @@ class PornBlockTest {
         val state = json.decodeFromString(GuardianState.serializer(), """{"merit":5}""")
         assertEquals(0L, state.caughtUntil)
         assertTrue(state.catches.isEmpty())
+    }
+
+    // ---- Round 74: your app list, check rate, hours and adult apps -----------------------------
+
+    @Test
+    fun youEditWhichAppsSheChecks() {
+        // Add a game, take Reddit off.
+        var p = PornBlock.setWatched(defaults, "com.example.game", byDefault = false, on = true)
+        p = PornBlock.setWatched(p, "com.reddit.frontpage", byDefault = true, on = false)
+        assertTrue(watches("com.example.game", category = 0, settings = p))
+        assertFalse(watches("com.reddit.frontpage", settings = p))
+        assertTrue(watches("com.twitter.android", settings = p))
+        // Ticking back only stores what differs from her list.
+        p = PornBlock.setWatched(p, "com.example.game", byDefault = false, on = false)
+        p = PornBlock.setWatched(p, "com.reddit.frontpage", byDefault = true, on = true)
+        assertEquals(defaults, p)
+        // Browsers can be taken off too.
+        val noChrome = PornBlock.setWatched(defaults, "com.android.chrome", byDefault = true, on = false)
+        assertFalse(watches("com.android.chrome", browser = true, settings = noChrome))
+    }
+
+    @Test
+    fun checkRateSteps() {
+        assertEquals(5, PornBlock.scanSeconds(defaults))
+        assertEquals(10, PornBlock.stepScan(5, up = true))
+        assertEquals(3, PornBlock.stepScan(5, up = false))
+        assertEquals(3, PornBlock.stepScan(3, up = false))
+        assertEquals(60, PornBlock.stepScan(60, up = true))
+        // A value off the list snaps to the nearest step.
+        assertEquals(10, PornBlock.scanSeconds(defaults.copy(scanSeconds = 9)))
+    }
+
+    @Test
+    fun onlyInsideYourHours() {
+        val hours = on.copy(pornBlock = defaults.copy(hoursOn = true, startMinute = 9 * 60, endMinute = 22 * 60))
+        assertTrue(PornBlock.active(on, 3 * 60))
+        assertTrue(PornBlock.active(hours, noon))
+        assertFalse(PornBlock.active(hours, 23 * 60))
+        assertFalse(may(config = hours, minute = 23 * 60))
+        assertTrue(may(config = hours, minute = noon))
+        // Overnight hours wrap past midnight.
+        val night = on.copy(pornBlock = defaults.copy(hoursOn = true, startMinute = 22 * 60, endMinute = 6 * 60))
+        assertTrue(PornBlock.active(night, 23 * 60))
+        assertFalse(PornBlock.active(night, noon))
+        // A lock already running stays outside your hours.
+        assertTrue(PornBlock.locked(hours, caught, now))
+    }
+
+    @Test
+    fun openingAnAdultAppIsACatch() {
+        val config = on.copy(pornBlock = defaults.copy(adultApps = setOf("com.adult")), alwaysAllowed = setOf("com.adult"))
+        fun adult(
+            pkg: String = "com.adult",
+            c: GuardianConfig = config,
+            state: GuardianState = GuardianState(),
+            minute: Int = noon,
+            protectedPackages: Set<String> = emptySet(),
+        ) = PornBlock.adultApp(pkg, c, state, now, minute, ownApp = false, protectedPackages = protectedPackages)
+        // Always-allowed doesn't protect it.
+        assertTrue(adult())
+        assertFalse(adult(pkg = "com.android.chrome"))
+        assertFalse(adult(state = caught))
+        assertFalse(adult(c = config.copy(enabled = false)))
+        assertFalse(adult(c = config.copy(pornBlock = config.pornBlock.copy(on = false))))
+        assertFalse(adult(protectedPackages = setOf("com.adult")))
+        val hours = config.copy(pornBlock = config.pornBlock.copy(hoursOn = true, startMinute = 9 * 60, endMinute = 22 * 60))
+        assertFalse(adult(c = hours, minute = 23 * 60))
+        assertTrue(adult(c = hours, minute = noon))
+        // During her lock it stays blocked, even though it's Always-allowed. Other Always-allowed apps open.
+        val withChat = config.copy(alwaysAllowed = setOf("com.adult", "com.whatsapp"))
+        val block = Rules.decide("com.adult", withChat, caught, now, noon)
+        assertTrue(block is Decision.Block && block.kind == RestrictionKind.CAUGHT)
+        assertEquals(Decision.Allow, Rules.decide("com.whatsapp", withChat, caught, now, noon))
+        assertEquals(Decision.Allow, Rules.decide("com.adult", withChat, GuardianState(), now, noon))
+    }
+
+    @Test
+    fun loosensWithRound74Settings() {
+        val strict = on.copy(lockGuard = true, pornBlock = defaults.copy(adultApps = setOf("a"), watched = setOf("g"), unwatched = setOf("r")))
+        fun after(p: PornBlockSettings) = strict.copy(pornBlock = p)
+        val p = strict.pornBlock
+        assertTrue(LockGuard.loosens(strict, after(p.copy(scanSeconds = 10))))
+        assertFalse(LockGuard.loosens(strict, after(p.copy(scanSeconds = 3))))
+        assertTrue(LockGuard.loosens(strict, after(p.copy(adultApps = emptySet()))))
+        assertFalse(LockGuard.loosens(strict, after(p.copy(adultApps = setOf("a", "b")))))
+        assertTrue(LockGuard.loosens(strict, after(p.copy(watched = emptySet()))))
+        assertTrue(LockGuard.loosens(strict, after(p.copy(unwatched = setOf("r", "x")))))
+        assertFalse(LockGuard.loosens(strict, after(p.copy(unwatched = emptySet(), watched = setOf("g", "h")))))
+        assertTrue(LockGuard.loosens(strict, after(p.copy(hoursOn = true))))
+        val hours = after(p.copy(hoursOn = true))
+        assertFalse(LockGuard.loosens(hours, hours.copy(pornBlock = hours.pornBlock.copy(hoursOn = false))))
+        assertTrue(LockGuard.loosens(hours, hours.copy(pornBlock = hours.pornBlock.copy(endMinute = 22 * 60))))
+    }
+
+    @Test
+    fun olderCatchesLoadAsScreenCatches() {
+        val json = Json { ignoreUnknownKeys = true }
+        val record = json.decodeFromString(CatchRecord.serializer(), """{"at":1,"app":"Chrome","hiding":false,"line":"x"}""")
+        assertFalse(record.adultApp)
     }
 }

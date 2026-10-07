@@ -3,6 +3,7 @@ package com.guardianangel.core
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.LockoutScope
+import com.guardianangel.data.PornBlockSettings
 
 /**
  * Lock guard and the slow Quit for now (rounds 41 and 43). Pure Kotlin, tested in LockGuardTest.
@@ -50,7 +51,8 @@ object LockGuard {
      * switched on, or a new always-allowed app. Since round 53 also: lockout scope narrowed to social
      * media, shorter blocks, and any change to bedtime hours while bedtime is on. Since round 68 also:
      * higher daily report goals, or an F no longer a failure. Since round 73 also: any Porn block
-     * switch off, or a shorter lock. Those take the slow way while guarding.
+     * switch off, or a shorter lock. Since round 74 also: checking less often, an app off her list,
+     * an adult app taken off, her hours switched on, or her hours moved. Those take the slow way while guarding.
      * Anything that makes her stricter, and every other detail, changes instantly.
      */
     fun loosens(before: GuardianConfig, after: GuardianConfig): Boolean {
@@ -78,6 +80,7 @@ object LockGuard {
             off(before.pornBlock.failure, after.pornBlock.failure) ||
             off(before.pornBlock.privateTabs, after.pornBlock.privateTabs) ||
             after.pornBlock.lockMinutes < before.pornBlock.lockMinutes ||
+            pornLoosens(before.pornBlock, after.pornBlock) ||
             off(before.report.failOnF, after.report.failOnF) ||
             after.report.unlockGoal > before.report.unlockGoal ||
             after.report.screenGoalMinutes > before.report.screenGoalMinutes ||
@@ -90,6 +93,17 @@ object LockGuard {
             off(before.punishment.on, after.punishment.on) ||
             off(!before.quietHours.on, !after.quietHours.on) ||
             !before.alwaysAllowed.containsAll(after.alwaysAllowed)
+    }
+
+    /** Round 74: Porn block's lists, check rate and hours. */
+    private fun pornLoosens(b: PornBlockSettings, a: PornBlockSettings): Boolean {
+        val hoursMoved = b.hoursOn && a.hoursOn && (b.startMinute != a.startMinute || b.endMinute != a.endMinute)
+        return PornBlock.scanSeconds(a) > PornBlock.scanSeconds(b) ||
+            !a.watched.containsAll(b.watched) ||
+            !b.unwatched.containsAll(a.unwatched) ||
+            !a.adultApps.containsAll(b.adultApps) ||
+            (!b.hoursOn && a.hoursOn) ||
+            hoursMoved
     }
 
     /**

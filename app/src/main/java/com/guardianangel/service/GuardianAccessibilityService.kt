@@ -11,11 +11,12 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
-import android.net.Uri
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
+import com.guardianangel.core.CatchKind
 import com.guardianangel.core.Decision
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.InstalledApps
 import com.guardianangel.core.Line
 import com.guardianangel.core.LockGuard
 import com.guardianangel.core.MarkOverlay
@@ -81,13 +82,15 @@ class GuardianAccessibilityService : AccessibilityService() {
         }
     }
 
-    /** Porn block (round 73): a look every few seconds while a browser or social app is in front. */
+    /** Porn block (round 73): a look every few seconds (your setting, round 74) while a watched app is in front. */
     private val pornTick = object : Runnable {
         override fun run() {
             scanForPorn()
-            handler.postDelayed(this, PornBlock.SCAN_SECONDS * 1_000L)
+            handler.postDelayed(this, scanDelay())
         }
     }
+
+    private fun scanDelay(): Long = PornBlock.scanSeconds(Guardian.config.value.pornBlock) * 1_000L
 
     /**
      * Open sites: runs every second while a visit exists. Finishes it when you've stayed long
@@ -140,7 +143,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         refreshPackages()
         updateGuardEvents()
         handler.post(tick)
-        handler.postDelayed(pornTick, PornBlock.SCAN_SECONDS * 1_000L)
+        handler.postDelayed(pornTick, scanDelay())
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF)
             addAction(Intent.ACTION_USER_PRESENT)
@@ -171,6 +174,23 @@ class GuardianAccessibilityService : AccessibilityService() {
     private fun scanForPorn() {
         val pkg = currentPackage
         porn?.maybeScan(pkg, pkg != null && pkg in launchers, browsers, protectedPackages) { onCaught() }
+    }
+
+    /** Porn block (round 74): opening one of your adult apps is a catch. Returns true if she caught you. */
+    private fun catchAdultApp(pkg: String): Boolean {
+        val caught = PornBlock.adultApp(
+            pkg,
+            Guardian.config.value,
+            Guardian.state.value,
+            Guardian.now(),
+            Guardian.minuteOfDay(),
+            ownApp = pkg == packageName,
+            protectedPackages = protectedPackages,
+        )
+        if (!caught) return false
+        Guardian.caught(InstalledApps.label(this, pkg), CatchKind.ADULT_APP)
+        if (PornBlock.locked(Guardian.config.value, Guardian.state.value, Guardian.now())) onCaught()
+        return true
     }
 
     /**
@@ -237,11 +257,7 @@ class GuardianAccessibilityService : AccessibilityService() {
     private fun refreshPackages() {
         protectedPackages = ProtectedApps.discover(this)
         launchers = ProtectedApps.launchers(this)
-        browsers = runCatching {
-            @Suppress("DEPRECATION")
-            packageManager.queryIntentActivities(Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com")), 0)
-                .map { it.activityInfo.packageName }.toSet()
-        }.getOrDefault(emptySet())
+        browsers = InstalledApps.browsers(this)
     }
 
     /** Screen content changes are only needed while Lock guard is guarding, so they're off otherwise. */
@@ -317,6 +333,7 @@ class GuardianAccessibilityService : AccessibilityService() {
 
     private fun evaluate(pkg: String) {
         if (pkg == packageName) return
+        if (catchAdultApp(pkg)) return
         val decision = Guardian.decide(pkg, protectedPackages)
         // Bedtime screen (round 54): covers the home screen and bedtime's blocked apps.
         val bedtime = Guardian.bedtimeScreen(decision, pkg in launchers)

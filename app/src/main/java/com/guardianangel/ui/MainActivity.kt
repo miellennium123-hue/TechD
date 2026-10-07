@@ -40,6 +40,8 @@ enum class Screen(val title: String) {
     CHASTITY("Chastity"),
     GALLERY("Photo proof"),
     ALLOWED("Always-allowed apps"),
+    PORN_APPS("Apps she checks"),
+    ADULT_APPS("Adult apps"),
     PROMPTS("What she can ask for"),
     TASK("Her task"),
     TASKS("Rules & Tasks"),
@@ -113,7 +115,7 @@ private fun MainContent(requested: MutableState<Screen?>) {
         screen = when (screen) {
             Screen.LINE -> Screen.LINES
             Screen.KINKS -> Screen.SESSIONS
-            Screen.ALLOWED, Screen.PROMPTS, Screen.TASKS, Screen.QUESTIONS, Screen.SITES, Screen.LINES, Screen.BACKGROUNDS -> Screen.SETTINGS
+            Screen.ALLOWED, Screen.PORN_APPS, Screen.ADULT_APPS, Screen.PROMPTS, Screen.TASKS, Screen.QUESTIONS, Screen.SITES, Screen.LINES, Screen.BACKGROUNDS -> Screen.SETTINGS
             else -> Screen.HOME
         }
     }
@@ -138,10 +140,12 @@ private fun MainContent(requested: MutableState<Screen?>) {
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (screen) {
                 Screen.HOME -> HomeScreen(config, state) { screen = it }
-                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS }, { screen = Screen.QUESTIONS }, { screen = Screen.SITES }, { screen = Screen.LINES }, { screen = Screen.BACKGROUNDS })
+                Screen.SETTINGS -> SettingsScreen(config, { screen = Screen.ALLOWED }, { screen = Screen.PROMPTS }, { screen = Screen.TASKS }, { screen = Screen.QUESTIONS }, { screen = Screen.SITES }, { screen = Screen.LINES }, { screen = Screen.BACKGROUNDS }, { screen = Screen.PORN_APPS }, { screen = Screen.ADULT_APPS })
                 Screen.CHASTITY -> ChastityScreen(config, state)
                 Screen.GALLERY -> GalleryScreen()
                 Screen.ALLOWED -> AllowedAppsScreen(config)
+                Screen.PORN_APPS -> PornAppsScreen(config)
+                Screen.ADULT_APPS -> AdultAppsScreen(config)
                 Screen.PROMPTS -> PromptsScreen(config)
                 Screen.SETUP -> SetupScreen()
                 Screen.TASK -> TaskScreen(state)

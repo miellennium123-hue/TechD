@@ -61,7 +61,7 @@ import java.util.Date
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit, openSites: () -> Unit, openLines: () -> Unit, openBackgrounds: () -> Unit) {
+fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openPrompts: () -> Unit, openTasks: () -> Unit, openQuestions: () -> Unit, openSites: () -> Unit, openLines: () -> Unit, openBackgrounds: () -> Unit, openPornApps: () -> Unit, openAdultApps: () -> Unit) {
     val context = LocalContext.current
     val update: ((GuardianConfig) -> GuardianConfig) -> Unit = { Guardian.updateConfig(it) }
     val state by Guardian.state.flow.collectAsState()
@@ -248,8 +248,8 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             val supported = PornScanner.supported()
             SwitchRow(
                 "Porn block",
-                "Every ${PornBlock.SCAN_SECONDS} seconds in a browser or social app (X, Reddit, Instagram and more) she checks your screen. " +
-                    "If she sees porn, she locks your phone.",
+                "Every few seconds in a browser or social app (X, Reddit, Instagram and more) she checks your screen. " +
+                    "If she sees porn, or you open one of your adult apps, she locks your phone.",
                 config.pornBlock.on,
             ) { v -> if (supported || !v) update { it.copy(pornBlock = it.pornBlock.copy(on = v)) } }
             Stepper(
@@ -258,6 +258,29 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 onMinus = { update { it.copy(pornBlock = it.pornBlock.copy(lockMinutes = PornBlock.stepLock(it.pornBlock.lockMinutes, up = false))) } },
                 onPlus = { update { it.copy(pornBlock = it.pornBlock.copy(lockMinutes = PornBlock.stepLock(it.pornBlock.lockMinutes, up = true))) } },
             )
+            Stepper(
+                "Check every",
+                "${PornBlock.scanSeconds(config.pornBlock)} seconds",
+                onMinus = { update { it.copy(pornBlock = it.pornBlock.copy(scanSeconds = PornBlock.stepScan(it.pornBlock.scanSeconds, up = false))) } },
+                onPlus = { update { it.copy(pornBlock = it.pornBlock.copy(scanSeconds = PornBlock.stepScan(it.pornBlock.scanSeconds, up = true))) } },
+            )
+            Muted("More often catches more, and uses more battery.")
+            OutlinedButton(onClick = openPornApps) { Text("Apps she checks") }
+            OutlinedButton(onClick = openAdultApps) { Text("Adult apps (${config.pornBlock.adultApps.size})") }
+            SwitchRow(
+                "Only at set hours",
+                "Off: porn is off limits at all hours. On: only inside your hours. Outside them she doesn't check and adult apps open. " +
+                    "A lock that's already running stays.",
+                config.pornBlock.hoursOn,
+            ) { v -> update { it.copy(pornBlock = it.pornBlock.copy(hoursOn = v)) } }
+            if (config.pornBlock.hoursOn) {
+                FilledTonalButton(onClick = {
+                    pickTime(config.pornBlock.startMinute) { m -> update { it.copy(pornBlock = it.pornBlock.copy(startMinute = m)) } }
+                }) { Text("From ${formatMinuteOfDay(config.pornBlock.startMinute)}") }
+                FilledTonalButton(onClick = {
+                    pickTime(config.pornBlock.endMinute) { m -> update { it.copy(pornBlock = it.pornBlock.copy(endMinute = m)) } }
+                }) { Text("Until ${formatMinuteOfDay(config.pornBlock.endMinute)}") }
+            }
             SwitchRow(
                 "Lock the screen too",
                 "The moment she catches you, the screen locks. When you unlock it, her caught screen is waiting.",
@@ -282,7 +305,12 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                     "She never looks at Always-allowed apps, so keep browsers off that list. " +
                     "She can miss small pictures and drawings, and can mistake swimwear for porn. Needs her watch (Accessibility).",
             )
-            if (config.lockGuard) Muted("Lock guard: switching any of this off or a shorter lock takes 30 minutes, and nothing here changes while you're locked.")
+            if (config.lockGuard) {
+                Muted(
+                    "Lock guard: switching any of this off, a shorter lock, checking less often, taking an app off either list, " +
+                        "switching on or moving your hours takes 30 minutes. Nothing here changes while you're locked.",
+                )
+            }
             state.catches.lastOrNull()?.let { last ->
                 val time = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(last.at))
                 Muted("Caught ${state.catches.size} ${if (state.catches.size == 1) "time" else "times"}. Last: ${last.app}, $time.")

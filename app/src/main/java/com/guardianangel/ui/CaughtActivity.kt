@@ -63,9 +63,15 @@ private fun CaughtScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
     val last = state.catches.lastOrNull()
     LockedOutScreen(
         line = last?.line.orEmpty(),
-        title = if (last?.hiding == true) "Caught hiding from her" else "Caught",
+        title = when {
+            last?.hiding == true -> "Caught hiding from her"
+            last?.adultApp == true -> "Caught in ${last?.app}"
+            else -> "Caught"
+        },
         detail = "Your phone is locked for ${formatDuration(state.caughtUntil - now)}. No way in until then.",
         noApps = "None. Add some in Settings > App lockouts > Always-allowed apps, once her lock ends.",
         onOpen = onOpen,
+        // Your adult apps stay locked even if Always-allowed (round 74).
+        hidden = config.pornBlock.adultApps,
     )
 }

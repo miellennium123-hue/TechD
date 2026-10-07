@@ -61,13 +61,17 @@ data class PeekRecord(
     val line: String,
 )
 
-/** One of her porn block catches (round 73). [hiding]: a private tab hid the screen from her. */
+/**
+ * One of her porn block catches (round 73). [hiding]: a private tab hid the screen from her.
+ * [adultApp] (round 74): you opened one of your adult apps.
+ */
 @Serializable
 data class CatchRecord(
     val at: Long,
     val app: String,
     val hiding: Boolean,
     val line: String,
+    val adultApp: Boolean = false,
 )
 
 /**
