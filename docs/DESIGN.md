@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.25.0 (Save to phone for photos, peeks and her videos). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 81)
+> **Last updated:** 2026-10-07 (round 82)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -102,6 +102,7 @@ Two lockout scopes:
 
 ### 4.8 Bluetooth toy control
 - **Later phase.** Likely via the open Buttplug.io / Intiface protocol
+- **Round 82:** the user has a **DG-Lab Coyote 3.0** e-stim box (uses it with xtoys) and asked if she could control it eventually. Yes, likely. Plan in section 10. Not built until the user has the box to test
 
 ### 4.9 Open sites (v0.8.0)
 - She opens one of **your own sites** in Chrome after a 10 second warning, and you stay for a set time
@@ -826,6 +827,13 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Quality of life:** session history and stats; live edge counter; framing preview before Start; a big-text far-away layout and landscape; dark mode with only the beat; torch for the back camera; a headphones mode; resume after a crash; haptic beat with the phone in your lap
   - **Rules that stay:** Quit for now everywhere, mood only changes her words, nothing leaves the phone, CBT and every kink stay opt-in with "Too much" to skip
 
+- **E-stim control (round 82, plan only, no code):** the user asked whether she could control their DG-Lab Coyote 3.0. Answer: very likely. Build only when the user has the box to test
+  - **How (Claude's pick): straight over Bluetooth.** DG-Lab publishes the Coyote 3.0 Bluetooth protocol (V3). The app sends one small command every 100 ms with both channels' strength (0 to 200) and the waveform, and a separate command sets a strength ceiling on the box (it has to be set again on every connection). No extra app, works offline, nothing leaves the phone. Needs Android's Bluetooth permissions
+  - **Other ways:** through Intiface Central (Buttplug), which community adapters connect to the Coyote and which would also bring vibrators and other toys; or DG-Lab's own app with its remote socket control (goes through a server, so it's the least private)
+  - **What she could do:** pulses on her beat (stronger as she speeds up), CBT counts as zaps, rising tease during edges that cuts out at "I'm at the edge", a jolt during the ruin, zaps when begging goes badly, slow random teasing during hands-off holds, and waveforms you pick from. Outside a session only while you've told her you're wired up
+  - **Safety rules (fixed, not settings):** you set each channel's maximum, and she writes it to the box as its ceiling every time it connects; she never goes above it. Strength rises gradually, never jumps. Stop, Pause, leaving the app, Quit for now, a dropped connection or her switching off all send strength 0 at once. Never during quiet hours or bedtime. A setup screen on electrode placement: below the waist only, never across the chest or heart, never with a pacemaker or heart condition. Mood never changes strength. "Too much" always lowers it
+  - **To test when the box is back:** finding and connecting to it, whether output stops by itself when commands stop (the protocol doesn't say), how strength feels per channel, and the battery reading
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -936,3 +944,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 79):** No code changes. User asked for many creative ideas to improve guided sessions (kink and quality of life) to pick from. Listed them in section 10, waiting on the user's picks. A started draft was set aside unmerged
 - **2026-10-07 (round 80):** No code changes. User asked where proof photos and session clips (ruins) are stored. Answer: private app storage (`files/proof` for photos and peeks, the clips folder for videos), not visible to file managers or the Gallery app. Reachable from a computer with `adb ... run-as com.guardianangel`, because the published APK is a debug build. Offered a Save to phone button, which would change the private storage rule, waiting on the user
 - **2026-10-07 (round 81, v0.25.0):** Save to phone. Photos, peeks and her videos each get a Save to phone button, and both screens get Save all to phone (asks first). Copies go to Pictures/Guardian Angel and Movies/Guardian Angel in the phone's gallery, only when you tap Save. Details in section 8
+- **2026-10-07 (round 82):** No code changes. User asked if she could control their DG-Lab Coyote 3.0 e-stim box eventually. Answer: very likely, straight over Bluetooth with DG-Lab's published protocol. Plan, ideas and fixed safety rules in section 10 (and a note in 4.8). Waiting until the user has the box to test
