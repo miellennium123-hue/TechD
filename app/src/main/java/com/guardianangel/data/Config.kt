@@ -21,6 +21,8 @@ data class GuardianConfig(
     val mark: MarkSettings = MarkSettings(),
     /** She peeks (round 60): about every 5 minutes she captures your screen into her private gallery. */
     val peek: PeekSettings = PeekSettings(),
+    /** Daily report (round 68): she counts unlocks and time in each app, then grades your day. */
+    val report: ReportSettings = ReportSettings(),
     val chastity: ChastitySettings = ChastitySettings(),
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
     /** What she can ask you to photograph when it isn't about chastity. */
@@ -155,6 +157,20 @@ data class PeekSettings(
     val on: Boolean = false,
     /** Round 64: right after she peeks, her comment pops up on screen for a few seconds. */
     val showComment: Boolean = true,
+)
+
+/**
+ * Daily report (round 68). She counts unlocks and time in each app, and at [reportMinute] she grades
+ * the day against your two goals. Her day runs from one report to the next. See core/Usage.
+ */
+@Serializable
+data class ReportSettings(
+    val on: Boolean = false,
+    val reportMinute: Int = 21 * 60 + 30,
+    val unlockGoal: Int = 60,
+    val screenGoalMinutes: Int = 180,
+    /** An F counts as a failure (punishment, chastity time, as set). Off: an F only costs merit. */
+    val failOnF: Boolean = false,
 )
 
 enum class MarkCorner(val label: String, val top: Boolean, val left: Boolean) {

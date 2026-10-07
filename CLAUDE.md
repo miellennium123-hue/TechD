@@ -25,8 +25,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 ## Building
 
-- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/Peek.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt` and `core/Session.kt` has JVM unit tests in `app/src/test/`, which CI runs.
-- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/Motion.kt`, `core/LockGuard.kt`, `core/Peek.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
+- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/Peek.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt` and `core/Usage.kt` has JVM unit tests in `app/src/test/`, which CI runs.
+- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/Motion.kt`, `core/LockGuard.kt`, `core/Peek.kt`, `core/Usage.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
 - Maven Central sometimes rate-limits this environment (HTTP 429), so local JVM test runs may fail to resolve dependencies. Rely on CI.
 - Locally with an SDK: `./gradlew testDebugUnitTest assembleDebug`.
 - Every build is signed with `app/signing/guardian.keystore` so updates install over the old app. Never replace or regenerate it, or the user has to uninstall and loses their data.
@@ -64,5 +64,6 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `core/LockGuard.kt`, `ui/SlowExit.kt`, `receiver/GuardAdminReceiver.kt` | Lock guard and the slow Quit for now: guarding, what loosens her settings, guarded screens, tamper rules (tested in `LockGuardTest.kt`), the hold-type-wait screen (also `LoosenHost` and `EnabledSwitch` in `ui/Components.kt`), the optional device admin |
 | `core/MarkOverlay.kt` | Her mark: the collar badge over every app and the dark tint during her blocks (rules in `Rules.markShown` / `Rules.markTinted`, tested in `MarkTest.kt`) |
 | `core/Peek.kt`, `core/ScreenPeek.kt` | She peeks: when she may look, what you were doing, keeping 100 (tested in `PeekTest.kt`), and the screenshot itself (Android 11+) |
+| `core/Usage.kt`, `ui/ReportsScreen.kt` | Daily report: her day (ends at your report time), what counts, grades A to F, keeping 30 reports (tested in `UsageTest.kt`). Her watch counts unlocks and app time |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen, Lock guard's screen check |
 | `ui/` | Compose screens and the Block and Proof activities |

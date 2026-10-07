@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.21.1 (Her mark and She peeks, her peek comments now visible). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 66)
+> **Status:** v0.22.0 (Daily report: unlocks, app time and her nightly grade). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 68)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -125,6 +125,10 @@ Two lockout scopes:
 ### 4.13 She peeks (v0.21.0)
 - About every 5 minutes she captures your screen into her **private gallery** and comments on what you were doing
 - Needs Android 11 or later. Details in section 8 (v0.21.0)
+
+### 4.14 Daily report (v0.22.0)
+- She counts your **unlocks** and **time in each app**, and every night at your report time she **grades your day** (A to F) against your two goals
+- Details in section 8 (v0.22.0)
 
 ---
 
@@ -597,6 +601,19 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Asked:** a "cock rating" where she really rates you. She can't judge the body itself, so the build uses what's real: your measurements against published data and what the phone measures in the photo (see section 10 and section 8, v0.10.0)
 - **Possible later:** measuring against a card or ruler in the photo, effects (merit or lock time) as a setting, demanding a rating at check-ins, categories from merit and chastity history
 
+### v0.22.0 (round 68, daily report)
+- **Asked:** the unlock counter and daily report from the round 62 ideas, on its own (search and site watch was stopped by a safety filter in rounds 63 and 67)
+- **Counting:** her watch counts each unlock (`ACTION_USER_PRESENT`) and the time the app in front is used, only while the screen is on and unlocked. Checked on app changes and her 30 second tick. One stretch counts at most 15 minutes, in case a screen off was missed. Her own screens, the home screen, the phone and system screens don't count (`Usage.countsApp`). Only while she and Daily report are on (`Usage.counting`)
+- **Her day:** runs from one report to the next, so the report covers the day just finished (`Usage.dayKey`). Only the day just finished gets a report, and only if she counted something. Older days (she or the phone was off) are dropped. Moving the report time later keeps the count going (`Usage.rollover`)
+- **Grades (`Usage.grade`):** by whichever goal you did worse on. A: at most 75% of both goals. B: within both. C: up to 125%. D: up to 150%. F: more. Merit: A +5, B +2, C 0, D -3, F -5
+- **An F is a failure** (`ReportSettings.failOnF`, off by default): an F counts as a failure instead (`Failure.BAD_DAY`, 5 merit plus her punishment and chastity time as set)
+- **The report:** her line for the grade (new group **Daily report** in Her lines, Grade A to F, both moods, editable), unlocks and time against the goals, and your top 5 apps by name. A notification that opens **Her reports** (silent in quiet time; Discreet hides the words as usual). She keeps the newest 30. **Delete all reports** clears them. Quit for now keeps them
+- **Where:** a **Daily report** card in Settings > Phone control (`GuardianConfig.report`): the switch (off), Report at (21:30), Unlocks a day (60, 10 to 300, steps of 10), Time in apps a day (3h, 30m to 12h, steps of 15m), An F is a failure. Home shows today's count and the last grade, with **Her reports**
+- **Lock guard:** switching Daily report off, raising a goal, or switching An F is a failure off takes the 30 minute screen. Lowering a goal or moving the report time is instant
+- **Privacy:** only counts are kept (unlocks and time per app), never what was on screen
+- **Never:** blocks anything. Mood only changes her words
+- **Tests:** `UsageTest.kt` (her day, what counts, the 15 minute cap, rollover, grades, top apps, keeping 30, lines in both moods, Lock guard, older saves)
+
 ---
 
 ## 10. Open questions
@@ -657,6 +674,8 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
     - **Privacy:** she checks each address against your list and forgets it. Nothing is saved unless it matches
     - **Limits:** only browsers she knows, not in-app browsers (Instagram, TikTok links) or apps. Some browsers show only the site, not the full address. Incognito is still visible to Accessibility. Changing browsers or a browser update can hide the bar until she learns it
     - **Plan if picked:** build it alone (not with the unlock counter) to keep the change small. Claude can't predict the safety filter that stopped round 63
+  - **Round 67:** the user said go. The build attempt was stopped by a safety filter again, so search and site watch is not planned. Nothing was built
+  - **Round 68:** the user asked for the unlock counter and daily report on its own. Built in v0.22.0 (section 8)
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -753,3 +772,5 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 64, v0.21.1):** User saw her screenshots but none of her comments. In the gallery, a tall screenshot pushed the comment off screen, and Discreet notifications hide her words. Fixed: the comment now shows at the top when you open a peek, and a new Show her comment setting (on) pops it up on screen right after she peeks. Details in section 8
 - **2026-10-06 (round 65):** No code changes. User asked whether search and site watch is possible. Answer: yes, through her watch reading the browser address bar, with limits (known browsers only, no in-app browsers). Recorded in section 10, waiting on the user's go-ahead
 - **2026-10-07 (round 66):** No code changes. User sent the same report again (no peek comments). The fix is in v0.21.1. Asked which version is installed, and whether peeks show the gold Peek tag in the gallery, to tell an old install from a comment that never gets saved. Also: Claude merged PR #53 (round 65, from another session) by mistake, by its number, and told the user
+- **2026-10-07 (round 67):** No code changes. User said go on search and site watch. The build attempt was stopped by a safety filter again, so it's not planned. Recorded in section 10
+- **2026-10-07 (round 68, v0.22.0):** Daily report. She counts your unlocks and time in each app (not her screens, home or the phone), and every night at your report time she grades the day A to F against your unlock and screen time goals, with merit (or a failure for an F, if you choose), her line and your top 5 apps. New Daily report card in Settings, Her reports screen, guarded by Lock guard. Details in section 8

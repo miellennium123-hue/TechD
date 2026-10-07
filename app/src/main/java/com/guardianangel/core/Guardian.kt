@@ -5,6 +5,7 @@ import android.widget.Toast
 import com.guardianangel.data.ActiveTask
 import com.guardianangel.data.ChastityLock
 import com.guardianangel.data.DegradationLevel
+import com.guardianangel.data.Grade
 import com.guardianangel.data.Grant
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
@@ -26,9 +27,11 @@ import com.guardianangel.data.Sites
 import com.guardianangel.data.Store
 import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
+import com.guardianangel.data.UsageDay
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 import java.util.Calendar
+import java.util.TimeZone
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -42,6 +45,7 @@ enum class Failure(val merit: Int) {
     RUIN_FAILED(5),
     SWITCHED_OFF(10),
     TAMPERED(10),
+    BAD_DAY(5),
 }
 
 sealed interface AskResult {
@@ -827,6 +831,62 @@ object Guardian {
     /** The gallery deleted screenshots: forget their peeks too. */
     fun forgetPeeks(files: Set<String>?) {
         state.update { st -> st.copy(peeks = if (files == null) emptyList() else st.peeks.filter { it.file !in files }) }
+    }
+
+    // ---- Daily report ------------------------------------------------------------------------
+
+    /** Her day number right now. Her day ends at your report time (round 68). */
+    private fun usageDay(t: Long): Long = Usage.dayKey(t + TimeZone.getDefault().getOffset(t), config.value.report.reportMinute)
+
+    /** You unlocked the phone. Counted only while she's on and the daily report is on. */
+    fun countUnlock() {
+        if (!Usage.counting(config.value)) return
+        checkReport()
+        state.update { it.copy(usage = Usage.addUnlock(it.usage, usageDay(now()))) }
+    }
+
+    /** Time in an app, from her watch. Her watch already left out her own screens, home and the phone. */
+    fun countTime(pkg: String, ms: Long) {
+        if (!Usage.counting(config.value) || ms <= 0) return
+        checkReport()
+        state.update { it.copy(usage = Usage.addTime(it.usage, usageDay(now()), pkg, ms)) }
+    }
+
+    /** Her day ended at your report time: she grades it. Also checked on her watch's 30 second tick. */
+    fun checkReport() {
+        if (!Usage.counting(config.value)) return
+        val day = usageDay(now())
+        if (state.value.usage.day == day) return
+        var done: UsageDay? = null
+        state.update { st ->
+            val (next, finished) = Usage.rollover(st.usage, day)
+            done = finished
+            st.copy(usage = next)
+        }
+        done?.let { sendReport(it) }
+    }
+
+    /**
+     * Her nightly report: the grade, merit (or a failure for an F, if you set that), her line, and a
+     * notification (silent in quiet time). Tapping it opens her reports.
+     */
+    private fun sendReport(day: UsageDay) {
+        val c = config.value
+        val grade = Usage.grade(day.unlocks, day.screenMs, c.report)
+        if (grade == Grade.F && c.report.failOnF) fail(Failure.BAD_DAY) else addMerit(grade.merit)
+        val line = say(Usage.line(grade))
+        val report = Usage.report(day, c.report, now(), line) { appName(it) }
+        state.update { it.copy(reports = Usage.add(it.reports, report)) }
+        Notifier.report(appContext, "Grade ${grade.name}. $line", silent = Rules.isQuiet(c, minuteOfDay()))
+    }
+
+    private fun appName(pkg: String): String = runCatching {
+        val pm = appContext.packageManager
+        pm.getApplicationInfo(pkg, 0).loadLabel(pm).toString()
+    }.getOrDefault(pkg)
+
+    fun clearReports() {
+        state.update { it.copy(reports = emptyList()) }
     }
 
     // ---- Rate me -----------------------------------------------------------------------------

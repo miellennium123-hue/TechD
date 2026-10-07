@@ -1,6 +1,7 @@
 package com.guardianangel.service
 
 import android.accessibilityservice.AccessibilityService
+import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
@@ -8,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.net.Uri
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
@@ -20,6 +22,7 @@ import com.guardianangel.core.ProtectedApps
 import com.guardianangel.core.Rules
 import com.guardianangel.core.ScreenPeek
 import com.guardianangel.core.SiteOpener
+import com.guardianangel.core.Usage
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.ui.BedtimeActivity
@@ -53,6 +56,10 @@ class GuardianAccessibilityService : AccessibilityService() {
     private var peek: ScreenPeek? = null
     private var browsers: Set<String> = emptySet()
 
+    /** Daily report (round 68): the app whose time is being counted, and since when (0: not counting). */
+    private var usagePkg: String? = null
+    private var usageSince = 0L
+
     /** Re-checks every 30 seconds so expiring grants and starting bedtimes take effect mid-app. */
     private val tick = object : Runnable {
         override fun run() {
@@ -63,6 +70,8 @@ class GuardianAccessibilityService : AccessibilityService() {
             updateGuardEvents()
             updateMark()
             peekIfDue()
+            meter(screenUnlocked())
+            Guardian.checkReport()
             handler.postDelayed(this, 30_000)
         }
     }
@@ -86,6 +95,14 @@ class GuardianAccessibilityService : AccessibilityService() {
     /** Screen off pauses a visit. Unlocking brings you back to the page, or shows a visit that was waiting. */
     private val screen = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            // Daily report: count the unlock, and only count app time while the phone is unlocked.
+            when (intent.action) {
+                Intent.ACTION_USER_PRESENT -> {
+                    Guardian.countUnlock()
+                    meter(true)
+                }
+                Intent.ACTION_SCREEN_OFF -> meter(false)
+            }
             // Unlocking during bedtime brings her bedtime screen back over whatever was in front.
             if (intent.action == Intent.ACTION_USER_PRESENT) currentPackage?.let { evaluate(it) }
             val visit = Guardian.state.value.visit ?: return
@@ -116,6 +133,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         }
         ContextCompat.registerReceiver(this, screen, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         startVisitTick()
+        meter(screenUnlocked())
         // Her mark follows every change to her settings and state right away (blocks starting,
         // Quit for now); the 30 second tick catches blocks and bedtimes that start or end on time.
         mark = MarkOverlay(this)
@@ -132,6 +150,26 @@ class GuardianAccessibilityService : AccessibilityService() {
     private fun peekIfDue() {
         val pkg = currentPackage
         peek?.maybePeek(pkg, pkg != null && pkg in launchers, browsers, protectedPackages)
+    }
+
+    /**
+     * Daily report (round 68): adds the time since the last call to the app that was in front, then
+     * keeps counting the app in front now if [running]. Her own screens, home and the phone don't count.
+     */
+    private fun meter(running: Boolean) {
+        val t = Guardian.now()
+        val pkg = usagePkg
+        if (usageSince > 0 && pkg != null && Usage.countsApp(pkg, pkg == packageName, pkg in launchers, protectedPackages)) {
+            Guardian.countTime(pkg, t - usageSince)
+        }
+        usagePkg = currentPackage
+        usageSince = if (running) t else 0
+    }
+
+    private fun screenUnlocked(): Boolean {
+        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val keyguard = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        return power.isInteractive && !keyguard.isKeyguardLocked
     }
 
     private fun startVisitTick() {
@@ -214,6 +252,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         if (isForegroundApp(pkg, event.className)) {
             currentPackage = pkg
+            meter(screenUnlocked())
             onVisitApp(pkg)
         }
         evaluate(pkg)
