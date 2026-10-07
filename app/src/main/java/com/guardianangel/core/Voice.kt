@@ -59,6 +59,7 @@ enum class Line(val group: String, val label: String, val note: String) {
     PEEK_OTHER("She peeks", "Anything else", "She peeked at any other app"),
     CAUGHT_PORN("Porn block", "Caught", "She saw porn on your screen and locked your phone"),
     CAUGHT_HIDING("Porn block", "Hiding", "A private tab hid your browser from her, so she locked your phone"),
+    CAUGHT_APP("Porn block", "Adult app", "You opened one of your adult apps, so she locked your phone"),
     REPORT_A("Daily report", "Grade A", "Her nightly report: well under both of your goals"),
     REPORT_B("Daily report", "Grade B", "Her nightly report: within both of your goals"),
     REPORT_C("Daily report", "Grade C", "Her nightly report: a little over a goal"),
@@ -153,6 +154,11 @@ object Voice {
             "A private tab, pet? You can't hide from me. Locked.",
             "Hiding things from your angel? That only makes me curious. Phone down.",
             "If you have to hide it from me, you shouldn't be looking at it. Locked.",
+        ),
+        Line.CAUGHT_APP to listOf(
+            "That app, pet? You know it's on my list. Phone down, you're locked.",
+            "Oh, sweetie. You opened it anyway. Now you sit and wait for me.",
+            "I told you that one is off limits. Locked, and I'm a little disappointed.",
         ),
         Line.REPORT_A to listOf(
             "An A today, pet. You barely touched your phone. I'm so proud of you.",
@@ -601,6 +607,11 @@ object Voice {
             "A private tab. Did you really think you could hide from me? Locked.",
             "Sneaking behind my back. Phone locked, and I'm not done with you.",
             "Hiding it only proves you knew it was wrong. Locked.",
+        ),
+        Line.CAUGHT_APP to listOf(
+            "You opened that app. Pathetic. Your phone is mine now.",
+            "Straight to your filth the moment I look away? Locked.",
+            "That app is banned, pet, and you knew it. Locked. Kneel and wait.",
         ),
         Line.REPORT_A to listOf(
             "An A. You actually obeyed. Don't expect me to say it often.",

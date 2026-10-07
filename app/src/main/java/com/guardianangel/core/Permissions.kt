@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import android.telecom.TelecomManager
@@ -63,7 +64,8 @@ object ProtectedApps {
     }
 }
 
-data class AppEntry(val packageName: String, val label: String)
+/** [category] is the app's Android category (ApplicationInfo.CATEGORY_*), or -1 when it has none. */
+data class AppEntry(val packageName: String, val label: String, val category: Int = -1)
 
 object InstalledApps {
     fun launchable(context: Context): List<AppEntry> {
@@ -71,11 +73,18 @@ object InstalledApps {
         val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         @Suppress("DEPRECATION")
         return pm.queryIntentActivities(launcher, 0)
-            .map { AppEntry(it.activityInfo.packageName, it.loadLabel(pm).toString()) }
+            .map { AppEntry(it.activityInfo.packageName, it.loadLabel(pm).toString(), it.activityInfo.applicationInfo.category) }
             .filter { it.packageName != context.packageName }
             .distinctBy { it.packageName }
             .sortedBy { it.label.lowercase() }
     }
+
+    /** Apps that open web links: her browsers. */
+    fun browsers(context: Context): Set<String> = runCatching {
+        @Suppress("DEPRECATION")
+        context.packageManager.queryIntentActivities(Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com")), 0)
+            .map { it.activityInfo.packageName }.toSet()
+    }.getOrDefault(emptySet())
 
     fun label(context: Context, pkg: String): String = runCatching {
         val pm = context.packageManager

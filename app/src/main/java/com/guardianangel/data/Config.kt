@@ -190,6 +190,20 @@ data class PornBlockSettings(
     val failure: Boolean = true,
     /** A browser screen she can't see (private tabs block screenshots) for about 15 seconds counts as porn. */
     val privateTabs: Boolean = true,
+    /** Round 74: how often she checks, in seconds (one of PornBlock.SCAN_STEPS). */
+    val scanSeconds: Int = 5,
+    /**
+     * Round 74: which apps she checks. Browsers, her social list and apps Android tags as social are
+     * checked unless in [unwatched]; any other app is checked if in [watched]. See PornBlock.watches.
+     */
+    val watched: Set<String> = emptySet(),
+    val unwatched: Set<String> = emptySet(),
+    /** Round 74: opening one of these counts as a catch. Always-allowed doesn't protect them. */
+    val adultApps: Set<String> = emptySet(),
+    /** Round 74: porn is only off limits from [startMinute] to [endMinute]. Off: at all hours. */
+    val hoursOn: Boolean = false,
+    val startMinute: Int = 8 * 60,
+    val endMinute: Int = 23 * 60,
 )
 
 enum class MarkCorner(val label: String, val top: Boolean, val left: Boolean) {

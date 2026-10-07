@@ -97,11 +97,18 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
  * then only your Always-allowed apps, the phone and her own app. Quit for now is always here.
  */
 @Composable
-fun LockedOutScreen(line: String, title: String, detail: String, noApps: String, onOpen: (Intent) -> Unit) {
+fun LockedOutScreen(
+    line: String,
+    title: String,
+    detail: String,
+    noApps: String,
+    onOpen: (Intent) -> Unit,
+    hidden: Set<String> = emptySet(),
+) {
     val context = LocalContext.current
     val config by Guardian.config.flow.collectAsState()
-    val apps = remember(config.alwaysAllowed) {
-        InstalledApps.launchable(context).filter { it.packageName in config.alwaysAllowed }
+    val apps = remember(config.alwaysAllowed, hidden) {
+        InstalledApps.launchable(context).filter { it.packageName in config.alwaysAllowed && it.packageName !in hidden }
     }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {

@@ -844,21 +844,24 @@ object Guardian {
     // ---- Porn block ---------------------------------------------------------------------------
 
     /**
-     * Porn block (round 73): she saw porn in [app], or a private tab hid it from her ([hiding]). The
+     * Porn block (round 73): she saw porn in [app], a private tab hid it from her, or (round 74) you opened one of your adult apps. The
      * phone locks for your lock length (everything but Always-allowed and the phone), it's a failure if
      * you set that, and she keeps the catch (never a screenshot). Her watch sends you home, shows her
      * caught screen and locks the screen. Returns her line.
      */
-    fun caught(app: String, hiding: Boolean): String {
+    fun caught(app: String, kind: CatchKind): String {
         val c = config.value
         if (!c.enabled || !c.pornBlock.on) return ""
         if (c.pornBlock.failure) fail(Failure.CAUGHT_PORN)
         val t = now()
-        val line = say(if (hiding) Line.CAUGHT_HIDING else Line.CAUGHT_PORN)
+        val line = say(kind.line)
         state.update {
             it.copy(
                 caughtUntil = PornBlock.lockUntil(it.caughtUntil, t, c.pornBlock.lockMinutes),
-                catches = PornBlock.add(it.catches, CatchRecord(t, app, hiding, line)),
+                catches = PornBlock.add(
+                    it.catches,
+                    CatchRecord(t, app, hiding = kind == CatchKind.HIDING, line = line, adultApp = kind == CatchKind.ADULT_APP),
+                ),
             )
         }
         Notifier.message(appContext, line)

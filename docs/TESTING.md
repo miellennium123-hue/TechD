@@ -1,9 +1,24 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.23.0 (porn block). Sections 0 to 0s cover what 0.6.0 to 0.23.0 changed
+> **Version under test:** 0.23.1 (porn block additions). Sections 0 to 0t cover what 0.6.0 to 0.23.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0t. New in 0.23.1: adult apps, hours, app list, check rate
+Settings > Phone control > **Porn block**. Keep **Locked for** at 15 minutes and **A catch is a failure** off while testing.
+- [ ] Settings > About shows **Version 0.23.1**
+- [ ] **Adult apps:** tick a harmless app (say Calculator) in **Adult apps**. Opening it sends you home, locks the screen, and her Caught screen says **Caught in Calculator** with an Adult app line
+- [ ] Add that app to **Always-allowed** too: it's still caught, stays locked during her lock, and isn't on the Caught screen's app list
+- [ ] **Apps she checks:** browsers and social apps start ticked, ticked apps are at the top. Tick a game: she checks it. Untick Reddit: she doesn't. **Reset to her list** puts it back
+- [ ] Always-allowed apps show "Always-allowed, so never checked"
+- [ ] **Check every:** steps 3, 5, 10, 15, 30, 60 seconds. At 3 seconds she catches porn faster. At 60, much slower
+- [ ] Incognito still counts after about 15 seconds at 3 and at 5 seconds
+- [ ] **Only at set hours** on, with hours that don't include now: no checks, adult apps open. Change the hours to include now: within about 30 seconds an open adult app is caught
+- [ ] Overnight hours (say 22:00 to 06:00) work across midnight
+- [ ] A lock that started inside your hours keeps going after they end
+- [ ] Her lines > Porn block has an **Adult app** situation
+- [ ] **Lock guard on:** checking less often, unticking an app, taking an adult app off, switching hours on or moving them takes the 30 minute screen. Checking more often, ticking apps, adding adult apps, switching hours off is instant
 
 ## 0s. New in 0.23.0: porn block
 Settings > Phone control > **Porn block** on. For a first test: **Locked for** 15 minutes, **A catch is a failure** off, Lock guard off. Needs Android 11 or later and her watch (Accessibility) on. If nothing happens after updating, switch her watch off and on in Accessibility.

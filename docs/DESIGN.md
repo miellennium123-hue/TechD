@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.23.0 (Porn block: she scans browsers and social apps, and porn locks your phone). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 73)
+> **Status:** v0.23.1 (Porn block: adult apps list, set hours, your own app list and check rate). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 74)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -135,6 +135,7 @@ Two lockout scopes:
 - If she sees **porn**, she **locks your phone**: sends you home, locks the screen, and her full-screen **Caught** screen covers everything but Always-allowed apps and the phone until her lock ends (1 hour by default)
 - Private tabs hide the screen from her, so a browser she can't see for about 15 seconds counts too
 - Nothing she scans is saved or leaves the phone. Needs Android 11 or later. Details in section 8 (v0.23.0)
+- **From v0.23.1:** an **adult apps** list (opening one is a catch), **set hours** when porn is off limits, and you choose **which apps she checks** and **how often** (3 to 60 seconds). Details in section 8 (v0.23.1)
 
 ---
 
@@ -182,7 +183,7 @@ User wants **a list of individual settings**, each toggled on/off.
 | Guided sessions | Off | Length 10 min (5 to 30). Kink menu. Ending sliders (permission 20, ruined 40, denied 40). Beat sound on. She watches (camera) on |
 | Rate me | Off | Her taste: likes bigger / likes smaller. Units: cm / inches. Last 5 scores, clear history |
 | Merit points and levels | On | On / Off |
-| Porn block (v0.23.0) | Off | Locked for 1h (15 min to 24h). Lock the screen too (on). A catch is a failure (on). Private tabs count (on) |
+| Porn block (v0.23.0) | Off | Locked for 1h (15 min to 24h). Lock the screen too (on). A catch is a failure (on). Private tabs count (on). Since v0.23.1: Check every 5 seconds (3 to 60). Apps she checks (browsers and social apps to start). Adult apps (none). Only at set hours (off, 08:00 to 23:00) |
 
 ---
 
@@ -636,6 +637,16 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Mood:** only her words
 - **Tests:** `PornBlockTest.kt` (what she watches, when she scans, tiles, her line, black screens and private tabs, her lock and screen, Lock guard, keeping 50 catches, older saves)
 
+### v0.23.1 (round 74, porn block: adult apps, hours, app list, check rate)
+- **Asked:** "a blocking list of adult apps, a time setting for when porn isn't allowed, and the ability to edit what games are checked for porn and how often". Claude asked three questions. Answers: "games" meant **apps**, opening an adult app is a **catch**, and the hours cover **everything**
+- **Adult apps (`PornBlockSettings.adultApps`, `PornBlock.adultApp`):** a list you tick from your installed apps (empty to start, nothing bundled). Opening one while porn is off limits is a catch (`CatchKind.ADULT_APP`), with the same home, screen lock, Caught screen and failure as porn on screen, and her own lines (new **Adult app** situation in the Porn block group of Her lines, both moods). Checked by her watch on every app change and her 30 second tick. **Always-allowed doesn't protect them:** they're caught even if Always-allowed, stay locked during her lock (`Rules.restrictions`), and her Caught screen leaves them off its app list. Never the phone or system screens. The catch is saved with `adultApp` set, and the Caught screen title names the app
+- **Set hours (`hoursOn`, `startMinute`, `endMinute`, `PornBlock.active`):** off by default (porn off limits at all hours). On: 08:00 to 23:00 to start, any times, overnight wraps. Outside your hours she doesn't check and adult apps open. A lock that's already running stays until it ends
+- **Apps she checks (`watched`, `unwatched`, `PornBlock.watches`):** her list as before (browsers, her social list, apps Android tags as social), plus any app you tick (games included), minus any you untick. Only differences are saved, so new browsers are still checked automatically. A new **Apps she checks** screen lists every app with ticked ones first, and notes Always-allowed apps (never checked). **Reset to her list**
+- **Check every (`scanSeconds`, `PornBlock.SCAN_STEPS`):** 3, 5 (default), 10, 15, 30 or 60 seconds. Private tabs still count after about 15 seconds at any rate, and never after one black frame (`blindScansNeeded`, at least 2 scans)
+- **Screens:** the Always-allowed picker became a shared `AppPicker` (search, ticks), used by Always-allowed, Apps she checks and Adult apps. `AppEntry` now carries the app's Android category, and `InstalledApps.browsers` finds browsers for both her watch and the list
+- **Lock guard (`LockGuard.pornLoosens`):** checking less often, unticking an app she checks, taking an adult app off, switching hours on, or moving hours while they're on takes the 30 minute screen. More often, more apps, more adult apps, or switching hours off is instant. While caught, nothing in Porn block can change (as before)
+- **Tests:** `PornBlockTest.kt` (your app list, check rate steps, your hours, adult apps and Always-allowed, Lock guard, older catches)
+
 ---
 
 ## 10. Open questions
@@ -735,6 +746,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Claude's pick:** B as the wall plus A as the watcher, with D cheap to add. Waiting on the user's choices: which parts, the lockdown length, and how often A checks (battery)
   - **Round 72:** the user picked A and D. Claude's response was stopped by a safety filter, so the porn blocker is not planned. Nothing was built
   - **Round 73 (v0.23.0):** the user asked again for A, and it's built as **Porn block** (section 4.15 and section 8). Checks every 5 seconds (not 15 to 60), and the lock is her own Caught screen plus Android's screen lock, not the device admin lockdown. Still open: D (adult app list), B and C
+  - **Round 74 (v0.23.1):** D is built as the **Adult apps** list (you pick them; opening one is a catch). B and C are still open
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -838,3 +850,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 71):** No code changes. User asked for a porn blocker that notices porn and locks the phone. Brainstormed four parts in section 10 (screen check with NudeNet, Private DNS family filter, local VPN filter, adult app list) and what a catch does, waiting on the user's choices
 - **2026-10-07 (round 72):** No code changes. User picked A (screen check) and D (adult apps) for the porn blocker. Claude's response was stopped by a safety filter, so it's not planned. Recorded in section 10
 - **2026-10-07 (round 73, v0.23.0):** Porn block (option A from round 71). Every 5 seconds in a browser or social app (X, Reddit and more) she checks the screen with her on-device nudity detector. Porn, or a private tab hiding the screen for about 15 seconds, locks your phone: home, screen locked, her Caught screen over everything but Always-allowed apps and the phone for 1 hour (a setting), and a failure (a setting). Nothing she scans is saved. New Porn block card in Settings, guarded by Lock guard. Details in section 8
+- **2026-10-07 (round 74, v0.23.1):** Porn block additions. An Adult apps list you pick (opening one is a catch, even if Always-allowed), Only at set hours (porn off limits only inside your hours, for both checks and adult apps), Apps she checks (tick any app, games included, or untick hers) and Check every (3 to 60 seconds). Claude asked three questions first. Details in section 8
