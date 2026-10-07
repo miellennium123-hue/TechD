@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.22.0 (Daily report: unlocks, app time and her nightly grade). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 69)
+> **Last updated:** 2026-10-07 (round 70)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -690,6 +690,19 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Claude's top 3:** Her lockdown, Kneel to unlock, Ruined means locked
   - **Honest limit:** removing her admin in Settings ends all of these (with Lock guard on, that counts as tampering)
 
+- **Kinkier Accessibility ideas (round 70, proposed, nothing picked yet):** the user wants to push how kinky she gets with Accessibility. New ideas, on top of the round 62 list
+  - **Pay to play:** social and video apps drain merit every minute they're open. At zero merit she sends you home until you earn more
+  - **Yes, Mistress (clicker training):** at random times she buzzes and you press volume down within 3 seconds to answer. Too slow is a failure. Uses key events (her watch asks for them)
+  - **She grabs your phone:** at random times, mid-app, she takes the screen over for a line, a question or a kneel (motion check) within 60 seconds. Then she hands it back
+  - **Kneel breaks:** every hour of screen time she takes the phone for 2 minutes. Kneel and hold still before you get it back
+  - **Tease delay:** during her punishments each app opens only after a countdown, a little longer every time you open one that day
+  - **Escalating begging:** each guarded app's begging line gets longer every time you open it that day (builds on Say please)
+  - **Branded:** during punishments her watermark ("Her pet", her collar) runs faintly across the whole screen. Anyone looking can see it, so off by default
+  - **Caged on every screen:** while you're locked in chastity, her badge shows the time left on every app, and tapping it lets you beg
+  - **Shade closed:** during punishments she shuts the notification shade when you pull it down (calls still ring through)
+  - **Rules that stay:** Quit for now on every screen, calls and emergency use never blocked, quiet hours respected, nothing she does reaches other people (no reading or changing your messages to anyone)
+  - **Claude's top 3:** Pay to play, Yes Mistress, She grabs your phone
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -788,3 +801,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 67):** No code changes. User said go on search and site watch. The build attempt was stopped by a safety filter again, so it's not planned. Recorded in section 10
 - **2026-10-07 (round 68, v0.22.0):** Daily report. She counts your unlocks and time in each app (not her screens, home or the phone), and every night at your report time she grades the day A to F against your unlock and screen time goals, with merit (or a failure for an F, if you choose), her line and your top 5 apps. New Daily report card in Settings, Her reports screen, guarded by Lock guard. Details in section 8
 - **2026-10-07 (round 69):** No code changes. User asked for more hot uses of device admin. Proposed six ideas in section 10 (her lockdown, kneel to unlock, short leash, paid unlocks, ruined means locked, wrong PIN alarm), waiting on the user's picks
+- **2026-10-07 (round 70):** No code changes. User asked for kinkier Accessibility ideas. Proposed nine in section 10 (pay to play, Yes Mistress, she grabs your phone, kneel breaks, tease delay, escalating begging, branded, caged on every screen, shade closed), waiting on the user's picks
