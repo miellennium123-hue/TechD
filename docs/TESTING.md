@@ -1,9 +1,18 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.24.1 (more clips). Sections 0 to 0v cover what 0.6.0 to 0.24.1 changed
+> **Version under test:** 0.25.0 (save to phone). Sections 0 to 0w cover what 0.6.0 to 0.25.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0w. New in 0.25.0: save to phone
+- [ ] Settings > About shows **Version 0.25.0**
+- [ ] Photos: open a proof photo, tap **Save to phone**. A message says it's saved, and it shows in your Gallery app under Pictures/Guardian Angel
+- [ ] Same for a peek
+- [ ] Guided sessions > Her videos: open a clip, **Save to phone**. It shows under Movies/Guardian Angel and plays with sound
+- [ ] **Save all to phone** on each screen asks first, then saves them all and says how many
+- [ ] Deleting a photo or clip in her app leaves the saved copy in your gallery
+- [ ] Android 9 or older: the first save asks for storage permission. Saying no shows a message and saves nothing
 
 ## 0v. New in 0.24.1: more clips
 - [ ] Settings > About shows **Version 0.24.1**

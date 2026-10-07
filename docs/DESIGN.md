@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.24.1 (She plays a clip every session, and about every other check-in and lock screen). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 80)
+> **Status:** v0.25.0 (Save to phone for photos, peeks and her videos). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 81)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -673,6 +673,13 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Settings text** on Guided sessions says the new rates. The three switches still turn each one off
 - **Tests:** `ClipsTest.kt` (new rates, clips before tasks), `SessionTest.kt` (quickshot watch break)
 
+### v0.25.0 (round 81, save to phone)
+- **Asked:** a Save to phone button for everything (round 80 explained that photos and clips are private app storage only)
+- **Where:** Photos (proof photos and peeks) and Guided sessions > Her videos. Opening one shows **Save to phone** next to Delete. Each screen also has **Save all to phone**, which asks first
+- **What it does:** copies the file into the phone's own gallery. Photos go to Pictures/Guardian Angel, videos to Movies/Guardian Angel (`core/MediaSaver.kt`, MediaStore on Android 10+, the storage permission on Android 9 and older, asked only then). A short message says how many were saved
+- **The rule changes:** her files still live in private storage and she never sends them anywhere, but a saved copy is yours: other apps and backups (like Google Photos) can see it, and deleting in her app doesn't delete the copy. Nothing is copied unless you tap Save
+- **Not saved:** Rate me photos (deleted after rating). Porn block screenshots are never saved at all
+
 ---
 
 ## 10. Open questions
@@ -928,3 +935,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 78, v0.24.1):** More clips. She plays one every session (quickshots too), about every other time her bedtime or Caught screen opens, and about every other check-in (now before sites, tasks and summons). Details in section 8
 - **2026-10-07 (round 79):** No code changes. User asked for many creative ideas to improve guided sessions (kink and quality of life) to pick from. Listed them in section 10, waiting on the user's picks. A started draft was set aside unmerged
 - **2026-10-07 (round 80):** No code changes. User asked where proof photos and session clips (ruins) are stored. Answer: private app storage (`files/proof` for photos and peeks, the clips folder for videos), not visible to file managers or the Gallery app. Reachable from a computer with `adb ... run-as com.guardianangel`, because the published APK is a debug build. Offered a Save to phone button, which would change the private storage rule, waiting on the user
+- **2026-10-07 (round 81, v0.25.0):** Save to phone. Photos, peeks and her videos each get a Save to phone button, and both screens get Save all to phone (asks first). Copies go to Pictures/Guardian Angel and Movies/Guardian Angel in the phone's gallery, only when you tap Save. Details in section 8
