@@ -179,10 +179,10 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     modifier = Modifier.weight(1f),
                     onStart = {
                         val clips = SessionClips.infos(context)
+                        val watch = Clips.inSession(settings, clips.size, Random.Default.nextDouble())
                         val built = if (quick) {
-                            Session.quickshot(caged, Random.Default)
+                            Session.quickshot(caged, Random.Default, watchClip = watch)
                         } else {
-                            val watch = Clips.inSession(settings, clips.size, Random.Default.nextDouble())
                             Session.build(settings, caged, Random.Default, soundingReady, watchClip = watch)
                         }
                         watchFile = Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }

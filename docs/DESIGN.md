@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.24.0 (Sessions: camera always on, she films edges and CBT, Her videos, and she makes you watch). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 77)
+> **Status:** v0.24.1 (She plays a clip every session, and about every other check-in and lock screen). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 78)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -115,7 +115,7 @@ Two lockout scopes:
 - She runs a JOI-style session to her beat, with a kink menu, the front camera watching, and her ending (permission, ruined or denied)
 - From v0.12.0 the camera also checks you keep her beat and stop when she says
 - From v0.17.0 a **Quickshot**: about 2 minutes, always ruined, and the camera always films the ruin
-- **From v0.24.0:** motion checks and "out of view" catching are **removed** (they didn't work). The camera is on for **every** session so you watch yourself. She films your **ruins, edges and CBT** (with sound) into **Her videos**, apart from proof photos, and sometimes **makes you watch** a clip: mid-session, at check-ins (open within a minute), and on her bedtime and Caught screens
+- **From v0.24.0:** motion checks and "out of view" catching are **removed** (they didn't work). The camera is on for **every** session so you watch yourself. She films your **ruins, edges and CBT** (with sound) into **Her videos**, apart from proof photos, and **makes you watch** a clip: mid-session, at check-ins (open within a minute), and on her bedtime and Caught screens. **From v0.24.1:** every session, about every other check-in and about every other lock screen
 - Details in 9.9 and section 8 (v0.11.0, v0.12.0 and v0.24.0)
 
 ### 4.12 Her mark (v0.21.0)
@@ -665,6 +665,14 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Privacy:** videos stay in private app storage, never in the gallery or backups, and never leave the phone
 - **Tests:** `ClipsTest.kt` (names, old ruin clips, keeping 40, what she films, picking, when she makes you watch, check-ins, Lock guard, older saves), `SessionTest.kt` (the watch break)
 
+### v0.24.1 (round 78, more clips)
+- **Asked:** "I want her to play a clip every session and every other lock screen and check in"
+- **Every session (`Clips.SESSION_CHANCE` 1.0):** every session with clips saved gets her watch break, **quickshots too** (after the first strokes, `Session.quickshot(watchClip)`)
+- **About every other lock screen (`LOCK_SCREEN_CHANCE` 0.5):** her bedtime or Caught screen opens with a clip about half the time. At random, so you never know which
+- **About every other check-in (`CHECK_IN_CHANCE` 0.5):** and a clip now comes **first**, before a site visit, task, summons or photo, so it really is about half of all check-ins. Same rules as before: needs notifications and clips, no clip already waiting, never in or a minute before quiet time, open within a minute or it's a failure
+- **Settings text** on Guided sessions says the new rates. The three switches still turn each one off
+- **Tests:** `ClipsTest.kt` (new rates, clips before tasks), `SessionTest.kt` (quickshot watch break)
+
 ---
 
 ## 10. Open questions
@@ -902,3 +910,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 75):** No code changes. User asked for more hot ideas, nothing about stillness. Proposed ten in section 10 (hidden timer, her wheel, beg out loud, her texts, wagers, orgasm budget, confession after a catch, tally marks, good boy chime, her weekly letter), waiting on the user's picks
 - **2026-10-07 (round 76):** No code changes. User asked for a Release calendar screen like Chastity and Guided sessions, and to brainstorm how it looks and works. Proposed the screen, how she sets and moves the release day, release day, history and links to chastity and sessions in section 10, with questions for the user
 - **2026-10-07 (round 77, v0.24.0):** Sessions rework. Motion checks and "out of view" catching removed. The camera is on for every session so you watch yourself. She films your ruins, edges and CBT with sound into a new Her videos area under Guided sessions (old ruin clips move there, out of Photos). She makes you watch a clip mid-session, at some check-ins (open it within a minute or it's a failure), and on her bedtime and Caught screens. Release calendar saved for later. Details in section 8
+- **2026-10-07 (round 78, v0.24.1):** More clips. She plays one every session (quickshots too), about every other time her bedtime or Caught screen opens, and about every other check-in (now before sites, tasks and summons). Details in section 8

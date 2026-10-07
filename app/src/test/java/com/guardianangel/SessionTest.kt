@@ -190,6 +190,14 @@ class SessionTest {
     }
 
     @Test
+    fun quickshotWatchBreak() {
+        assertTrue(Session.quickshot(caged = false, Random(1)).steps.none { it.kind == StepKind.WATCH })
+        val kinds = Session.quickshot(caged = false, Random(1), watchClip = true).steps.map { it.kind }
+        assertEquals(1, kinds.count { it == StepKind.WATCH })
+        assertEquals(StepKind.STROKE, kinds[kinds.indexOf(StepKind.WATCH) - 1])
+    }
+
+    @Test
     fun watchBreakOnlyWhenAsked() {
         repeat(30) { seed ->
             val plain = Session.build(all, false, Random(seed))

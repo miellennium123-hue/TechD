@@ -1,9 +1,15 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.24.0 (sessions: camera, her videos, watching). Sections 0 to 0u cover what 0.6.0 to 0.24.0 changed
+> **Version under test:** 0.24.1 (more clips). Sections 0 to 0v cover what 0.6.0 to 0.24.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0v. New in 0.24.1: more clips
+- [ ] Settings > About shows **Version 0.24.1**
+- [ ] With at least one clip saved, **every** session stops once to play a clip, quickshots too (after the first strokes)
+- [ ] Over several check-ins, about half send a clip, even with tasks, Shows up or Open sites on
+- [ ] Over several openings, her bedtime or Caught screen plays a clip about half the time
 
 ## 0u. New in 0.24.0: sessions, her videos, watching
 - [ ] Settings > About shows **Version 0.24.0**

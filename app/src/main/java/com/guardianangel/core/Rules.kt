@@ -344,7 +344,8 @@ object Rules {
      * when she can actually notify you, and never during or running into quiet hours or bedtime,
      * so you can't fail while asleep or without being told.
      *
-     * Site visits come first, almost every time (round 19). They need no notification because the
+     * A clip to watch comes first, about every other check-in (round 78), when you have [clips].
+     * Then site visits, almost every time (round 19). They need no notification because the
      * warning shows itself, but they do need [canOpenSites]: the accessibility service and a browser.
      */
     fun checkInAction(
@@ -357,6 +358,10 @@ object Rules {
         clips: Int = 0,
     ): CheckInAction {
         if (isQuiet(config, minuteOfDay)) return CheckInAction.QUIET
+        // Round 78: a clip to watch comes first, about every other check-in. Within a minute, so it
+        // needs a notification, like every deadline, and never runs into quiet time.
+        val canWatch = canNotify && Clips.atCheckIns(config, clips) && state.watch == null && !reachesQuiet(config, minuteOfDay, 1)
+        if (canWatch && rolls.watch < Clips.CHECK_IN_CHANCE) return CheckInAction.WATCH
         val canSite = canOpenSites && config.sitesOn && config.siteList.isNotEmpty() && state.visit == null &&
             state.summons == null && !reachesQuiet(config, minuteOfDay, siteMinutes(config))
         if (canSite && rolls.site < SITE_CHANCE) return CheckInAction.SITE
@@ -366,12 +371,9 @@ object Rules {
         val canSummon = config.showsUpOn && state.summons == null && state.visit == null &&
             !reachesQuiet(config, minuteOfDay, SUMMON_LOCK_MINUTES)
         val canProof = !proofPending && !reachesQuiet(config, minuteOfDay, CHECK_IN_PROOF_MINUTES)
-        // Round 77: watch one of your clips within a minute. Needs a notification, like every deadline.
-        val canWatch = Clips.atCheckIns(config, clips) && state.watch == null && !reachesQuiet(config, minuteOfDay, 1)
         return when {
             canTask && rolls.task < TASK_CHANCE -> CheckInAction.TASK
             canSummon && rolls.summons < SUMMON_CHANCE -> CheckInAction.SUMMONS
-            canWatch && rolls.watch < Clips.CHECK_IN_CHANCE -> CheckInAction.WATCH
             canProof && rolls.proof < proofChance(config, state) -> CheckInAction.PROOF
             else -> CheckInAction.PLAIN
         }
