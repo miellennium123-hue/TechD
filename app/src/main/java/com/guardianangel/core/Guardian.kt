@@ -50,6 +50,7 @@ enum class Failure(val merit: Int) {
     BAD_DAY(5),
     CAUGHT_PORN(10),
     MISSED_CLIP(5),
+    MISSED_COMMAND(5),
 }
 
 sealed interface AskResult {
@@ -532,7 +533,7 @@ object Guardian {
         val lock = st.chastity
         val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble())
         val canOpenSites = Permissions.accessibility(appContext) && SiteOpener.browserPackage(appContext) != null
-        val clips = SessionClips.list(appContext).size
+        val clips = SessionClips.videos(appContext).size
         val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls, canOpenSites, clips)
         val handled = when (action) {
             CheckInAction.QUIET -> true // bedtime: let her pet sleep
@@ -1005,13 +1006,16 @@ object Guardian {
 
     /**
      * A finished session (leaving early isn't recorded and costs nothing). Obeying to the end: +5 merit.
-     * A ruin you couldn't hold is a failure with the usual failure settings. Returns her last line.
+     * A ruin you couldn't hold, or missing her exact command to cum (round 79), is a failure with the
+     * usual failure settings. Returns her last line.
      * After a ruin during a lock she wants a photo of the cage back on: returns that request's id too.
      */
     fun finishSession(record: SessionRecord): Pair<String, Long?> {
         state.update { it.copy(sessions = (it.sessions + record).takeLast(Sessions.HISTORY)) }
         val line = if (record.outcome == SessionOutcome.RUIN_FAILED) {
             fail(Failure.RUIN_FAILED)
+        } else if (record.outcome == SessionOutcome.MISSED_COMMAND) {
+            fail(Failure.MISSED_COMMAND)
         } else {
             addMerit(5)
             say(if (record.outcome == SessionOutcome.RUINED) Line.SESSION_RUIN_DONE else Line.SESSION_END)
@@ -1026,5 +1030,11 @@ object Guardian {
 
     fun clearSessions() {
         state.update { it.copy(sessions = emptyList()) }
+    }
+
+    /** Round 79: her caption for a clip or edge photo she just saved. Captions of deleted clips are dropped. */
+    fun captionClip(name: String, caption: String) {
+        val names = SessionClips.infos(appContext).map { it.name }.toSet()
+        state.update { st -> st.copy(clipCaptions = Clips.keepCaptions(st.clipCaptions + (name to caption), names)) }
     }
 }

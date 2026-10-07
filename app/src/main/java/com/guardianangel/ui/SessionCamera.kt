@@ -1,6 +1,7 @@
 package com.guardianangel.ui
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import androidx.camera.core.CameraSelector
@@ -17,6 +18,7 @@ import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +33,8 @@ import com.guardianangel.core.ClipKind
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.SessionClips
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** Film one step: [id] changes for every new clip, [maxSeconds] is the longest it runs. */
 data class ClipRequest(val id: Int, val kind: ClipKind, val maxSeconds: Int)
@@ -47,6 +51,7 @@ fun SessionCamera(
     onClip: (ClipKind, File?) -> Unit,
     modifier: Modifier = Modifier,
     back: Boolean = false,
+    snapshot: Int = 0,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -99,6 +104,21 @@ fun SessionCamera(
             handler.removeCallbacksAndMessages(null)
             recording?.stop()
         }
+    }
+
+    // Round 79: her edge face. Each new [snapshot] number grabs what you see right now as a photo.
+    LaunchedEffect(snapshot) {
+        if (snapshot <= 0) return@LaunchedEffect
+        val frame = previewView.bitmap ?: return@LaunchedEffect
+        val file = withContext(Dispatchers.IO) {
+            runCatching {
+                val out = SessionClips.newFile(context, ClipKind.FACE)
+                out.outputStream().use { frame.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+                SessionClips.prune(context)
+                out
+            }.getOrNull()
+        }
+        clip(ClipKind.FACE, file)
     }
 
     AndroidView(factory = { previewView }, modifier = modifier)

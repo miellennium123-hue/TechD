@@ -108,7 +108,7 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
 fun rememberLockScreenClip(): File? {
     val context = LocalContext.current
     return remember {
-        val clips = SessionClips.infos(context)
+        val clips = SessionClips.videos(context)
         if (Clips.onLockScreen(Guardian.config.value, clips.size, Random.nextDouble())) {
             Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }
         } else {

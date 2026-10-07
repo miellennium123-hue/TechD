@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.25.0 (Save to phone for photos, peeks and her videos). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 82)
+> **Status:** v0.26.0 (Sessions part 1: her voice, rhythm, edging, cruel endings, deals and clip extras). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 83)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -117,7 +117,8 @@ Two lockout scopes:
 - From v0.12.0 the camera also checks you keep her beat and stop when she says
 - From v0.17.0 a **Quickshot**: about 2 minutes, always ruined, and the camera always films the ruin
 - **From v0.24.0:** motion checks and "out of view" catching are **removed** (they didn't work). The camera is on for **every** session so you watch yourself. She films your **ruins, edges and CBT** (with sound) into **Her videos**, apart from proof photos, and **makes you watch** a clip: mid-session, at check-ins (open within a minute), and on her bedtime and Caught screens. **From v0.24.1:** every session, about every other check-in and about every other lock screen
-- Details in 9.9 and section 8 (v0.11.0, v0.12.0 and v0.24.0)
+- **From v0.26.0:** her voice reads commands (whispering late at night), beat patterns, exact counts, grip commands, an edge goal with shrinking rests, edge timing and an edge face photo, her deal, cruel countdowns, cum on command, keep going, instant replay, then vs now, captions, a ruin reel and session history
+- Details in 9.9 and section 8 (v0.11.0, v0.12.0, v0.24.0 and v0.26.0)
 
 ### 4.12 Her mark (v0.21.0)
 - Her small gold **collar badge** sits in a corner over every app while she's on
@@ -681,6 +682,23 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **The rule changes:** her files still live in private storage and she never sends them anywhere, but a saved copy is yours: other apps and backups (like Google Photos) can see it, and deleting in her app doesn't delete the copy. Nothing is copied unless you tap Save
 - **Not saved:** Rate me photos (deleted after rating). Porn block screenshots are never saved at all
 
+### v0.26.0 (round 83, sessions part 1)
+- **Asked:** build round 79 ideas 1, 2, 3, 4, 8, 9, 10, 11, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 43, 47, 49, 50, 51 and 52
+- **Asked before building:** 37 (release days become permission sessions) needs the release calendar, so it waits for the calendar (user's choice). Shipped in two releases (user's choice): **part 1 (this)** is voice, rhythm, edging, endings and clips; **part 2 (v0.27.0)** is themes (31), she decides the length (32), training program (33), warm-up and cool-down (34), booked sessions (36), punishment sessions (38), a ruin session after a Porn block catch (39), clamps (43), small-size humiliation (47), framing preview (50), landscape and dark mode (51), torch (52)
+- **Not built (not picked):** pause and begging to cum from the round 79 draft were dropped
+- **Her voice (1, 2, `ui/SessionVoice.kt`):** the phone's own text to speech says every command, her remarks, the edge goal, grip commands and countdown numbers, and counts CBT (and every tenth stroke of an exact count). **Whisper late at night** (on): 22:00 to 06:00 slower, lower and quieter (`Session.whisper`). Setting **Her voice** (on)
+- **Big text (4):** her words, the beat circle and the edge button big (setting, off)
+- **Cruel countdowns (3, 20):** about 30% of countdowns hold on a number for 3 seconds while she taunts you (`Step.tauntAt`). About 25% of permission endings count down to 1, then "not yet" and one more edge before the real countdown. About 25% of uncaged denials come at the end of a countdown ("one... no")
+- **Rhythm (8, 9, 10, 11):** edges and "faster and faster" ramps speed her beat up across the command (`Step.bpmTo`). With Speed changes about 30% of strokes get a pattern: heartbeat (two quick strokes, a pause), stutter (skips and doubles), every other beat. About 15% of strokes are an exact count (20 to 60, counted on screen). About 30% come with a grip or style command (only the tip, two fingers, your other hand, full length, squeeze tight, barely touching, flat palm)
+- **Edging (13, 14, 15, 16, 17):** her edge goal at the start ("Tonight: 7 edges") and "edge 3 of 7" on screen. About 40% of edges add a balance command first (stay right at the edge with her slowest strokes, 10 to 15 seconds). Rests after edges start at 30 seconds and shrink by 5 each edge, down to 8. She times each edge from her command to your tap; under 40 seconds she mocks you. A bigger "I'm at the edge" button, and her **edge face**: a photo from the camera the moment you tap, saved to Her videos
+- **Her deal (19):** about 35% of uncaged sessions not already ending in permission: before the ending she offers a sure ruin now, or 5 more edges (shrinking rests) then a coin flip (heads permission, tails the ending you had). No answer in 60 seconds: she picks the ruin (`Session.takeDeal`)
+- **Endings (21, 22, 23):** **Keep going** (new kink, off): stroke through your orgasm, or through the replay after a ruin. **Cum on command:** every permission ending ends on her exact command, then you answer honestly: right on command (her praise), too early or too late (a failure, `Failure.MISSED_COMMAND`, new outcome "missed her command"). **Instant replay:** right after the ruin she plays the ruin clip back (quickshots too)
+- **Clips (25, 26, 27, 28, 30):** her watch break is now stroking to her beat while your old clip plays (hands still during a lock). **Then vs now:** the clip above, you live below. **Ruin reel:** Her videos plays every ruin back to back, oldest first. **Captions:** each new clip or photo gets her caption ("Ruin #12 · after 6 edges", "Edge 3 · 25s to the edge. Too quick", "CBT · 8 slaps", "Your face at edge 2"), shown on the grid and in the player (`GuardianState.clipCaptions`, kept only for clips that still exist). **Look into the lens:** 8 seconds into a filmed edge or CBT count she wants your eyes on the camera
+- **History (49):** a **Your sessions** card on Guided sessions: totals (sessions, edges, fastest edge, ruined, finished, denied) and the last 10 with date, length, outcome, edges, fastest edge, her deal and clips saved
+- **Her lines:** new in Guided sessions: Stroke while you watch, Faster and faster, Keep going, Exact count, Balance at the edge, Edge goal, Too quick, Look into the lens, Countdown taunt, Not yet, No, Her deal, Took the ruin, Took the edges, Coin flip won and lost, On command, Instant replay. Both moods, editable
+- **Mood:** never changes any of it, only her words
+- **Tests:** `SessionTest.kt` (keep going, ramps, ending marks, stroking while watching, her deal, shrinking rests, counts, styles and patterns, cruel countdowns, edge timing and whisper), `ClipsTest.kt` (edge face photos, captions, ruin reel). 216 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -826,6 +844,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **New kinks (opt-in):** counted spanks (like CBT), clamps and pins on a timer, ice and temperature, prostate and plug tease, dress-up commands, small-size humiliation that uses your Rate me result, a clean-up order after you finish
   - **Quality of life:** session history and stats; live edge counter; framing preview before Start; a big-text far-away layout and landscape; dark mode with only the beat; torch for the back camera; a headphones mode; resume after a crash; haptic beat with the phone in your lap
   - **Rules that stay:** Quit for now everywhere, mood only changes her words, nothing leaves the phone, CBT and every kink stay opt-in with "Too much" to skip
+  - **Round 83:** the user picked 1, 2, 3, 4, 8, 9, 10, 11, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 43, 47, 49, 50, 51, 52. Part 1 built in v0.26.0 (section 8). Part 2 next (v0.27.0). 37 waits for the release calendar
 
 - **E-stim control (round 82, plan only, no code):** the user asked whether she could control their DG-Lab Coyote 3.0. Answer: very likely. Build only when the user has the box to test
   - **How (Claude's pick): straight over Bluetooth.** DG-Lab publishes the Coyote 3.0 Bluetooth protocol (V3). The app sends one small command every 100 ms with both channels' strength (0 to 200) and the waveform, and a separate command sets a strength ceiling on the box (it has to be set again on every connection). No extra app, works offline, nothing leaves the phone. Needs Android's Bluetooth permissions
@@ -945,3 +964,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 80):** No code changes. User asked where proof photos and session clips (ruins) are stored. Answer: private app storage (`files/proof` for photos and peeks, the clips folder for videos), not visible to file managers or the Gallery app. Reachable from a computer with `adb ... run-as com.guardianangel`, because the published APK is a debug build. Offered a Save to phone button, which would change the private storage rule, waiting on the user
 - **2026-10-07 (round 81, v0.25.0):** Save to phone. Photos, peeks and her videos each get a Save to phone button, and both screens get Save all to phone (asks first). Copies go to Pictures/Guardian Angel and Movies/Guardian Angel in the phone's gallery, only when you tap Save. Details in section 8
 - **2026-10-07 (round 82):** No code changes. User asked if she could control their DG-Lab Coyote 3.0 e-stim box eventually. Answer: very likely, straight over Bluetooth with DG-Lab's published protocol. Plan, ideas and fixed safety rules in section 10 (and a note in 4.8). Waiting until the user has the box to test
+- **2026-10-07 (round 83, v0.26.0):** Sessions part 1. Her voice (whispering late at night) and big text, beat patterns, exact counts, grip commands, an edge goal with shrinking rests, balance at the edge, edge timing and an edge face photo, her deal (a sure ruin or 5 edges and a coin flip), cruel countdowns, cum on command, keep going, instant replay, stroking while you watch with then vs now, a ruin reel, captions, look into the lens, and session history. Part 2 is next; the release day idea waits for the calendar. Details in section 8

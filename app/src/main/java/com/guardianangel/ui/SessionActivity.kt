@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -59,7 +60,10 @@ import com.guardianangel.core.ClipKind
 import com.guardianangel.core.Clips
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Permissions
+import com.guardianangel.core.Line
 import com.guardianangel.core.Session
+import com.guardianangel.core.BeatPattern
+import com.guardianangel.core.DealChoice
 import com.guardianangel.core.SessionClips
 import com.guardianangel.core.SessionScript
 import com.guardianangel.core.Step
@@ -124,6 +128,18 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
     var filmed by remember { mutableIntStateOf(0) }
     // Round 77: the clip she plays mid-session, picked when it starts.
     var watchFile by remember { mutableStateOf<File?>(null) }
+    // Round 79: what she counts, her deal, your finish on command, and remarks between commands.
+    var edges by remember { mutableIntStateOf(0) }
+    var fastestEdge by remember { mutableIntStateOf(0) }
+    var lastEdgeSeconds by remember { mutableIntStateOf(0) }
+    var snapshot by remember { mutableIntStateOf(0) }
+    var deal by remember { mutableStateOf("") }
+    var finishOutcome by remember { mutableStateOf(SessionOutcome.FINISHED) }
+    var remark by remember { mutableStateOf<String?>(null) }
+    val voice = remember {
+        if (settings.voice) SessionVoice(context, Session.whisper(settings, Guardian.minuteOfDay())) else null
+    }
+    DisposableEffect(Unit) { onDispose { voice?.shutdown() } }
 
     fun end(outcome: SessionOutcome) {
         val s = script ?: return
@@ -136,21 +152,27 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 skipped = skipped,
                 outcome = outcome,
                 quick = s.quick,
+                edges = edges,
+                filmed = filmed,
+                fastestEdge = fastestEdge,
+                deal = deal,
             ),
         )
         finalLine = line
         relockProof = proof
+        voice?.say(line)
         phase = SessionPhase.DONE
     }
 
     fun advance() {
         if (index + 1 < steps.size) {
             index++
+            if (steps[index].kind == StepKind.EDGE) edges++
             return
         }
         when (script?.ending) {
             SessionEnding.RUINED -> phase = SessionPhase.HONOR
-            SessionEnding.PERMISSION -> end(SessionOutcome.FINISHED)
+            SessionEnding.PERMISSION -> end(finishOutcome)
             else -> end(SessionOutcome.DENIED)
         }
     }
@@ -178,7 +200,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     onAllowCamera = { permission.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)) },
                     modifier = Modifier.weight(1f),
                     onStart = {
-                        val clips = SessionClips.infos(context)
+                        val clips = SessionClips.videos(context)
                         val watch = Clips.inSession(settings, clips.size, Random.Default.nextDouble())
                         val built = if (quick) {
                             Session.quickshot(caged, Random.Default, watchClip = watch)
@@ -197,8 +219,14 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     index = index,
                     caged = caged,
                     beatSound = settings.beatSound,
+                    bigText = settings.bigText,
                     watchFile = watchFile,
+                    replayFile = clip,
                     backCamera = settings.backCamera,
+                    voice = voice,
+                    snapshot = snapshot,
+                    remark = remark,
+                    onRemarkShown = { remark = null },
                     onSwitchCamera = { Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) } },
                     modifier = Modifier.weight(1f),
                     onNext = { advance() },
@@ -206,8 +234,41 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                         skipped++
                         advance()
                     },
+                    onEdge = { seconds ->
+                        lastEdgeSeconds = seconds
+                        if (fastestEdge == 0 || seconds < fastestEdge) fastestEdge = seconds
+                        if (Session.edgeFast(seconds)) remark = Guardian.say(Line.SESSION_EDGE_FAST)
+                        snapshot++
+                        advance()
+                    },
+                    onDeal = { choice ->
+                        val s = script
+                        if (s != null) {
+                            val (ending, next) = Session.takeDeal(s, steps, index, choice, Session.kinks(settings, caged), Random.Default)
+                            script = s.copy(ending = ending)
+                            steps = next
+                            deal = if (choice == DealChoice.RUIN_NOW) "took the ruin" else "took the edges"
+                            remark = Guardian.say(if (choice == DealChoice.RUIN_NOW) Line.SESSION_DEAL_RUIN else Line.SESSION_DEAL_EDGES)
+                        }
+                        advance()
+                    },
+                    onFinish = { outcome ->
+                        finishOutcome = outcome
+                        if (outcome == SessionOutcome.FINISHED) remark = Guardian.say(Line.SESSION_ON_COMMAND)
+                        advance()
+                    },
                     onClip = { kind, file ->
-                        if (file != null) filmed++
+                        if (file != null) {
+                            filmed++
+                            // Her caption on what she just saved.
+                            val number = when (kind) {
+                                ClipKind.RUIN -> SessionClips.infos(context).count { it.kind == ClipKind.RUIN }
+                                else -> edges
+                            }
+                            val reps = steps.getOrNull(index)?.takeIf { it.kind == StepKind.CBT }?.reps
+                                ?: steps.take(index).lastOrNull { it.kind == StepKind.CBT }?.reps ?: 0
+                            Guardian.captionClip(file.name, Clips.caption(kind, number, lastEdgeSeconds, reps, edges))
+                        }
                         if (kind == ClipKind.RUIN) {
                             clip = file
                             clipFailed = file == null
@@ -237,8 +298,18 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 ) {
                     AngelImage(Modifier.size(160.dp))
                     SpeechBubble(finalLine)
-                    script?.let { Muted("Ending: ${it.ending.label}. Skipped: $skipped.") }
-                    if (filmed > 0) Muted("She filmed $filmed ${if (filmed == 1) "clip" else "clips"}. They're in Guided sessions > Her videos.")
+                    script?.let {
+                        Muted(
+                            listOfNotNull(
+                                "Ending: ${it.ending.label}",
+                                "Edges: $edges",
+                                "fastest ${fastestEdge}s".takeIf { fastestEdge > 0 },
+                                deal.ifBlank { null },
+                                "Skipped: $skipped".takeIf { skipped > 0 },
+                            ).joinToString(" · "),
+                        )
+                    }
+                    if (filmed > 0) Muted("She saved $filmed ${if (filmed == 1) "clip or photo" else "clips and photos"}. They're in Guided sessions > Her videos.")
                     val proof = relockProof
                     if (proof != null) {
                         Button(onClick = {
@@ -323,120 +394,278 @@ private fun Running(
     index: Int,
     caged: Boolean,
     beatSound: Boolean,
+    bigText: Boolean,
     watchFile: File?,
+    replayFile: File?,
     backCamera: Boolean,
+    voice: SessionVoice?,
+    snapshot: Int,
+    remark: String?,
+    onRemarkShown: () -> Unit,
     onSwitchCamera: () -> Unit,
     modifier: Modifier,
     onNext: () -> Unit,
     onSkip: () -> Unit,
+    onEdge: (Int) -> Unit,
+    onDeal: (DealChoice) -> Unit,
+    onFinish: (SessionOutcome) -> Unit,
     onClip: (ClipKind, File?) -> Unit,
 ) {
     val step = steps[index]
     val now = rememberNow(250)
     var startedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var ticks by remember { mutableIntStateOf(0) }
+    var count by remember { mutableIntStateOf(0) }
     var line by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf<String?>(null) }
+    var replay by remember { mutableStateOf<File?>(null) }
     val pulse = remember { Animatable(1f) }
     val tone = remember { runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 70) }.getOrNull() }
     DisposableEffect(Unit) { onDispose { tone?.release() } }
     val config by Guardian.config.flow.collectAsState()
-    // A clip she plays mid-session; if it's gone, she moves straight on.
-    val playing = step.kind == StepKind.WATCH
-    val clipToPlay = watchFile?.takeIf { playing && it.exists() }
+    val edgeGoal = steps.count { it.kind == StepKind.EDGE }
+    val edgeNumber = steps.take(index + 1).count { it.kind == StepKind.EDGE }
+    // A clip she plays: one of yours mid-session, or the ruin you just did. Gone: she moves straight on.
+    val clipToPlay = when (step.kind) {
+        StepKind.WATCH -> watchFile?.takeIf { it.exists() }
+        StepKind.REPLAY -> replay
+        else -> null
+    }
 
-    // Each command: her line, then wait its time (a tap step moves on when you tap, or when time runs out).
-    LaunchedEffect(index, steps) {
+    // Each command: her line (spoken too), then wait its time. Tap steps move on when you tap or time runs out.
+    LaunchedEffect(index, step) {
         startedAt = System.currentTimeMillis()
         ticks = 0
         line = Guardian.say(step.line)
-        comment = step.comment?.let { Guardian.line(it) }
-        if (step.kind == StepKind.WATCH && watchFile?.exists() != true) {
-            onNext()
-            return@LaunchedEffect
+        val extras = listOfNotNull(
+            remark,
+            step.comment?.let { Guardian.line(it) },
+            // Round 79: her edge goal at the start.
+            if (step.kind == StepKind.INTRO && edgeGoal > 0) Guardian.line(Line.SESSION_EDGE_GOAL) + " Tonight: $edgeGoal edges." else null,
+            step.style?.label,
+        )
+        comment = extras.joinToString("\n").ifBlank { null }
+        if (remark != null) onRemarkShown()
+        voice?.say(listOfNotNull(remark, line).joinToString(" "))
+        extras.drop(if (remark != null) 1 else 0).forEach { voice?.then(it) }
+        when (step.kind) {
+            StepKind.WATCH -> if (watchFile?.exists() != true) {
+                onNext()
+                return@LaunchedEffect
+            }
+            StepKind.REPLAY -> {
+                // The ruin clip is still being saved for a moment; wait up to 4 seconds for it.
+                var waited = 0
+                while (replayFile == null && waited < 8) {
+                    delay(500)
+                    waited++
+                }
+                replay = replayFile
+                if (replay == null) {
+                    onNext()
+                    return@LaunchedEffect
+                }
+            }
+            StepKind.COUNTDOWN -> {
+                // Her countdown, spoken. With a taunt she holds on her number while she teases you.
+                for (n in step.seconds downTo 1) {
+                    count = n
+                    voice?.say("$n")
+                    delay(1_000)
+                    if (n == step.tauntAt) {
+                        line = Guardian.say(Line.SESSION_TAUNT)
+                        voice?.say(line)
+                        delay(Session.TAUNT_SECONDS * 1_000L)
+                    }
+                }
+                onNext()
+                return@LaunchedEffect
+            }
+            StepKind.DEAL -> {
+                delay(step.seconds * 1_000L)
+                onDeal(DealChoice.RUIN_NOW) // No answer: she picks the ruin for you.
+                return@LaunchedEffect
+            }
+            StepKind.FINISH -> {
+                delay(step.seconds * 1_000L)
+                onFinish(SessionOutcome.FINISHED)
+                return@LaunchedEffect
+            }
+            else -> Unit
         }
         delay(step.seconds * 1_000L)
         onNext()
     }
 
-    // Her beat: a pulse (and a tick) per stroke. CBT stops ticking at its count.
-    LaunchedEffect(index, steps, step.bpm) {
+    // Round 79: eyes on the lens while she films an edge or CBT.
+    val films = Clips.films(step.kind, config.session)
+    LaunchedEffect(index, step, films) {
+        if (films == null || films == ClipKind.RUIN) return@LaunchedEffect
+        delay(8_000)
+        val lens = Guardian.line(Line.SESSION_LENS)
+        comment = listOfNotNull(comment, lens).joinToString("\n")
+        voice?.say(lens)
+    }
+
+    // Her beat: a pulse (and a tick) per stroke, on her pattern, speeding up on a ramp. CBT and exact
+    // counts stop at their number; she says CBT counts aloud, and every tenth stroke of a count.
+    LaunchedEffect(index, step) {
         if (step.bpm <= 0) return@LaunchedEffect
-        val period = 60_000L / step.bpm
+        if ((step.kind == StepKind.CBT || step.kind == StepKind.COUNT) && voice != null) delay(3_000)
+        var beat = 0
+        fun stroke(period: Long) {
+            if (step.reps != 0 && ticks >= step.reps) return
+            ticks++
+            if (beatSound) tone?.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
+            when {
+                step.kind == StepKind.CBT -> voice?.say("$ticks")
+                step.kind == StepKind.COUNT && ticks % 10 == 0 -> voice?.say("$ticks")
+            }
+            launch {
+                pulse.snapTo(1.35f)
+                pulse.animateTo(1f, tween((period * 0.8).toInt()))
+            }
+        }
+        fun rest() {
+            launch {
+                pulse.snapTo(1.08f)
+                pulse.animateTo(1f, tween(200))
+            }
+        }
         while (true) {
-            if (step.reps == 0 || ticks < step.reps) {
-                ticks++
-                if (beatSound) tone?.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
-                launch {
-                    pulse.snapTo(1.35f)
-                    pulse.animateTo(1f, tween((period * 0.8).toInt()))
+            val bpm = step.bpmAt(System.currentTimeMillis() - startedAt).coerceAtLeast(10)
+            val period = 60_000L / bpm
+            when (step.pattern) {
+                BeatPattern.STEADY -> {
+                    stroke(period)
+                    delay(period)
+                }
+                BeatPattern.HEARTBEAT -> {
+                    stroke(period / 4)
+                    delay(period / 4)
+                    stroke(period / 4)
+                    delay(period * 3 / 4)
+                }
+                BeatPattern.STUTTER -> {
+                    val r = Random.nextDouble()
+                    when {
+                        r < 0.2 -> rest()
+                        r < 0.35 -> {
+                            stroke(period / 2)
+                            delay(period / 2)
+                            stroke(period / 2)
+                        }
+                        else -> stroke(period)
+                    }
+                    delay(period)
+                }
+                BeatPattern.EVERY_OTHER -> {
+                    beat++
+                    if (beat % 2 == 1) stroke(period) else rest()
+                    delay(period)
                 }
             }
-            delay(period)
         }
     }
 
     // What she films on this step: the ruin always, edges and CBT if you let her. Index keeps each step its own clip.
-    val films = Clips.films(step.kind, config.session)
     val record = films?.let {
         ClipRequest(index, it, if (it == ClipKind.RUIN) Session.RUIN_CLIP_SECONDS - 1 else step.seconds)
     }
 
     val left = ((startedAt + step.seconds * 1_000L - now) / 1_000).coerceAtLeast(0)
+    val playing = clipToPlay != null
     val totalLeft = (if (playing) 0 else left) + steps.drop(index + 1).sumOf { it.estimate }
+    val bpmNow = step.bpmAt(now - startedAt)
 
     Column(
         modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(if (bigText) 8.dp else 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Muted("About ${(totalLeft + 59) / 60} min left" + if (caged) " · locked" else "")
-        SpeechBubble(listOfNotNull(line.ifBlank { null }, comment).joinToString("\n"))
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            // You see yourself the whole session. While she plays a clip, you shrink to the corner.
-            SessionCamera(
-                record = record,
-                onClip = onClip,
-                modifier = if (clipToPlay != null) {
-                    Modifier.align(Alignment.BottomEnd).size(110.dp, 150.dp).clip(MaterialTheme.shapes.medium)
-                } else {
-                    Modifier.fillMaxSize()
-                },
-                back = backCamera,
-            )
+        Muted(
+            listOfNotNull(
+                "About ${(totalLeft + 59) / 60} min left",
+                "edge $edgeNumber of $edgeGoal".takeIf { edgeGoal > 0 && edgeNumber > 0 },
+                "locked".takeIf { caged },
+            ).joinToString(" · "),
+        )
+        val words = listOfNotNull(line.ifBlank { null }, comment).joinToString("\n")
+        if (bigText) {
+            Text(words, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        } else {
+            SpeechBubble(words)
+        }
+        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Then vs now: her clip above, you live below. Otherwise you see yourself the whole session.
             if (clipToPlay != null) {
-                ClipPlayer(clipToPlay, Modifier.fillMaxSize().padding(bottom = 160.dp), onEnd = onNext)
-            }
-            if (step.bpm > 0) {
-                Box(
-                    Modifier.size(120.dp).scale(pulse.value).clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)),
+                Text(
+                    if (step.kind == StepKind.REPLAY) "Your ruin, just now" else "You, then",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
                 )
+                ClipPlayer(clipToPlay, Modifier.weight(1f).fillMaxWidth(), onEnd = onNext)
+                Text("You, now", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
-            when {
-                step.kind == StepKind.COUNTDOWN -> Text("$left", style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.Bold)
-                record != null -> Text(
-                    "REC",
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
-                )
-                else -> Unit
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                SessionCamera(record = record, onClip = onClip, modifier = Modifier.fillMaxSize(), back = backCamera, snapshot = snapshot)
+                if (step.bpm > 0) {
+                    Box(
+                        Modifier.size(if (bigText) 160.dp else 120.dp).scale(pulse.value).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)),
+                    )
+                }
+                when {
+                    step.kind == StepKind.COUNTDOWN -> Text("$count", style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.Bold)
+                    record != null -> Text(
+                        "REC",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+                    )
+                    else -> Unit
+                }
             }
         }
         val detail = when {
+            playing && step.bpm > 0 -> "Stroke through it · ${step.bpm} per minute"
             playing -> "Watch yourself"
             step.kind == StepKind.CBT -> "Count: ${ticks.coerceAtMost(step.reps)} of ${step.reps}"
-            step.bpm > 0 -> "Follow the beat · ${step.bpm} per minute"
+            step.kind == StepKind.COUNT -> "Stroke ${ticks.coerceAtMost(step.reps)} of ${step.reps}"
+            step.kind == StepKind.COUNTDOWN || step.kind == StepKind.DEAL || step.kind == StepKind.FINISH -> null
+            step.bpmTo > 0 && step.kind != StepKind.EDGE -> "Faster and faster · $bpmNow per minute"
+            step.bpm > 0 && step.pattern != BeatPattern.STEADY -> "${step.pattern.label} · $bpmNow per minute"
+            step.bpm > 0 -> "Follow the beat · $bpmNow per minute"
             step.kind.still -> "Hands off · ${left}s"
             step.kind.tap != null -> "Up to ${left / 60}:${"%02d".format(left % 60)}"
             else -> "${left}s"
         }
-        Text(detail, style = MaterialTheme.typography.titleMedium)
+        detail?.let { Text(it, style = if (bigText) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium) }
+        when (step.kind) {
+            StepKind.EDGE -> Button(
+                onClick = { onEdge(((System.currentTimeMillis() - startedAt) / 1_000).toInt()) },
+                modifier = Modifier.fillMaxWidth().height(if (bigText) 72.dp else 56.dp),
+            ) { Text("I'm at the edge", style = MaterialTheme.typography.titleMedium) }
+            StepKind.DEAL -> {
+                Button(onClick = { onDeal(DealChoice.RUIN_NOW) }, modifier = Modifier.fillMaxWidth()) { Text("A sure ruin, now") }
+                OutlinedButton(onClick = { onDeal(DealChoice.EDGES) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("${Session.DEAL_EDGES} more edges and her coin flip")
+                }
+                Muted("No answer in ${left}s and she picks the ruin.")
+            }
+            StepKind.FINISH -> {
+                Button(onClick = { onFinish(SessionOutcome.FINISHED) }, modifier = Modifier.fillMaxWidth()) { Text("Right on her command") }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { onFinish(SessionOutcome.MISSED_COMMAND) }) { Text("Too early") }
+                    OutlinedButton(onClick = { onFinish(SessionOutcome.MISSED_COMMAND) }) { Text("Too late") }
+                }
+                Muted("Be honest. Too early or too late is a failure.")
+            }
+            else -> step.kind.tap?.let { label -> Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(label) } }
+        }
         if (record == null && !playing) {
             TextButton(onClick = onSwitchCamera) { Text(if (backCamera) "Use front camera" else "Use back camera") }
         }
-        step.kind.tap?.let { label -> Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(label) } }
         if (step.kind.skippable) OutlinedButton(onClick = onSkip) { Text("Too much (skip, no penalty)") }
     }
 }

@@ -1,9 +1,35 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.25.0 (save to phone). Sections 0 to 0w cover what 0.6.0 to 0.25.0 changed
+> **Version under test:** 0.26.0 (sessions part 1). Sections 0 to 0x cover what 0.6.0 to 0.26.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0x. New in 0.26.0: sessions part 1
+Turn on Edging, Speed changes, CBT, Countdowns and the new **Keep going** kink for the best test. Set endings to try each one.
+- [ ] Settings > About shows **Version 0.26.0**
+- [ ] **Her voice:** she says every command, counts CBT, says countdown numbers. Switch off in Guided sessions works
+- [ ] **Whisper:** between 22:00 and 06:00 her voice is slower and quieter
+- [ ] **Big text:** her words, the beat circle and the edge button are big enough to read from a distance
+- [ ] **Edge goal:** the intro says "Tonight: N edges", and the top shows "edge 2 of N"
+- [ ] **Faster and faster:** edges and ramps speed the beat up (the per-minute number climbs)
+- [ ] **Patterns:** heartbeat (two quick, a pause), stutter, every other beat
+- [ ] **Exact counts:** "Stroke 12 of 40", every tenth spoken
+- [ ] **Grip commands** appear under her line (only the tip, two fingers...)
+- [ ] **Balance:** sometimes after "I'm at the edge" she keeps you at the edge with very slow strokes
+- [ ] **Rests** after edges get shorter each time
+- [ ] **Too quick:** reaching the edge in under 40 seconds gets mocked
+- [ ] **Edge face:** a photo appears in Her videos tagged with "Your face at edge N"
+- [ ] **Look into the lens:** 8 seconds into a filmed edge or CBT
+- [ ] **Countdown taunts:** some countdowns stop on a number while she teases you
+- [ ] **Not yet:** some permission countdowns stop at 1 for one more edge. Some denials come at the end of a countdown
+- [ ] **Her deal:** before some ruined or denied endings, two buttons. The ruin works; the edges give 5 edges then her coin flip. No answer in 60 seconds picks the ruin
+- [ ] **Cum on command:** permission ends with three buttons. Too early or too late counts as a failure
+- [ ] **Keep going:** you stroke through your finish, or through the replay after a ruin
+- [ ] **Instant replay:** right after the ruin, your ruin plays back (quickshot too)
+- [ ] **Watch break:** your old clip above, you live below, stroking to her beat
+- [ ] **Her videos:** captions on the grid and in the player, **Play her ruin reel** plays every ruin in a row
+- [ ] **Your sessions:** totals and the last 10 sessions with edges, fastest edge, her deal and clips saved
 
 ## 0w. New in 0.25.0: save to phone
 - [ ] Settings > About shows **Version 0.25.0**

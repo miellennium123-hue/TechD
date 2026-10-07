@@ -137,4 +137,41 @@ class ClipsTest {
         assertEquals(1, state.sessions.size)
         assertNull(state.watch)
     }
+
+    // ---- Round 79 ---------------------------------------------------------------------------
+
+    @Test
+    fun edgeFacesArePhotosSheNeverPlays() {
+        val face = Clips.name(ClipKind.FACE, 5L)
+        assertTrue(face.endsWith(".jpg"))
+        assertEquals(ClipKind.FACE, Clips.parse(face)?.kind)
+        assertFalse(ClipKind.FACE.video)
+        assertNull(Clips.parse("clip_5_face.mp4"))
+        val onlyFace = listOf(ClipInfo(face, 5, ClipKind.FACE))
+        assertNull(Clips.pick(onlyFace, Random(1)))
+        val mixed = onlyFace + ClipInfo("b", 6, ClipKind.EDGE)
+        repeat(20) { assertEquals(ClipKind.EDGE, Clips.pick(mixed, Random(it))?.kind) }
+    }
+
+    @Test
+    fun herCaptions() {
+        assertEquals("Ruin #12 · after 6 edges", Clips.caption(ClipKind.RUIN, 12, edges = 6))
+        assertEquals("Ruin #1", Clips.caption(ClipKind.RUIN, 1))
+        assertEquals("Edge 3 · 25s to the edge. Too quick", Clips.caption(ClipKind.EDGE, 3, seconds = 25))
+        assertEquals("Edge 3 · 90s to the edge", Clips.caption(ClipKind.EDGE, 3, seconds = 90))
+        assertEquals("CBT · 8 slaps", Clips.caption(ClipKind.CBT, 0, reps = 8))
+        assertEquals("Your face at edge 2", Clips.caption(ClipKind.FACE, 2))
+        val kept = Clips.keepCaptions(mapOf("a" to "x", "gone" to "y"), setOf("a", "b"))
+        assertEquals(mapOf("a" to "x"), kept)
+    }
+
+    @Test
+    fun ruinReelOldestFirst() {
+        val clips = listOf(
+            ClipInfo("r2", 20, ClipKind.RUIN),
+            ClipInfo("e", 15, ClipKind.EDGE),
+            ClipInfo("r1", 10, ClipKind.RUIN),
+        )
+        assertEquals(listOf("r1", "r2"), Clips.reel(clips).map { it.name })
+    }
 }

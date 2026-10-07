@@ -23,7 +23,11 @@ import com.guardianangel.core.Session
 import com.guardianangel.core.SessionClips
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
+import com.guardianangel.data.SessionOutcome
 import com.guardianangel.data.Sessions
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /** Guided sessions (round 46): her own screen from Home, with Start, the kink menu and every session setting. */
@@ -88,6 +92,22 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
             SwitchRow("Beat sound", "A tick on every beat, as well as the pulse.", config.session.beatSound) { v ->
                 update { it.copy(session = it.session.copy(beatSound = v)) }
             }
+            SwitchRow(
+                "Her voice",
+                "She says every command out loud and counts CBT for you, so you can watch yourself instead of reading. " +
+                    "Uses your phone's own voice, at media volume.",
+                config.session.voice,
+            ) { v -> update { it.copy(session = it.session.copy(voice = v)) } }
+            SwitchRow(
+                "Whisper late at night",
+                "From 22:00 to 06:00 her voice drops to a slow, quiet whisper.",
+                config.session.whisper,
+            ) { v -> update { it.copy(session = it.session.copy(whisper = v)) } }
+            SwitchRow(
+                "Big text",
+                "Her words, the beat and the edge button big enough to read and hit from across the room.",
+                config.session.bigText,
+            ) { v -> update { it.copy(session = it.session.copy(bigText = v)) } }
             Muted(
                 "The camera is on for every session, so you watch yourself the whole time. She always films a ruin. " +
                     "Clips have sound if you allow the microphone, and stay private to this app.",
@@ -116,14 +136,53 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
                 config.session.watchOnLockScreens,
             ) { v -> update { it.copy(session = it.session.copy(watchOnLockScreens = v)) } }
             if (config.lockGuard) Muted("Lock guard: switching check-ins or lock screens off takes 30 minutes.")
-            if (state.sessions.isNotEmpty()) {
-                Muted("Last sessions: " + state.sessions.takeLast(5).joinToString(", ") {
-                    (if (it.quick) "quickshot " else "") + it.outcome.name.lowercase().replace('_', ' ')
-                })
+        }
+
+        // Round 79: your sessions, with what she counted.
+        if (state.sessions.isNotEmpty()) {
+            SectionCard("Your sessions") {
+                val all = state.sessions
+                Text(
+                    "${all.size} sessions · ${all.sumOf { it.edges }} edges · " +
+                        (all.filter { it.fastestEdge > 0 }.minOfOrNull { it.fastestEdge }?.let { "fastest edge ${it}s · " } ?: "") +
+                        "${all.count { it.outcome == SessionOutcome.RUINED }} ruined · " +
+                        "${all.count { it.outcome == SessionOutcome.FINISHED }} finished · " +
+                        "${all.count { it.outcome == SessionOutcome.DENIED }} denied",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                val date = remember { SimpleDateFormat("EEE d MMM, HH:mm", Locale.getDefault()) }
+                all.takeLast(10).reversed().forEach { r ->
+                    Column {
+                        Text(
+                            date.format(Date(r.at)) + if (r.quick) " · quickshot" else " · ${r.minutes} min",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Muted(
+                            listOfNotNull(
+                                outcomeLabel(r.outcome),
+                                "${r.edges} edges".takeIf { r.edges > 0 },
+                                "fastest ${r.fastestEdge}s".takeIf { r.fastestEdge > 0 },
+                                r.deal.ifBlank { null },
+                                "${r.filmed} saved".takeIf { r.filmed > 0 },
+                                "locked".takeIf { r.caged },
+                            ).joinToString(" · "),
+                        )
+                    }
+                }
+                Muted("She keeps your last ${Sessions.HISTORY}. Counts start from version 0.26.0.")
                 TextButton(onClick = { Guardian.clearSessions() }) { Text("Clear session history") }
             }
         }
     }
+}
+
+private fun outcomeLabel(outcome: SessionOutcome): String = when (outcome) {
+    SessionOutcome.FINISHED -> "finished"
+    SessionOutcome.RUINED -> "ruined"
+    SessionOutcome.RUIN_FAILED -> "couldn't stop"
+    SessionOutcome.DENIED -> "denied"
+    SessionOutcome.MISSED_COMMAND -> "missed her command"
 }
 
 /** One ending's weight, 0 to 100 in steps of 10, with its share right now. */
