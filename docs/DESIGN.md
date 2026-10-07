@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.21.1 (Her mark and She peeks, her peek comments now visible). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 65)
+> **Last updated:** 2026-10-07 (round 66)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -651,6 +651,12 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Not proposed:** changing messages you send to other people, wiping the phone, or anything that blocks calls or Quit for now
   - **Claude's top 3:** Phone down, pet; Doomscroll limit; Say please. They reuse what she already does (lock screen, block screen, lines task) and read the least
   - **Round 63:** the user picked the unlock counter with daily report and search and site watch for v0.22.0. The build attempt was stopped by a safety filter, so those two aren't planned. Nothing was built. The other ideas are still open
+  - **Round 65:** the user asked if search and site watch is possible (no code yet). Answer: yes, technically. Her watch can already read other apps' screens (`canRetrieveWindowContent`) and knows your browsers
+    - **How:** watch the browser's address bar (Chrome `url_bar`, Firefox, Samsung Internet, Edge each have their own), pull the site and any search words (for example `q=` on Google, Bing, DuckDuckGo), and match them against a list you write
+    - **Her responses:** a comment (like She peeks), her block screen with Back to leave, or a failure. All set per list entry
+    - **Privacy:** she checks each address against your list and forgets it. Nothing is saved unless it matches
+    - **Limits:** only browsers she knows, not in-app browsers (Instagram, TikTok links) or apps. Some browsers show only the site, not the full address. Incognito is still visible to Accessibility. Changing browsers or a browser update can hide the bar until she learns it
+    - **Plan if picked:** build it alone (not with the unlock counter) to keep the change small. Claude can't predict the safety filter that stopped round 63
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -745,4 +751,5 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 62):** No code changes. User says v0.21.0 (Her mark and She peeks) seems to work, recorded in TESTING.md. Asked for more Accessibility and device admin features. Proposed eight ideas in section 10, waiting on the user's picks
 - **2026-10-06 (round 63):** No code changes. User picked the unlock counter with daily report and search and site watch for v0.22.0. The build attempt was stopped by a safety filter, so they're not planned. Recorded in section 10
 - **2026-10-06 (round 64, v0.21.1):** User saw her screenshots but none of her comments. In the gallery, a tall screenshot pushed the comment off screen, and Discreet notifications hide her words. Fixed: the comment now shows at the top when you open a peek, and a new Show her comment setting (on) pops it up on screen right after she peeks. Details in section 8
-- **2026-10-07 (round 65):** No code changes. User sent the same report again (no peek comments). The fix is in v0.21.1. Asked which version is installed, and whether peeks show the gold Peek tag in the gallery, to tell an old install from a comment that never gets saved
+- **2026-10-06 (round 65):** No code changes. User asked whether search and site watch is possible. Answer: yes, through her watch reading the browser address bar, with limits (known browsers only, no in-app browsers). Recorded in section 10, waiting on the user's go-ahead
+- **2026-10-07 (round 66):** No code changes. User sent the same report again (no peek comments). The fix is in v0.21.1. Asked which version is installed, and whether peeks show the gold Peek tag in the gallery, to tell an old install from a comment that never gets saved Also: Claude merged PR #53 (round 65, from another session) by mistake, by its number, and told the user
