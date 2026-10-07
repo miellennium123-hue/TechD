@@ -1,9 +1,26 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.26.0 (sessions part 1). Sections 0 to 0x cover what 0.6.0 to 0.26.0 changed
+> **Version under test:** 0.27.0 (sessions part 2). Sections 0 to 0y cover what 0.6.0 to 0.27.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0y. New in 0.27.0: sessions part 2
+- [ ] Settings > About shows **Version 0.27.0**
+- [ ] **Start screen:** the camera preview shows you before you tap Start
+- [ ] **Themes:** chips on the start screen; each changes the length and endings shown. CBT discipline only shows with CBT on. Your pick is remembered
+- [ ] **She decides the length:** the start screen says she won't tell you, and the session hides the time left
+- [ ] **Training:** switch on; the start screen says week 1. (Later weeks: a little longer, rarer permission)
+- [ ] **Warm-up and cool-down:** slow strokes first, a hands-off cool-down last, chapter titles at the top
+- [ ] **Punishment sessions:** after any failure, Home says you owe one and the next session is a punishment (always ruined). Finishing it clears it
+- [ ] **Ruin after a catch:** after a Porn block catch, a notification says you owe a ruin within a day. The next session is a ruin. Ending ruined clears it
+- [ ] **Booked sessions:** switch on; Guided sessions and Home show the booked time. A reminder 15 minutes before, one at the time. Starting within 15 minutes keeps it and books the next. Missing it is a failure
+- [ ] **Clamps** (kink on): on, her timer up to 3 minutes, off. "Too much" skips
+- [ ] **Small-size remarks** (kink on, with a Rate me result): remarks include your percentile
+- [ ] **Landscape:** turn the phone; camera left, her words and buttons right
+- [ ] **Dark:** blacks out the screen except the beat; she still films and talks
+- [ ] **Torch:** with the back camera, the Torch button lights it
+- [ ] **Lock guard on:** switching off training, punishment sessions, the ruin after a catch or booked sessions takes 30 minutes
 
 ## 0x. New in 0.26.0: sessions part 1
 Turn on Edging, Speed changes, CBT, Countdowns and the new **Keep going** kink for the best test. Set endings to try each one.

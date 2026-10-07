@@ -18,6 +18,10 @@ object Scheduler {
     const val ACTION_TASK = "com.guardianangel.action.TASK"
     const val ACTION_SUMMONS = "com.guardianangel.action.SUMMONS"
     const val ACTION_WATCH = "com.guardianangel.action.WATCH"
+    const val ACTION_BOOK_REMIND = "com.guardianangel.action.BOOK_REMIND"
+    const val ACTION_BOOK_NOW = "com.guardianangel.action.BOOK_NOW"
+    const val ACTION_BOOK_MISS = "com.guardianangel.action.BOOK_MISS"
+    const val ACTION_RUIN_DUE = "com.guardianangel.action.RUIN_DUE"
     const val EXTRA_ID = "id"
 
     private const val RC_CHECK_IN = 1
@@ -25,6 +29,10 @@ object Scheduler {
     private const val RC_TASK = 3
     private const val RC_SUMMONS = 4
     private const val RC_WATCH = 5
+    private const val RC_BOOK_REMIND = 6
+    private const val RC_BOOK_NOW = 7
+    private const val RC_BOOK_MISS = 8
+    private const val RC_RUIN_DUE = 9
 
     fun scheduleAll(context: Context) {
         val st = Guardian.state.value
@@ -34,7 +42,31 @@ object Scheduler {
         st.task?.let { scheduleTask(context, Guardian.nextTaskAlarm(it, Guardian.now())) }
         st.summons?.let { scheduleSummons(context, it.lockAt) }
         st.watch?.takeIf { !it.started }?.let { scheduleWatch(context, it.dueAt) }
+        st.booked?.takeIf { !it.kept }?.let { scheduleBooking(context, it.at) }
+        st.ruinOwedBy.takeIf { it > 0 }?.let { scheduleRuinDue(context, it) }
     }
+
+    /** Round 84: her booked session at [at]: a reminder 15 minutes before, the start, and the miss 15 minutes after. */
+    fun scheduleBooking(context: Context, at: Long) {
+        val now = Guardian.now()
+        val remind = at - SessionPlan.BOOK_REMIND_MINUTES * MINUTE
+        if (remind > now) set(context, pending(context, ACTION_BOOK_REMIND, RC_BOOK_REMIND), remind)
+        if (at > now) set(context, pending(context, ACTION_BOOK_NOW, RC_BOOK_NOW), at)
+        set(context, pending(context, ACTION_BOOK_MISS, RC_BOOK_MISS), max(at + SessionPlan.BOOK_WINDOW_MINUTES * MINUTE, now + 5_000))
+    }
+
+    fun cancelBooking(context: Context) {
+        cancel(context, pending(context, ACTION_BOOK_REMIND, RC_BOOK_REMIND))
+        cancel(context, pending(context, ACTION_BOOK_NOW, RC_BOOK_NOW))
+        cancel(context, pending(context, ACTION_BOOK_MISS, RC_BOOK_MISS))
+    }
+
+    /** Round 84: the ruin you owe after a Porn block catch is due at [at]. */
+    fun scheduleRuinDue(context: Context, at: Long) =
+        set(context, pending(context, ACTION_RUIN_DUE, RC_RUIN_DUE), max(at, Guardian.now() + 5_000))
+
+    fun cancelRuinDue(context: Context) =
+        cancel(context, pending(context, ACTION_RUIN_DUE, RC_RUIN_DUE))
 
     /** Next check-in lands somewhere between 60% and 100% of the interval, so never later than it. */
     fun scheduleNextCheckIn(context: Context) {
@@ -81,6 +113,8 @@ object Scheduler {
     fun cancelAll(context: Context, proofs: List<ProofRequest>) {
         cancelSummons(context)
         cancelWatch(context)
+        cancelBooking(context)
+        cancelRuinDue(context)
         cancel(context, pending(context, ACTION_CHECK_IN, RC_CHECK_IN))
         cancelChastityEnd(context)
         cancelTask(context)

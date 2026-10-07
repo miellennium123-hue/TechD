@@ -45,6 +45,10 @@ enum class StepKind(
     CAGE_TEASE(Line.SESSION_CAGE_TEASE),
     TOY(Line.SESSION_TOY),
     CBT(Line.SESSION_CBT_SOFT, skippable = true),
+    /** Round 84, Clamps kink: put them on, her timer, then off. Never longer than 3 minutes. */
+    CLAMP_ON(Line.SESSION_CLAMP_ON, tap = "They're on", watched = false, expected = 30),
+    CLAMP(Line.SESSION_CLAMP, skippable = true),
+    CLAMP_OFF(Line.SESSION_CLAMP_OFF, tap = "They're off", watched = false, expected = 20),
     SOUND_IN(Line.SESSION_SOUND_IN, watched = false, skippable = true),
     SOUND_HOLD(Line.SESSION_SOUND_HOLD, still = true, watched = false, skippable = true),
     SOUND_OUT(Line.SESSION_SOUND_OUT, watched = false, skippable = true),
@@ -68,6 +72,8 @@ enum class StepKind(
     RUIN(Line.SESSION_RUIN, still = true, watched = false),
     DENIED(Line.SESSION_DENIED, still = true, watched = false),
     RELOCK(Line.SESSION_RELOCK, tap = "Locked again", watched = false, expected = 30),
+    /** Round 84: her cool-down after every ending. Hands off, breathe. */
+    COOL(Line.SESSION_COOL, still = true, watched = false),
 }
 
 /** Round 79: how she wants your strokes on her beat. [label] is shown with the beat. */
@@ -114,6 +120,8 @@ data class Step(
     val pattern: BeatPattern = BeatPattern.STEADY,
     val style: StrokeStyle? = null,
     val tauntAt: Int = 0,
+    /** Round 84: part of her warm-up. */
+    val warmup: Boolean = false,
 ) {
     /** Her beat [elapsedMs] into the step: steady, or partway from [bpm] to [bpmTo]. */
     fun bpmAt(elapsedMs: Long): Int {
@@ -165,6 +173,19 @@ object Session {
     const val DEAL_CHANCE = 0.35
     const val TRICK_CHANCE = 0.25
     const val TAUNT_CHANCE = 0.3
+    /** Round 84: clamps at most twice a session, each for at most this long. */
+    const val CLAMPS_PER_SESSION = 2
+    const val CLAMP_MAX_SECONDS = 180
+    const val COOL_SECONDS = 45
+
+    /** Round 84: the chapter a command belongs to, shown on screen when it changes. */
+    fun chapter(step: Step): String = when {
+        step.warmup -> "Warm-up"
+        step.kind == StepKind.COOL -> "Cool-down"
+        step.ending -> "The ending"
+        step.kind == StepKind.INTRO -> ""
+        else -> "Her session"
+    }
 
     /** The kinks that can run right now. */
     fun kinks(settings: SessionSettings, caged: Boolean): Set<Kink> =
@@ -218,22 +239,27 @@ object Session {
         random: Random,
         soundingReady: Boolean = false,
         watchClip: Boolean = false,
+        sizeKnown: Boolean = false,
     ): SessionScript {
         val kinks = kinks(settings, caged).let { if (soundingReady) it else it - Kink.SOUNDING }
-        val target = settings.minutes.coerceIn(Sessions.MIN_MINUTES, Sessions.MAX_MINUTES) * 60
+        val target = settings.minutes.coerceIn(Sessions.MIN_MINUTES, Sessions.HER_MAX_MINUTES) * 60
         val ending = pickEnding(settings, caged, random.nextDouble())
         val endingSteps = endingSteps(ending, caged, kinks, random)
         val bodyTarget = (target - endingSteps.sumOf { it.estimate }).coerceAtLeast(60)
         val commentary = listOfNotNull(
             Line.SESSION_PRAISE.takeIf { Kink.PRAISE in kinks },
             Line.SESSION_HUMILIATION.takeIf { Kink.HUMILIATION in kinks },
+            // Round 84: small-size remarks need your Rate me result.
+            Line.SESSION_SPH.takeIf { Kink.SMALL_SIZE in kinks && sizeKnown },
         )
         var cbtLeft = if (settings.cbt == CbtLevel.HARD) CBT_HARD_LIMIT else CBT_SOFT_LIMIT
         val soundAt = if (Kink.SOUNDING in kinks) bodyTarget / 3 else -1
         var sounded = false
         var edges = 0
+        var clampsLeft = CLAMPS_PER_SESSION
 
         val steps = mutableListOf(Step(StepKind.INTRO, 6))
+        steps += warmup(caged, random)
         var elapsed = steps.sumOf { it.estimate }
         var count = 0
         while (elapsed < bodyTarget) {
@@ -245,11 +271,12 @@ object Session {
                 // Without a lock, stroking is the base: after anything else, back to the beat.
                 !caged && !steps.last().kind.stroking -> listOf(base(caged, kinks, random))
                 else -> {
-                    val extra = extra(kinks, settings.cbt, cbtLeft, steps.last().kind, edges, random)
+                    val extra = extra(kinks, settings.cbt, cbtLeft, clampsLeft, steps.last().kind, edges, random)
                     if (extra == null || random.nextDouble() < 0.3) listOf(base(caged, kinks, random)) else extra
                 }
             }
             if (next.any { it.kind == StepKind.CBT }) cbtLeft--
+            if (next.any { it.kind == StepKind.CLAMP }) clampsLeft--
             edges += next.count { it.kind == StepKind.EDGE }
             val withCountdown =
                 if (Kink.COUNTDOWNS in kinks && next.first().kind != StepKind.SOUND_IN && random.nextDouble() < 0.3) {
@@ -303,6 +330,17 @@ object Session {
             }
         }
     }
+
+    /** Round 84: her warm-up. Slow, light strokes (hands still during a lock) before she starts for real. */
+    private fun warmup(caged: Boolean, random: Random): List<Step> =
+        if (caged) {
+            listOf(Step(StepKind.HOLD, 20, line = Line.SESSION_WARMUP, warmup = true))
+        } else {
+            listOf(
+                Step(StepKind.STROKE, random.nextInt(25, 36), bpm = random.nextInt(40, 56), line = Line.SESSION_WARMUP, warmup = true),
+                Step(StepKind.STROKE, random.nextInt(20, 31), bpm = random.nextInt(55, 71), warmup = true),
+            )
+        }
 
     /** A countdown, sometimes with her taunt held on a number partway down. */
     private fun countdown(seconds: Int, random: Random): Step =
@@ -401,7 +439,8 @@ object Session {
                 listOf(edge(random.nextInt(110, 141)), Step(StepKind.DENIED, 15))
             }
         }
-        return steps.map { it.copy(ending = true) }
+        // Round 84: her cool-down after every ending.
+        return (steps + Step(StepKind.COOL, COOL_SECONDS)).map { it.copy(ending = true) }
     }
 
     /** An edge: her beat starts at [bpm] and speeds up as you get closer. */
@@ -432,11 +471,12 @@ object Session {
     }
 
     /** One command from the kink menu, or null if nothing fits right now. [edges]: edges so far, for shrinking rests. */
-    private fun extra(kinks: Set<Kink>, cbt: CbtLevel, cbtLeft: Int, previous: StepKind, edges: Int, random: Random): List<Step>? {
+    private fun extra(kinks: Set<Kink>, cbt: CbtLevel, cbtLeft: Int, clampsLeft: Int, previous: StepKind, edges: Int, random: Random): List<Step>? {
         val options = kinks.filter {
             when (it) {
                 Kink.CBT -> cbtLeft > 0 && previous != StepKind.CBT
-                Kink.PRAISE, Kink.HUMILIATION, Kink.COUNTDOWNS, Kink.SOUNDING, Kink.POST_ORGASM -> false
+                Kink.CLAMPS -> clampsLeft > 0
+                Kink.PRAISE, Kink.HUMILIATION, Kink.COUNTDOWNS, Kink.SOUNDING, Kink.POST_ORGASM, Kink.SMALL_SIZE -> false
                 else -> true
             }
         }
@@ -463,6 +503,11 @@ object Session {
             Kink.CAGE_TEASE -> listOf(Step(StepKind.CAGE_TEASE, random.nextInt(20, 46), bpm = random.nextInt(50, 91)))
             Kink.TOYS -> listOf(Step(StepKind.TOY, random.nextInt(30, 61)))
             Kink.CBT -> listOf(cbtStep(cbt, random))
+            Kink.CLAMPS -> listOf(
+                Step(StepKind.CLAMP_ON, 120),
+                Step(StepKind.CLAMP, random.nextInt(60, CLAMP_MAX_SECONDS + 1)),
+                Step(StepKind.CLAMP_OFF, 60),
+            )
             else -> null
         }
     }

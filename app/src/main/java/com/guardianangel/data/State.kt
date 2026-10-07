@@ -46,6 +46,14 @@ data class GuardianState(
     val caughtUntil: Long = 0,
     /** Her catches, newest last. No screenshots, just when and where. Quit for now keeps them. */
     val catches: List<CatchRecord> = emptyList(),
+    /** Round 84: when her training program started (0: not training). Quit for now keeps it. */
+    val trainingStart: Long = 0,
+    /** Round 84: a failure means your next session is a punishment session. Quit for now clears it. */
+    val owedPunishment: Boolean = false,
+    /** Round 84: Porn block caught you; a ruined session is due by this time (0: none). Quit for now clears it. */
+    val ruinOwedBy: Long = 0,
+    /** Round 84: her booked session. Quit for now clears it. */
+    val booked: BookedSession? = null,
     /** Round 79: her caption on each clip, by file name. Quit for now keeps them. */
     val clipCaptions: Map<String, String> = emptyMap(),
     /** Round 77: a check-in wants you to watch one of your clips. Quit for now clears it. */
@@ -63,6 +71,13 @@ data class PeekRecord(
     val file: String,
     val app: String,
     val line: String,
+)
+
+/** Her booked session (round 84): start any session within 15 minutes of [at], or it's a failure. */
+@Serializable
+data class BookedSession(
+    val at: Long,
+    val kept: Boolean = false,
 )
 
 /**

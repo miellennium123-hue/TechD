@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Color as AndroidColor
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -21,6 +22,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +55,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -65,6 +70,9 @@ import com.guardianangel.core.Session
 import com.guardianangel.core.BeatPattern
 import com.guardianangel.core.DealChoice
 import com.guardianangel.core.SessionClips
+import com.guardianangel.core.SessionPlan
+import com.guardianangel.core.SessionPlanned
+import com.guardianangel.core.SessionReason
 import com.guardianangel.core.SessionScript
 import com.guardianangel.core.Step
 import com.guardianangel.core.StepKind
@@ -72,6 +80,7 @@ import com.guardianangel.data.Kink
 import com.guardianangel.data.SessionEnding
 import com.guardianangel.data.SessionOutcome
 import com.guardianangel.data.SessionRecord
+import com.guardianangel.data.SessionTheme
 import com.guardianangel.ui.theme.GuardianTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -136,6 +145,15 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
     var deal by remember { mutableStateOf("") }
     var finishOutcome by remember { mutableStateOf(SessionOutcome.FINISHED) }
     var remark by remember { mutableStateOf<String?>(null) }
+    // Round 84: her plan for this session (theme, training, her length, what you owe).
+    val gstate by Guardian.state.flow.collectAsState()
+    var chosen by remember { mutableStateOf(settings.theme) }
+    val lengthRoll = remember { Random.Default.nextDouble() }
+    val plan = remember(chosen, config, gstate.owedPunishment, gstate.ruinOwedBy, gstate.trainingStart) {
+        SessionPlan.plan(config, gstate, chosen, System.currentTimeMillis(), lengthRoll)
+    }
+    var running by remember { mutableStateOf<SessionPlanned?>(null) }
+    val sizeNote = gstate.ratings.lastOrNull()?.let { "Rate me: longer than ${it.lengthPercentile}% of men." }
     val voice = remember {
         if (settings.voice) SessionVoice(context, Session.whisper(settings, Guardian.minuteOfDay())) else null
     }
@@ -146,7 +164,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
         val (line, proof) = Guardian.finishSession(
             SessionRecord(
                 System.currentTimeMillis(),
-                if (s.quick) (s.estimate + 59) / 60 else settings.minutes,
+                if (s.quick) (s.estimate + 59) / 60 else (running?.settings?.minutes ?: settings.minutes),
                 s.ending,
                 caged,
                 skipped = skipped,
@@ -156,6 +174,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 filmed = filmed,
                 fastestEdge = fastestEdge,
                 deal = deal,
+                theme = if (s.quick) SessionTheme.YOURS else running?.theme ?: SessionTheme.YOURS,
             ),
         )
         finalLine = line
@@ -192,6 +211,9 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 }
                 phase == SessionPhase.SETUP -> Setup(
                     quick = quick,
+                    plan = plan,
+                    chosen = chosen,
+                    onTheme = { chosen = it },
                     hasCamera = hasCamera,
                     hasMic = hasMic,
                     caged = caged,
@@ -205,8 +227,19 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                         val built = if (quick) {
                             Session.quickshot(caged, Random.Default, watchClip = watch)
                         } else {
-                            Session.build(settings, caged, Random.Default, soundingReady, watchClip = watch)
+                            Session.build(plan.settings, caged, Random.Default, soundingReady, watchClip = watch, sizeKnown = sizeNote != null)
                         }
+                        running = plan
+                        if (!quick && plan.reason == SessionReason.CHOSEN && chosen != settings.theme) {
+                            Guardian.updateConfig { c -> c.copy(session = c.session.copy(theme = chosen)) }
+                        }
+                        Guardian.sessionStarted()
+                        // Her opening remarks: a punishment, her training week, or tonight's theme.
+                        remark = listOfNotNull(
+                            Guardian.say(Line.SESSION_PUNISH_START).takeIf { !quick && plan.reason == SessionReason.PUNISHMENT },
+                            "Tonight: ${plan.theme.label}.".takeIf { !quick && plan.theme != SessionTheme.YOURS && plan.reason == SessionReason.CHOSEN },
+                            (Guardian.line(Line.SESSION_TRAINING) + " Week ${plan.week}.").takeIf { !quick && plan.week > 0 },
+                        ).joinToString(" ").ifBlank { null }
                         watchFile = Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }
                         script = built
                         steps = built.steps
@@ -225,6 +258,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     backCamera = settings.backCamera,
                     voice = voice,
                     snapshot = snapshot,
+                    secretLength = !quick && running?.secretLength == true,
+                    sizeNote = sizeNote,
                     remark = remark,
                     onRemarkShown = { remark = null },
                     onSwitchCamera = { Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) } },
@@ -335,6 +370,9 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
 @Composable
 private fun Setup(
     quick: Boolean,
+    plan: SessionPlanned,
+    chosen: SessionTheme,
+    onTheme: (SessionTheme) -> Unit,
     hasCamera: Boolean,
     hasMic: Boolean,
     caged: Boolean,
@@ -345,7 +383,7 @@ private fun Setup(
     onStart: () -> Unit,
 ) {
     val config by Guardian.config.flow.collectAsState()
-    val s = config.session
+    val s = plan.settings
     val kinks = Session.kinks(s, caged)
     val (p, r, d) = Session.endingShares(s, caged)
     Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -355,10 +393,31 @@ private fun Setup(
             if (caged) Muted("You're locked: she has you take the cage off first, and put it back on after.")
         } else {
             Text("Guided session", style = MaterialTheme.typography.headlineSmall)
-            Text("About ${s.minutes} minutes. Endings: permission $p%, ruined $r%, denied $d%.")
+            // Round 84: what you owe her comes first.
+            when (plan.reason) {
+                SessionReason.RUIN_OWED -> Text(
+                    "This is the ruin you owe her for what Porn block caught. It ends ruined.",
+                    color = MaterialTheme.colorScheme.error,
+                )
+                SessionReason.PUNISHMENT -> Text(
+                    "You failed her, so this is a punishment session: CBT-heavy if you've allowed CBT, and always ruined.",
+                    color = MaterialTheme.colorScheme.error,
+                )
+                SessionReason.CHOSEN -> {
+                    Text("Theme", style = MaterialTheme.typography.titleSmall)
+                    ChoiceChips(SessionTheme.entries.filter { SessionPlan.available(it, config.session) }, chosen, { it.label }) { onTheme(it) }
+                    Muted(chosen.note)
+                }
+            }
+            if (plan.week > 0) Muted("Her training: week ${plan.week} of ${SessionPlan.MAX_WEEK}. A little longer and harsher every week.")
+            Text(
+                (if (plan.secretLength) "She decides how long, and she won't tell you." else "About ${s.minutes} minutes.") +
+                    " Endings: permission $p%, ruined $r%, denied $d%.",
+            )
             if (caged) Muted("You're locked, so only cage-safe commands until the end, and no permission.")
             Text("Kinks: " + kinks.joinToString(", ") { it.label }.ifEmpty { "none (just her basics)" })
             if (Kink.CBT in kinks) Muted("CBT (${s.cbt.label.lowercase()}): stop if it ever hurts sharply. \"Too much\" skips with no penalty.")
+            if (Kink.CLAMPS in kinks) Muted("Clamps: 3 minutes at most each time. Take them off early if anything goes numb; \"Too much\" skips.")
             if (Kink.SOUNDING in kinks) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = soundingReady, onCheckedChange = onSoundingReady)
@@ -369,11 +428,20 @@ private fun Setup(
         }
         Muted(
             "Prop the phone up where the camera sees you: you'll watch yourself the whole time. She films your ruin" +
-                (if (s.filmTasks && !quick) ", edges and CBT" else "") +
+                (if (config.session.filmTasks && !quick) ", edges and CBT" else "") +
                 " into Guided sessions > Her videos, private to this app. Stop or Quit for now any time.",
         )
+        // Round 84: frame yourself before she starts.
+        if (hasCamera) {
+            SessionCamera(
+                record = null,
+                onClip = { _, _ -> },
+                modifier = Modifier.fillMaxWidth().height(220.dp).clip(MaterialTheme.shapes.medium),
+                back = config.session.backCamera,
+            )
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Camera: ${if (s.backCamera) "back" else "front"}", Modifier.weight(1f))
+            Text("Camera: ${if (config.session.backCamera) "back" else "front"}", Modifier.weight(1f))
             TextButton(onClick = {
                 Guardian.updateConfig { c -> c.copy(session = c.session.copy(backCamera = !c.session.backCamera)) }
             }) { Text("Switch") }
@@ -400,6 +468,8 @@ private fun Running(
     backCamera: Boolean,
     voice: SessionVoice?,
     snapshot: Int,
+    secretLength: Boolean,
+    sizeNote: String?,
     remark: String?,
     onRemarkShown: () -> Unit,
     onSwitchCamera: () -> Unit,
@@ -439,7 +509,7 @@ private fun Running(
         line = Guardian.say(step.line)
         val extras = listOfNotNull(
             remark,
-            step.comment?.let { Guardian.line(it) },
+            step.comment?.let { c -> Guardian.line(c) + if (c == Line.SESSION_SPH && sizeNote != null) " $sizeNote" else "" },
             // Round 79: her edge goal at the start.
             if (step.kind == StepKind.INTRO && edgeGoal > 0) Guardian.line(Line.SESSION_EDGE_GOAL) + " Tonight: $edgeGoal edges." else null,
             step.style?.label,
@@ -577,26 +647,15 @@ private fun Running(
     val playing = clipToPlay != null
     val totalLeft = (if (playing) 0 else left) + steps.drop(index + 1).sumOf { it.estimate }
     val bpmNow = step.bpmAt(now - startedAt)
+    // Round 84: dark mode (only her beat on screen), the torch, and landscape.
+    var dark by remember { mutableStateOf(false) }
+    var torch by remember { mutableStateOf(false) }
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val chapter = Session.chapter(step)
 
-    Column(
-        modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(if (bigText) 8.dp else 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Muted(
-            listOfNotNull(
-                "About ${(totalLeft + 59) / 60} min left",
-                "edge $edgeNumber of $edgeGoal".takeIf { edgeGoal > 0 && edgeNumber > 0 },
-                "locked".takeIf { caged },
-            ).joinToString(" · "),
-        )
-        val words = listOfNotNull(line.ifBlank { null }, comment).joinToString("\n")
-        if (bigText) {
-            Text(words, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        } else {
-            SpeechBubble(words)
-        }
-        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    // The camera, her clip and her beat. In dark mode the screen goes black except for her beat.
+    val stage: @Composable (Modifier) -> Unit = { m ->
+        Column(m, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // Then vs now: her clip above, you live below. Otherwise you see yourself the whole session.
             if (clipToPlay != null) {
                 Text(
@@ -608,16 +667,24 @@ private fun Running(
                 Text("You, now", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                SessionCamera(record = record, onClip = onClip, modifier = Modifier.fillMaxSize(), back = backCamera, snapshot = snapshot)
+                SessionCamera(
+                    record = record,
+                    onClip = onClip,
+                    modifier = Modifier.fillMaxSize(),
+                    back = backCamera,
+                    snapshot = snapshot,
+                    torch = torch && backCamera,
+                )
+                if (dark) Box(Modifier.matchParentSize().background(Color.Black))
                 if (step.bpm > 0) {
                     Box(
-                        Modifier.size(if (bigText) 160.dp else 120.dp).scale(pulse.value).clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)),
+                        Modifier.size(if (bigText || dark) 160.dp else 120.dp).scale(pulse.value).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = if (dark) 0.8f else 0.55f)),
                     )
                 }
                 when {
                     step.kind == StepKind.COUNTDOWN -> Text("$count", style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.Bold)
-                    record != null -> Text(
+                    record != null && !dark -> Text(
                         "REC",
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold,
@@ -627,6 +694,32 @@ private fun Running(
                 }
             }
         }
+    }
+
+    // The chapter, time left and her words.
+    val header: @Composable ColumnScope.() -> Unit = {
+        if (chapter.isNotBlank()) {
+            Text(chapter.uppercase(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        }
+        Muted(
+            listOfNotNull(
+                "About ${(totalLeft + 59) / 60} min left".takeIf { !secretLength },
+                "edge $edgeNumber of $edgeGoal".takeIf { edgeGoal > 0 && edgeNumber > 0 },
+                "locked".takeIf { caged },
+            ).joinToString(" · "),
+        )
+        if (!dark) {
+            val words = listOfNotNull(line.ifBlank { null }, comment).joinToString("\n")
+            if (bigText) {
+                Text(words, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            } else {
+                SpeechBubble(words)
+            }
+        }
+    }
+
+    // The count and your buttons.
+    val controls: @Composable ColumnScope.() -> Unit = {
         val detail = when {
             playing && step.bpm > 0 -> "Stroke through it · ${step.bpm} per minute"
             playing -> "Watch yourself"
@@ -636,6 +729,7 @@ private fun Running(
             step.bpmTo > 0 && step.kind != StepKind.EDGE -> "Faster and faster · $bpmNow per minute"
             step.bpm > 0 && step.pattern != BeatPattern.STEADY -> "${step.pattern.label} · $bpmNow per minute"
             step.bpm > 0 -> "Follow the beat · $bpmNow per minute"
+            step.kind == StepKind.CLAMP -> "Clamps on · ${left}s"
             step.kind.still -> "Hands off · ${left}s"
             step.kind.tap != null -> "Up to ${left / 60}:${"%02d".format(left % 60)}"
             else -> "${left}s"
@@ -644,7 +738,7 @@ private fun Running(
         when (step.kind) {
             StepKind.EDGE -> Button(
                 onClick = { onEdge(((System.currentTimeMillis() - startedAt) / 1_000).toInt()) },
-                modifier = Modifier.fillMaxWidth().height(if (bigText) 72.dp else 56.dp),
+                modifier = Modifier.fillMaxWidth().height(if (bigText || dark) 72.dp else 56.dp),
             ) { Text("I'm at the edge", style = MaterialTheme.typography.titleMedium) }
             StepKind.DEAL -> {
                 Button(onClick = { onDeal(DealChoice.RUIN_NOW) }, modifier = Modifier.fillMaxWidth()) { Text("A sure ruin, now") }
@@ -663,9 +757,37 @@ private fun Running(
             }
             else -> step.kind.tap?.let { label -> Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(label) } }
         }
-        if (record == null && !playing) {
-            TextButton(onClick = onSwitchCamera) { Text(if (backCamera) "Use front camera" else "Use back camera") }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { dark = !dark }) { Text(if (dark) "Show camera" else "Dark") }
+            if (backCamera) TextButton(onClick = { torch = !torch }) { Text(if (torch) "Torch off" else "Torch") }
+            if (record == null && !playing) {
+                TextButton(onClick = onSwitchCamera) { Text(if (backCamera) "Front camera" else "Back camera") }
+            }
         }
         if (step.kind.skippable) OutlinedButton(onClick = onSkip) { Text("Too much (skip, no penalty)") }
+    }
+
+    if (landscape) {
+        Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            stage(Modifier.weight(1f).fillMaxHeight())
+            Column(
+                Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                header()
+                controls()
+            }
+        }
+    } else {
+        Column(
+            modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(if (bigText) 8.dp else 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            header()
+            stage(Modifier.weight(1f).fillMaxWidth())
+            controls()
+        }
     }
 }

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -52,12 +53,14 @@ fun SessionCamera(
     modifier: Modifier = Modifier,
     back: Boolean = false,
     snapshot: Int = 0,
+    torch: Boolean = false,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val clip by rememberUpdatedState(onClip)
     val previewView = remember { PreviewView(context) }
     var capture by remember { mutableStateOf<VideoCapture<Recorder>?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
 
     DisposableEffect(lifecycleOwner, back) {
         val main = ContextCompat.getMainExecutor(context)
@@ -80,13 +83,14 @@ fun SessionCamera(
                     .build()
                 val videoCapture = VideoCapture.withOutput(recorder)
                 p.unbindAll()
-                p.bindToLifecycle(lifecycleOwner, selector, preview, videoCapture)
+                camera = p.bindToLifecycle(lifecycleOwner, selector, preview, videoCapture)
                 capture = videoCapture
             }
         }, main)
         onDispose {
             disposed = true
             capture = null
+            camera = null
             provider?.unbindAll()
         }
     }
@@ -104,6 +108,12 @@ fun SessionCamera(
             handler.removeCallbacksAndMessages(null)
             recording?.stop()
         }
+    }
+
+    // Round 84: the torch, for the back camera in low light.
+    LaunchedEffect(torch, camera) {
+        val c = camera ?: return@LaunchedEffect
+        if (c.cameraInfo.hasFlashUnit()) runCatching { c.cameraControl.enableTorch(torch) }
     }
 
     // Round 79: her edge face. Each new [snapshot] number grabs what you see right now as a photo.

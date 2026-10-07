@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.26.0 (Sessions part 1: her voice, rhythm, edging, cruel endings, deals and clip extras). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 83)
+> **Status:** v0.27.0 (Sessions part 2: themes, training, owed and booked sessions, clamps, size remarks, layout). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 84)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -118,7 +118,8 @@ Two lockout scopes:
 - From v0.17.0 a **Quickshot**: about 2 minutes, always ruined, and the camera always films the ruin
 - **From v0.24.0:** motion checks and "out of view" catching are **removed** (they didn't work). The camera is on for **every** session so you watch yourself. She films your **ruins, edges and CBT** (with sound) into **Her videos**, apart from proof photos, and **makes you watch** a clip: mid-session, at check-ins (open within a minute), and on her bedtime and Caught screens. **From v0.24.1:** every session, about every other check-in and about every other lock screen
 - **From v0.26.0:** her voice reads commands (whispering late at night), beat patterns, exact counts, grip commands, an edge goal with shrinking rests, edge timing and an edge face photo, her deal, cruel countdowns, cum on command, keep going, instant replay, then vs now, captions, a ruin reel and session history
-- Details in 9.9 and section 8 (v0.11.0, v0.12.0, v0.24.0 and v0.26.0)
+- **From v0.27.0:** themes, her own lengths, a training program, warm-up and cool-down, booked sessions, punishment sessions, a ruin owed after a Porn block catch, clamps, small-size remarks, a framing preview, landscape, dark mode and a torch
+- Details in 9.9 and section 8 (v0.11.0, v0.12.0, v0.24.0, v0.26.0 and v0.27.0)
 
 ### 4.12 Her mark (v0.21.0)
 - Her small gold **collar badge** sits in a corner over every app while she's on
@@ -699,6 +700,24 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Mood:** never changes any of it, only her words
 - **Tests:** `SessionTest.kt` (keep going, ramps, ending marks, stroking while watching, her deal, shrinking rests, counts, styles and patterns, cruel countdowns, edge timing and whisper), `ClipsTest.kt` (edge face photos, captions, ruin reel). 216 unit tests passed locally
 
+### v0.27.0 (round 84, sessions part 2)
+- **Asked:** part 2 of the round 83 picks: 31, 32, 33, 34, 36, 38, 39, 43, 47, 50, 51, 52 (37 waits for the release calendar)
+- **Themes (31, `core/SessionPlan.kt`, `SessionTheme`):** picked on the session's start screen and remembered: Your settings, Tease night (20 min, mostly denied), Edge marathon (30 min), Punishment (15 min, hard CBT, always ruined), Reward (15 min, mostly permission), Ruin training (10 min, always ruined), CBT discipline (15 min, never a full release; only offered with CBT on). A theme only ever uses kinks you've switched on. Shown in history
+- **She decides the length (32, `herLength`, off):** 5 to 45 minutes, and the time left is hidden during the session
+- **Training program (33, `training`, off):** starts the day you switch it on (`GuardianState.trainingStart`). Each week: 3 more minutes and 5 points of permission moved to denial, up to week 8 and 45 minutes. Her line and the week at the start. Switching off and on starts over
+- **Warm-up and cool-down (34):** every session opens with a warm-up (slow, light strokes; a hold during a lock) and every ending closes with a 45 second hands-off cool-down. Chapter titles on screen: Warm-up, Her session, The ending, Cool-down (`Session.chapter`)
+- **Booked sessions (36, `booked`, off):** she books the next one a day or two ahead, on a quarter hour between 09:00 and 22:00 that keeps 15 minutes clear of quiet hours and bedtime (`SessionPlan.nextBooking`). A notification when booked (silent), a reminder 15 minutes before, and one at the time. Starting any session within 15 minutes either side keeps it (+3 merit) and she books the next. Missing it is a failure (`Failure.MISSED_SESSION`, 5 merit plus her failure settings) and she books the next. Only while she can send notifications. Shown on Home and in Guided sessions. Quit for now and switching her off clear it
+- **Punishment sessions (38, `punishmentSessions`, on):** after any failure (`GuardianState.owedPunishment`) your next session is the Punishment theme, always ruined. Finishing it pays it off. Shown on Home and the start screen
+- **A ruin after a Porn block catch (39, `ruinAfterCatch`, on):** a catch means you owe her a ruined session within 24 hours (`GuardianState.ruinOwedBy`), with a notification. Your next session is a ruin (Ruin training theme). Any session ending ruined, quickshots included, pays it off. Missing it is a failure (`Failure.MISSED_RUIN`, 8 merit). Only while sessions are on and she can notify. Owed ruins come before owed punishments
+- **Clamps (43, new kink, off):** clamps or pins on (tap when on), her timer (1 to 3 minutes, "Too much" skips), then off. At most twice a session. Cage-safe
+- **Small-size humiliation (47, new kink, off):** her remarks about your size, with your latest Rate me result ("longer than N% of men"). Only with a Rate me result saved
+- **Framing preview (50):** the camera on the start screen so you can set up the phone first
+- **Landscape and dark mode (51):** on its side, the camera is on the left and her words and buttons on the right. **Dark** during a session blacks out the screen except her beat (she still films, and her voice still talks)
+- **Torch (52):** a Torch button while using the back camera
+- **Her lines:** new in Guided sessions: Warm-up, Cool-down, Clamps on, Clamps timer, Clamps off, Small-size remark, Punishment session, A ruin owed, Training week, Session booked, Booked session time. Both moods, editable
+- **Lock guard:** switching off her training, punishment sessions, the ruin after a catch or booked sessions takes the 30 minute screen. Themes and her length change instantly
+- **Tests:** `SessionPlanTest.kt` (themes keep to your kinks, endings and lengths, CBT discipline, training weeks, what you owe comes first, her length, bookings clear of quiet time, the booking window, Lock guard, older saves), `SessionTest.kt` (warm-up, cool-down and chapters, clamps, size remarks). 229 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -845,6 +864,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Quality of life:** session history and stats; live edge counter; framing preview before Start; a big-text far-away layout and landscape; dark mode with only the beat; torch for the back camera; a headphones mode; resume after a crash; haptic beat with the phone in your lap
   - **Rules that stay:** Quit for now everywhere, mood only changes her words, nothing leaves the phone, CBT and every kink stay opt-in with "Too much" to skip
   - **Round 83:** the user picked 1, 2, 3, 4, 8, 9, 10, 11, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 43, 47, 49, 50, 51, 52. Part 1 built in v0.26.0 (section 8). Part 2 next (v0.27.0). 37 waits for the release calendar
+  - **Round 84:** part 2 built in v0.27.0 (section 8). Only 37 is left, for the release calendar
 
 - **E-stim control (round 82, plan only, no code):** the user asked whether she could control their DG-Lab Coyote 3.0. Answer: very likely. Build only when the user has the box to test
   - **How (Claude's pick): straight over Bluetooth.** DG-Lab publishes the Coyote 3.0 Bluetooth protocol (V3). The app sends one small command every 100 ms with both channels' strength (0 to 200) and the waveform, and a separate command sets a strength ceiling on the box (it has to be set again on every connection). No extra app, works offline, nothing leaves the phone. Needs Android's Bluetooth permissions
@@ -965,3 +985,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 81, v0.25.0):** Save to phone. Photos, peeks and her videos each get a Save to phone button, and both screens get Save all to phone (asks first). Copies go to Pictures/Guardian Angel and Movies/Guardian Angel in the phone's gallery, only when you tap Save. Details in section 8
 - **2026-10-07 (round 82):** No code changes. User asked if she could control their DG-Lab Coyote 3.0 e-stim box eventually. Answer: very likely, straight over Bluetooth with DG-Lab's published protocol. Plan, ideas and fixed safety rules in section 10 (and a note in 4.8). Waiting until the user has the box to test
 - **2026-10-07 (round 83, v0.26.0):** Sessions part 1. Her voice (whispering late at night) and big text, beat patterns, exact counts, grip commands, an edge goal with shrinking rests, balance at the edge, edge timing and an edge face photo, her deal (a sure ruin or 5 edges and a coin flip), cruel countdowns, cum on command, keep going, instant replay, stroking while you watch with then vs now, a ruin reel, captions, look into the lens, and session history. Part 2 is next; the release day idea waits for the calendar. Details in section 8
+- **2026-10-07 (round 84, v0.27.0):** Sessions part 2. Themes (tease night, edge marathon, punishment, reward, ruin training, CBT discipline), she decides the length, a training program, warm-up and cool-down with chapters, booked sessions, punishment sessions after failures, a ruin owed after a Porn block catch, a clamps kink, small-size remarks from your Rate me result, a framing preview, landscape, dark mode and a torch. Details in section 8
