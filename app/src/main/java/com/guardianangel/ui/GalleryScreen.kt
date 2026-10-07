@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -60,14 +61,20 @@ fun GalleryScreen() {
     var files by remember { mutableStateOf(ProofFiles.list(context)) }
     var viewing by remember { mutableStateOf<File?>(null) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
+    var confirmSaveAll by remember { mutableStateOf(false) }
+    val saveToPhone = rememberSaveToPhone()
     val state by Guardian.state.flow.collectAsState()
     val peeks = remember(state.peeks) { state.peeks.associateBy { it.file } }
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Muted("Photos and her peeks at your screen, stored only inside this app. Not in your gallery, not backed up. Session videos are in Guided sessions > Her videos.")
+        Muted(
+            "Photos and her peeks at your screen, stored only inside this app. Not in your gallery, not backed up, " +
+                "unless you tap Save to phone. Session videos are in Guided sessions > Her videos.",
+        )
         if (files.isEmpty()) {
             Text("No photos yet.")
         } else {
+            OutlinedButton(onClick = { confirmSaveAll = true }) { Text("Save all to phone") }
             OutlinedButton(onClick = { confirmDeleteAll = true }) { Text("Delete all photos") }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -123,14 +130,21 @@ fun GalleryScreen() {
                     // Takes only the room left, so her comment and Delete always stay on screen.
                     PhotoThumb(file, 1600, Modifier.fillMaxWidth().weight(1f, fill = false), ContentScale.Fit)
                 }
-                TextButton(onClick = {
-                    file.delete()
-                    Guardian.forgetPeeks(setOf(file.name))
-                    files = ProofFiles.list(context)
-                    viewing = null
-                }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { saveToPhone(listOf(file)) }) { Text("Save to phone") }
+                    TextButton(onClick = {
+                        file.delete()
+                        Guardian.forgetPeeks(setOf(file.name))
+                        files = ProofFiles.list(context)
+                        viewing = null
+                    }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                }
             }
         }
+    }
+
+    if (confirmSaveAll) {
+        SaveAllDialog(files.size, "photos", onSave = { saveToPhone(files) }, onDismiss = { confirmSaveAll = false })
     }
 
     if (confirmDeleteAll) {

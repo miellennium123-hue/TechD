@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,15 +52,18 @@ fun ClipsScreen() {
     var clips by remember { mutableStateOf(SessionClips.infos(context)) }
     var viewing by remember { mutableStateOf<ClipInfo?>(null) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
+    var confirmSaveAll by remember { mutableStateOf(false) }
+    val saveToPhone = rememberSaveToPhone()
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Muted(
             "Ruins, edges and CBT she filmed during your sessions, with sound. Stored only inside this app: not in your " +
-                "gallery, not backed up. She keeps the newest ${Clips.KEEP}, and sometimes makes you watch one.",
+                "gallery, not backed up, unless you tap Save to phone. She keeps the newest ${Clips.KEEP}, and sometimes makes you watch one.",
         )
         if (clips.isEmpty()) {
             Text("No videos yet. She films your next ruin, and your edges and CBT if you let her.")
         } else {
+            OutlinedButton(onClick = { confirmSaveAll = true }) { Text("Save all to phone") }
             OutlinedButton(onClick = { confirmDeleteAll = true }) { Text("Delete all videos") }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -94,13 +98,20 @@ fun ClipsScreen() {
                     controls = true,
                     loop = true,
                 )
-                TextButton(onClick = {
-                    SessionClips.file(context, clip.name).delete()
-                    clips = SessionClips.infos(context)
-                    viewing = null
-                }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { saveToPhone(listOf(SessionClips.file(context, clip.name))) }) { Text("Save to phone") }
+                    TextButton(onClick = {
+                        SessionClips.file(context, clip.name).delete()
+                        clips = SessionClips.infos(context)
+                        viewing = null
+                    }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                }
             }
         }
+    }
+
+    if (confirmSaveAll) {
+        SaveAllDialog(clips.size, "videos", onSave = { saveToPhone(SessionClips.list(context)) }, onDismiss = { confirmSaveAll = false })
     }
 
     if (confirmDeleteAll) {
