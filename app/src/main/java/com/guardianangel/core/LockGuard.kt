@@ -25,11 +25,12 @@ object LockGuard {
     /** She says something new this often while you wait. */
     const val TALK_EVERY_SECONDS = 15
 
-    /** She's in charge right now: a chastity lock, a punishment, one of her rules, or a summons. */
+    /** She's in charge right now: a chastity lock, a punishment, one of her rules, a summons, or her porn block lock. */
     fun locked(config: GuardianConfig, state: GuardianState, now: Long): Boolean =
         config.enabled && (
             state.chastity != null ||
                 state.punishmentUntil > now ||
+                PornBlock.locked(config, state, now) ||
                 (state.task?.ruleUntil ?: 0L) > now ||
                 state.summons != null
             )
@@ -48,7 +49,8 @@ object LockGuard {
      * Whether a settings change loosens her control: one of her controls switched off, Quiet hours
      * switched on, or a new always-allowed app. Since round 53 also: lockout scope narrowed to social
      * media, shorter blocks, and any change to bedtime hours while bedtime is on. Since round 68 also:
-     * higher daily report goals, or an F no longer a failure. Those take the slow way while guarding.
+     * higher daily report goals, or an F no longer a failure. Since round 73 also: any Porn block
+     * switch off, or a shorter lock. Those take the slow way while guarding.
      * Anything that makes her stricter, and every other detail, changes instantly.
      */
     fun loosens(before: GuardianConfig, after: GuardianConfig): Boolean {
@@ -71,6 +73,11 @@ object LockGuard {
             off(before.mark.tint, after.mark.tint) ||
             off(before.peek.on, after.peek.on) ||
             off(before.report.on, after.report.on) ||
+            off(before.pornBlock.on, after.pornBlock.on) ||
+            off(before.pornBlock.lockScreen, after.pornBlock.lockScreen) ||
+            off(before.pornBlock.failure, after.pornBlock.failure) ||
+            off(before.pornBlock.privateTabs, after.pornBlock.privateTabs) ||
+            after.pornBlock.lockMinutes < before.pornBlock.lockMinutes ||
             off(before.report.failOnF, after.report.failOnF) ||
             after.report.unlockGoal > before.report.unlockGoal ||
             after.report.screenGoalMinutes > before.report.screenGoalMinutes ||
@@ -86,7 +93,7 @@ object LockGuard {
     }
 
     /**
-     * Option C (round 53): while her timed block or bedtime is running, its settings can't be changed
+     * Option C (round 53): while her timed block or bedtime (since round 73 also her porn block lock) is running, its settings can't be changed
      * at all, no app can be added to Always-allowed, and Lock guard can't be switched off. Checked while guarding, before [loosens].
      * Returns what's frozen, for her refusal, or null if the change can go ahead.
      */
@@ -98,6 +105,9 @@ object LockGuard {
         }
         if (Rules.blockRunning(before, state, now) && (before.lockouts != after.lockouts || loosened)) {
             return "Her app block is running. App lockouts, Always-allowed and Lock guard are locked until it ends."
+        }
+        if (PornBlock.locked(before, state, now) && (before.pornBlock != after.pornBlock || loosened)) {
+            return "She caught you, so your phone is locked. Porn block, Always-allowed and Lock guard are locked until it ends."
         }
         return null
     }

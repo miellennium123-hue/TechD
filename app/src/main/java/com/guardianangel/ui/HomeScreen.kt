@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Line
 import com.guardianangel.core.Permissions
+import com.guardianangel.core.PornBlock
 import com.guardianangel.core.Rules
 import com.guardianangel.core.SiteOpener
 import com.guardianangel.data.GuardianConfig
@@ -138,6 +139,13 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             SectionCard("Apps locked") {
                 Text("${formatDuration(state.lockoutUntil - now)} left", fontWeight = FontWeight.Bold)
                 Muted("Her timed block. The only way in is ${Rules.BUY_MERIT} merit for ${Rules.BUY_MINUTES} minutes, from the block screen.")
+            }
+        }
+
+        if (PornBlock.locked(config, state, now)) {
+            SectionCard("Caught") {
+                Text("${formatDuration(state.caughtUntil - now)} left", fontWeight = FontWeight.Bold)
+                Muted("Porn block. Your phone is locked: only Always-allowed apps and the phone open until it ends.")
             }
         }
 

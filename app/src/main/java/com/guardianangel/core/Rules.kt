@@ -19,7 +19,7 @@ import kotlin.random.Random
 const val MINUTE = 60_000L
 const val HOUR = 60 * MINUTE
 
-enum class RestrictionKind { LOCKOUT, PERMISSION, BEDTIME, PUNISHMENT, RULE, SUMMONS }
+enum class RestrictionKind { LOCKOUT, PERMISSION, BEDTIME, PUNISHMENT, RULE, SUMMONS, CAUGHT }
 
 data class Restriction(val kind: RestrictionKind, val askAllowed: Boolean)
 
@@ -141,6 +141,10 @@ object Rules {
         if (isBedtime(config.bedtime, minuteOfDay)) {
             result += Restriction(RestrictionKind.BEDTIME, false)
         }
+        // Porn block (round 73): she caught you, so everything but Always-allowed is locked.
+        if (PornBlock.locked(config, state, now)) {
+            result += Restriction(RestrictionKind.CAUGHT, false)
+        }
         val summons = state.summons
         if (summons != null && now >= summons.lockAt) {
             result += Restriction(RestrictionKind.SUMMONS, false)
@@ -172,6 +176,10 @@ object Rules {
         if (list.isEmpty()) return Decision.Allow
         // Ignored her for too long: everything locks until you answer. Only answering opens it.
         if (list.any { it.kind == RestrictionKind.SUMMONS }) return Decision.Block(RestrictionKind.SUMMONS, askAllowed = false)
+        // Porn block: no way in until her lock ends. Grants don't cover it.
+        if (list.any { it.kind == RestrictionKind.CAUGHT }) {
+            return Decision.Block(RestrictionKind.CAUGHT, askAllowed = false, until = state.caughtUntil)
+        }
         if (list.any { it.kind == RestrictionKind.PUNISHMENT }) {
             return Decision.Block(RestrictionKind.PUNISHMENT, askAllowed = false, until = state.punishmentUntil)
         }
@@ -201,6 +209,14 @@ object Rules {
             (launcher || (decision is Decision.Block && decision.kind == RestrictionKind.BEDTIME))
 
     /**
+     * Her caught screen (round 73): while her porn block lock runs, it covers the home screen
+     * ([launcher]) and every app it blocks. Always-allowed apps stay open.
+     */
+    fun caughtScreen(config: GuardianConfig, state: GuardianState, now: Long, decision: Decision, launcher: Boolean): Boolean =
+        PornBlock.locked(config, state, now) &&
+            (launcher || (decision is Decision.Block && decision.kind == RestrictionKind.CAUGHT))
+
+    /**
      * Her mark (round 60): her collar badge shows over every app while she's on. Not over her own
      * screens ([ownApp]), which already show her, so it never sits on Quit for now.
      */
@@ -208,13 +224,14 @@ object Rules {
 
     /**
      * One of her blocks is running: her timed block, bedtime, a punishment, one of her enforced rules,
-     * or a summons you ignored long enough to lock everything.
+     * a summons you ignored long enough to lock everything, or her porn block lock.
      */
     fun herBlockRunning(config: GuardianConfig, state: GuardianState, now: Long, minuteOfDay: Int): Boolean =
         config.enabled && (
             blockRunning(config, state, now) ||
                 isBedtime(config.bedtime, minuteOfDay) ||
                 state.punishmentUntil > now ||
+                PornBlock.locked(config, state, now) ||
                 state.task?.let { it.enforced && it.ruleUntil > now } == true ||
                 state.summons?.let { now >= it.lockAt } == true
             )

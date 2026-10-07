@@ -61,6 +61,13 @@
             android:taskAffinity="com.guardianangel.bedtime" />
 
         <activity
+            android:name=".ui.CaughtActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.guardianangel.caught" />
+
+        <activity
             android:name=".ui.ShowUpActivity"
             android:excludeFromRecents="true"
             android:exported="false"
