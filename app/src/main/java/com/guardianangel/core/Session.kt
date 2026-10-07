@@ -122,6 +122,8 @@ data class Step(
     val tauntAt: Int = 0,
     /** Round 84: part of her warm-up. */
     val warmup: Boolean = false,
+    /** Round 85: the CBT she filmed this session loops on screen during this command. */
+    val showCbt: Boolean = false,
 ) {
     /** Her beat [elapsedMs] into the step: steady, or partway from [bpm] to [bpmTo]. */
     fun bpmAt(elapsedMs: Long): Int {
@@ -370,6 +372,35 @@ object Session {
         val middle = places.filter { it >= steps.size / 4 && it <= steps.size * 3 / 4 }.ifEmpty { places }
         steps.add(middle[random.nextInt(middle.size)], watchStep(caged, random))
     }
+
+    /** Round 85: the owed ruin opens with this long of hard CBT, every slap counted and filmed. */
+    const val OWED_CBT_SECONDS = 60
+    const val OWED_CBT_BPM = 30
+
+    /**
+     * The ruin you owe her after a Porn block catch (round 85): a quickshot that opens with a full minute
+     * of hard CBT she films, then fast strokes, the edge and the ruin while that CBT clip loops on screen
+     * above you (you still see yourself below). Then her instant replay of the ruin. "Too much" still skips
+     * the CBT with no penalty. During a lock: the CBT with the cage on, then unlock, and back on after.
+     */
+    fun owedRuin(caged: Boolean, random: Random): SessionScript = SessionScript(
+        SessionEnding.RUINED,
+        caged,
+        buildList {
+            add(Step(StepKind.INTRO, 6, line = Line.SESSION_OWED_RUIN))
+            val reps = OWED_CBT_SECONDS * OWED_CBT_BPM / 60
+            add(Step(StepKind.CBT, OWED_CBT_SECONDS + 3, bpm = OWED_CBT_BPM, reps = reps, line = Line.SESSION_CBT_HARD))
+            if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
+            add(Step(StepKind.STROKE, 20, bpm = random.nextInt(130, 151), line = Line.SESSION_WATCH_CBT, showCbt = true))
+            add(Step(StepKind.FASTER, 15, bpm = random.nextInt(170, 191), showCbt = true))
+            add(Step(StepKind.EDGE, QUICKSHOT_EDGE_SECONDS, bpm = 150, bpmTo = 180, showCbt = true))
+            add(Step(StepKind.COUNTDOWN, 3, showCbt = true))
+            add(Step(StepKind.RUIN, RUIN_CLIP_SECONDS, showCbt = true))
+            add(Step(StepKind.REPLAY, RUIN_CLIP_SECONDS + 5))
+            if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
+        }.map { it.copy(ending = true) },
+        quick = true,
+    )
 
     /**
      * A quickshot (round 49): about two minutes, fast to her beat, always a ruin she films.

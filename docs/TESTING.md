@@ -1,9 +1,19 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.27.0 (sessions part 2). Sections 0 to 0y cover what 0.6.0 to 0.27.0 changed
+> **Version under test:** 0.27.1 (the owed ruin). Sections 0 to 0z cover what 0.6.0 to 0.27.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z. New in 0.27.1: the owed ruin
+Get caught by Porn block (or test with Debug mode) so you owe her a ruin.
+- [ ] Settings > About shows **Version 0.27.1**
+- [ ] Both **Start a session** and **Quickshot** open "The ruin you owe her"
+- [ ] It opens with a full minute of hard CBT, counted aloud, with REC showing (filmed even with edges and CBT filming off)
+- [ ] Then fast strokes, the edge, a countdown and the ruin, with your CBT looping above and you live below
+- [ ] Then the replay of your ruin. "Ruined, as ordered" clears the debt from Home
+- [ ] "Too much" skips the CBT with no penalty
+- [ ] Her videos has the CBT clip and the ruin
 
 ## 0y. New in 0.27.0: sessions part 2
 - [ ] Settings > About shows **Version 0.27.0**
