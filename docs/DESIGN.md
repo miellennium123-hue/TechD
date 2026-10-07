@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.27.1 (The ruin you owe after a Porn block catch: a minute of filmed CBT, then a quickshot watching it). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 89)
+> **Status:** v0.27.2 (Edge face from the front camera). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-07 (round 90)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -725,6 +725,10 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Her lines:** new in Guided sessions: Owed ruin, Stroke to your CBT. Both moods, editable
 - **Tests:** `SessionTest.kt` (the owed ruin's minute of CBT, what plays during it, the lock order). 230 unit tests passed locally
 
+### v0.27.2 (round 90, fix: edge face camera)
+- **Reported:** her edge face photo came from the camera aimed at your crotch (the back camera), so it showed that instead of your face
+- **Fixed (`ui/SessionCamera.kt`):** the edge face always comes from the front camera, which faces you while you watch her screen. Filming with the back camera, at your "I'm at the edge" tap she flips to the front camera for about a second, waits until it's streaming, takes the photo and flips back. The edge clip has already stopped at the tap, so nothing is lost; a step right after may start filming a moment later. With the front camera already in use, nothing changes
+
 ---
 
 ## 10. Open questions
@@ -1015,3 +1019,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 86):** No code changes. User wants to give her more control in the next update. Proposed ideas in section 10 (surrender period, ratchet, hidden settings, her whims, daily orders, her bedtime, app rationing, muted notifications, cage and wear orders, her orgasms, morning verdict, her shop, strike ladder), waiting on the user's picks
 - **2026-10-07 (round 87):** No code changes. User asked how possible a Windows port is, minus Guided sessions. Answer: very possible with Kotlin Multiplatform and Compose for Desktop, reusing the pure Kotlin core. Lock guard is the hard part. Plan and open questions in section 10
 - **2026-10-07 (round 89):** No code changes. User decided to stop the Windows port, so it's not happening. Closed the round 88 doc PR and marked the plan shelved in section 10
+- **2026-10-07 (round 90, v0.27.2):** Fix. Her edge face photo now always comes from the front camera: filming with the back camera, she flips to the front for a moment at your edge tap, takes it and flips back

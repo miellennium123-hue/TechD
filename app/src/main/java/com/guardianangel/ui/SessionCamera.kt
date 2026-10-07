@@ -35,6 +35,7 @@ import com.guardianangel.core.Permissions
 import com.guardianangel.core.SessionClips
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 /** Film one step: [id] changes for every new clip, [maxSeconds] is the longest it runs. */
@@ -61,8 +62,11 @@ fun SessionCamera(
     val previewView = remember { PreviewView(context) }
     var capture by remember { mutableStateOf<VideoCapture<Recorder>?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
+    // Round 87: her edge face comes from the front camera, even while she films you with the back one.
+    var selfie by remember { mutableStateOf(false) }
+    val useBack = back && !selfie
 
-    DisposableEffect(lifecycleOwner, back) {
+    DisposableEffect(lifecycleOwner, useBack) {
         val main = ContextCompat.getMainExecutor(context)
         val future = ProcessCameraProvider.getInstance(context)
         var provider: ProcessCameraProvider? = null
@@ -74,8 +78,8 @@ fun SessionCamera(
                 provider = p
                 val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
                 // The camera you picked; the other one only if this phone doesn't have it.
-                val wanted = if (back) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
-                val other = if (back) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+                val wanted = if (useBack) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
+                val other = if (useBack) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
                 val selector = if (runCatching { p.hasCamera(wanted) }.getOrDefault(false)) wanted else other
                 val recorder = Recorder.Builder()
                     .setQualitySelector(QualitySelector.from(Quality.SD, FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)))
@@ -116,10 +120,27 @@ fun SessionCamera(
         if (c.cameraInfo.hasFlashUnit()) runCatching { c.cameraControl.enableTorch(torch) }
     }
 
-    // Round 79: her edge face. Each new [snapshot] number grabs what you see right now as a photo.
+    // Round 79: her edge face. Each new [snapshot] number takes a photo of your face. Round 87: always
+    // from the front camera, which faces you while you watch her screen. Filming with the back camera,
+    // she flips to the front for a moment, waits for a clear picture, takes it, and flips back.
     LaunchedEffect(snapshot) {
         if (snapshot <= 0) return@LaunchedEffect
-        val frame = previewView.bitmap ?: return@LaunchedEffect
+        val flipped = back
+        if (flipped) {
+            selfie = true
+            // Let the switch start, wait for the front camera to stream (up to 3 seconds), then a moment
+            // for its exposure.
+            delay(300)
+            var waited = 0
+            while (waited < 30 && previewView.previewStreamState.value != PreviewView.StreamState.STREAMING) {
+                delay(100)
+                waited++
+            }
+            delay(400)
+        }
+        val frame = previewView.bitmap
+        if (flipped) selfie = false
+        if (frame == null) return@LaunchedEffect
         val file = withContext(Dispatchers.IO) {
             runCatching {
                 val out = SessionClips.newFile(context, ClipKind.FACE)
