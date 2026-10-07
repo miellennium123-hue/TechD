@@ -3,6 +3,7 @@ package com.guardianangel.core
 import android.content.Context
 import android.widget.Toast
 import com.guardianangel.data.ActiveTask
+import com.guardianangel.data.CatchRecord
 import com.guardianangel.data.ChastityLock
 import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.Grade
@@ -46,6 +47,7 @@ enum class Failure(val merit: Int) {
     SWITCHED_OFF(10),
     TAMPERED(10),
     BAD_DAY(5),
+    CAUGHT_PORN(10),
 }
 
 sealed interface AskResult {
@@ -163,6 +165,7 @@ object Guardian {
                 grants = emptyList(),
                 punishmentUntil = 0,
                 lockoutUntil = 0,
+                caughtUntil = 0,
                 askCooldownUntil = emptyMap(),
                 checkInPending = false,
                 lastBegAt = 0,
@@ -275,6 +278,7 @@ object Guardian {
         if (before.showsUpOn && !after.showsUpOn && state.value.summons != null) clearSummons()
         if (before.sitesOn && !after.sitesOn) clearVisit()
         if (before.lockouts.on && !after.lockouts.on) state.update { it.copy(lockoutUntil = 0) }
+        if (before.pornBlock.on && !after.pornBlock.on) state.update { it.copy(caughtUntil = 0) }
         if (!after.enabled) return
         if (after.checkInMinutes != before.checkInMinutes) Scheduler.scheduleNextCheckIn(appContext)
         val wallpaperChanged = after.wallpaper.on &&
@@ -319,6 +323,10 @@ object Guardian {
     /** Whether her bedtime screen should cover this app or the home screen right now (round 54). */
     fun bedtimeScreen(decision: Decision, launcher: Boolean): Boolean =
         Rules.bedtimeScreen(config.value, minuteOfDay(), decision, launcher)
+
+    /** Whether her caught screen should cover this app or the home screen right now (round 71). */
+    fun caughtScreen(decision: Decision, launcher: Boolean): Boolean =
+        Rules.caughtScreen(config.value, state.value, now(), decision, launcher)
 
     fun grant(pkg: String, minutes: Int, bought: Boolean = false) {
         val t = now()
@@ -831,6 +839,34 @@ object Guardian {
     /** The gallery deleted screenshots: forget their peeks too. */
     fun forgetPeeks(files: Set<String>?) {
         state.update { st -> st.copy(peeks = if (files == null) emptyList() else st.peeks.filter { it.file !in files }) }
+    }
+
+    // ---- Porn block ---------------------------------------------------------------------------
+
+    /**
+     * Porn block (round 71): she saw porn in [app], or a private tab hid it from her ([hiding]). The
+     * phone locks for your lock length (everything but Always-allowed and the phone), it's a failure if
+     * you set that, and she keeps the catch (never a screenshot). Her watch sends you home, shows her
+     * caught screen and locks the screen. Returns her line.
+     */
+    fun caught(app: String, hiding: Boolean): String {
+        val c = config.value
+        if (!c.enabled || !c.pornBlock.on) return ""
+        if (c.pornBlock.failure) fail(Failure.CAUGHT_PORN)
+        val t = now()
+        val line = say(if (hiding) Line.CAUGHT_HIDING else Line.CAUGHT_PORN)
+        state.update {
+            it.copy(
+                caughtUntil = PornBlock.lockUntil(it.caughtUntil, t, c.pornBlock.lockMinutes),
+                catches = PornBlock.add(it.catches, CatchRecord(t, app, hiding, line)),
+            )
+        }
+        Notifier.message(appContext, line)
+        return line
+    }
+
+    fun clearCatches() {
+        state.update { it.copy(catches = emptyList()) }
     }
 
     // ---- Daily report ------------------------------------------------------------------------

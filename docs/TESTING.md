@@ -1,9 +1,29 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.22.0 (daily report). Sections 0 to 0r cover what 0.6.0 to 0.22.0 changed
+> **Version under test:** 0.23.0 (porn block). Sections 0 to 0s cover what 0.6.0 to 0.23.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0s. New in 0.23.0: porn block
+Settings > Phone control > **Porn block** on. For a first test: **Locked for** 15 minutes, **A catch is a failure** off, Lock guard off. Needs Android 11 or later and her watch (Accessibility) on. If nothing happens after updating, switch her watch off and on in Accessibility.
+- [ ] Settings > About shows **Version 0.23.0**
+- [ ] Browse ordinary pages in Chrome and scroll X or Reddit for a few minutes: nothing happens
+- [ ] Open an explicit picture in a browser: within about 5 seconds you're sent home, the screen locks, and unlocking shows her **Caught** screen with her line and the time left
+- [ ] The same in X or Reddit
+- [ ] While caught: every app except Always-allowed and the phone sends you back to her Caught screen, including the home screen. Phone, Always-allowed apps and **Open Guardian Angel** work
+- [ ] Home shows a **Caught** card with the time left. Her mark's tint shows (if Her mark is on)
+- [ ] When the time is up, the Caught screen closes on its own and apps open again
+- [ ] **Private tabs count** on: open an incognito tab in Chrome and stay about 15 seconds: she locks you with a Hiding line. Off: nothing happens
+- [ ] **Lock the screen too** off: you're sent to her Caught screen but the screen stays on
+- [ ] **A catch is a failure** on: a catch also costs merit and adds punishment and chastity time as set
+- [ ] An app on the Always-allowed list is never checked
+- [ ] Settings card shows how often she caught you and when. **Forget her catches** clears it
+- [ ] Her lines has a **Porn block** group (Caught, Hiding), and editing one changes what she says
+- [ ] Quit for now on her Caught screen ends the lock
+- [ ] **Lock guard on:** switching Porn block or any of its switches off, or a shorter lock, opens the 30 minute screen. While caught, Porn block and Always-allowed can't be changed
+- [ ] Battery: note anything unusual after a day of normal use with it on
+- [ ] Report anything ordinary that set her off (false alarms), or porn she missed
 
 ## 0r. New in 0.22.0: daily report
 Settings > Phone control > **Daily report** on. For a quick test, set **Report at** to 5 minutes from now.

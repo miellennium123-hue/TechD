@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -18,6 +19,8 @@ import com.guardianangel.core.Guardian
 import com.guardianangel.core.Line
 import com.guardianangel.core.LockGuard
 import com.guardianangel.core.MarkOverlay
+import com.guardianangel.core.PornBlock
+import com.guardianangel.core.PornScanner
 import com.guardianangel.core.ProtectedApps
 import com.guardianangel.core.Rules
 import com.guardianangel.core.ScreenPeek
@@ -27,6 +30,7 @@ import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.ui.BedtimeActivity
 import com.guardianangel.ui.BlockActivity
+import com.guardianangel.ui.CaughtActivity
 import com.guardianangel.ui.MainActivity
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -54,6 +58,7 @@ class GuardianAccessibilityService : AccessibilityService() {
     private val scope = MainScope()
     private var mark: MarkOverlay? = null
     private var peek: ScreenPeek? = null
+    private var porn: PornScanner? = null
     private var browsers: Set<String> = emptySet()
 
     /** Daily report (round 68): the app whose time is being counted, and since when (0: not counting). */
@@ -73,6 +78,14 @@ class GuardianAccessibilityService : AccessibilityService() {
             meter(screenUnlocked())
             Guardian.checkReport()
             handler.postDelayed(this, 30_000)
+        }
+    }
+
+    /** Porn block (round 71): a look every few seconds while a browser or social app is in front. */
+    private val pornTick = object : Runnable {
+        override fun run() {
+            scanForPorn()
+            handler.postDelayed(this, PornBlock.SCAN_SECONDS * 1_000L)
         }
     }
 
@@ -127,6 +140,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         refreshPackages()
         updateGuardEvents()
         handler.post(tick)
+        handler.postDelayed(pornTick, PornBlock.SCAN_SECONDS * 1_000L)
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF)
             addAction(Intent.ACTION_USER_PRESENT)
@@ -138,6 +152,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         // Quit for now); the 30 second tick catches blocks and bedtimes that start or end on time.
         mark = MarkOverlay(this)
         peek = ScreenPeek(this)
+        porn = PornScanner(this)
         scope.launch { Guardian.config.flow.combine(Guardian.state.flow) { _, _ -> }.collect { updateMark() } }
     }
 
@@ -150,6 +165,25 @@ class GuardianAccessibilityService : AccessibilityService() {
     private fun peekIfDue() {
         val pkg = currentPackage
         peek?.maybePeek(pkg, pkg != null && pkg in launchers, browsers, protectedPackages)
+    }
+
+    /** Porn block (round 71): rules in core/PornBlock. Cheap when it's off: no screenshot is taken. */
+    private fun scanForPorn() {
+        val pkg = currentPackage
+        porn?.maybeScan(pkg, pkg != null && pkg in launchers, browsers, protectedPackages) { onCaught() }
+    }
+
+    /**
+     * She caught you: out of the app, her caught screen up, and the screen locked if you set that.
+     * Unlocking the phone shows her caught screen, not what she caught.
+     */
+    private fun onCaught() {
+        performGlobalAction(GLOBAL_ACTION_HOME)
+        startActivity(CaughtActivity.intent(this))
+        updateMark()
+        if (Guardian.config.value.pornBlock.lockScreen && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN) }, 600)
+        }
     }
 
     /**
@@ -286,18 +320,27 @@ class GuardianAccessibilityService : AccessibilityService() {
         val decision = Guardian.decide(pkg, protectedPackages)
         // Bedtime screen (round 54): covers the home screen and bedtime's blocked apps.
         val bedtime = Guardian.bedtimeScreen(decision, pkg in launchers)
-        if (decision !is Decision.Block && !bedtime) return
+        // Caught screen (round 71): the same, while her porn block lock runs.
+        val caught = !bedtime && Guardian.caughtScreen(decision, pkg in launchers)
+        if (decision !is Decision.Block && !bedtime && !caught) return
         val t = Guardian.now()
         if (pkg == lastBlockedPackage && t - lastBlockAt < 1_500) return
         lastBlockedPackage = pkg
         lastBlockAt = t
-        startActivity(if (bedtime) BedtimeActivity.intent(this) else BlockActivity.intent(this, pkg))
+        startActivity(
+            when {
+                bedtime -> BedtimeActivity.intent(this)
+                caught -> CaughtActivity.intent(this)
+                else -> BlockActivity.intent(this, pkg)
+            },
+        )
     }
 
     override fun onInterrupt() = Unit
 
     override fun onDestroy() {
         handler.removeCallbacks(tick)
+        handler.removeCallbacks(pornTick)
         handler.removeCallbacks(visitTick)
         scope.cancel()
         mark?.hide()

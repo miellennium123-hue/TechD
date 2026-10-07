@@ -75,17 +75,34 @@ class BedtimeActivity : ComponentActivity() {
 
 @Composable
 private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
-    val context = LocalContext.current
     val config by Guardian.config.flow.collectAsState()
     val now = rememberNow()
     val line = remember { Guardian.say(Line.BEDTIME_SCREEN) }
-    val apps = remember(config.alwaysAllowed) {
-        InstalledApps.launchable(context).filter { it.packageName in config.alwaysAllowed }
-    }
     val bedtime = config.enabled && config.bedtime.screen && Rules.isBedtime(config.bedtime, Guardian.minuteOfDay())
 
     // Bedtime over, switched off, or Quit for now: she lets you go.
     LaunchedEffect(bedtime) { if (!bedtime) onDone() }
+
+    LockedOutScreen(
+        line = line,
+        title = "Locked out until ${formatMinuteOfDay(config.bedtime.endMinute)}",
+        detail = "${formatDuration(untilEnd(config.bedtime.endMinute, now))} left. No way in until then.",
+        noApps = "None. Add some in Settings > App lockouts > Always-allowed apps, outside bedtime.",
+        onOpen = onOpen,
+    )
+}
+
+/**
+ * Her full-screen lock (bedtime since round 54, her porn block since round 71): her line, how long,
+ * then only your Always-allowed apps, the phone and her own app. Quit for now is always here.
+ */
+@Composable
+fun LockedOutScreen(line: String, title: String, detail: String, noApps: String, onOpen: (Intent) -> Unit) {
+    val context = LocalContext.current
+    val config by Guardian.config.flow.collectAsState()
+    val apps = remember(config.alwaysAllowed) {
+        InstalledApps.launchable(context).filter { it.packageName in config.alwaysAllowed }
+    }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -94,17 +111,17 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AngelImage(Modifier.size(180.dp))
-            SpeechBubble(line)
+            if (line.isNotBlank()) SpeechBubble(line)
             Text(
-                "Locked out until ${formatMinuteOfDay(config.bedtime.endMinute)}",
+                title,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
             )
-            Muted("${formatDuration(untilEnd(config.bedtime.endMinute, now))} left. No way in until then.")
+            Muted(detail)
 
             Text("Your unlocked apps", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            if (apps.isEmpty()) Muted("None. Add some in Settings > App lockouts > Always-allowed apps, outside bedtime.")
+            if (apps.isEmpty()) Muted(noApps)
             apps.forEach { app ->
                 FilledTonalButton(
                     onClick = { context.packageManager.getLaunchIntentForPackage(app.packageName)?.let(onOpen) },

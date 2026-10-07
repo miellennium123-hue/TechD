@@ -33,6 +33,8 @@ import com.guardianangel.core.Guardian
 import com.guardianangel.core.Line
 import com.guardianangel.core.Notifier
 import com.guardianangel.core.Permissions
+import com.guardianangel.core.PornBlock
+import com.guardianangel.core.PornScanner
 import com.guardianangel.core.Rules
 import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.Voice
@@ -54,6 +56,8 @@ import com.guardianangel.data.RatingTaste
 import com.guardianangel.data.Sites
 import com.guardianangel.data.WallpaperMode
 import kotlin.math.roundToInt
+import java.text.DateFormat
+import java.util.Date
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -238,6 +242,52 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                     "her own screens or your Always-allowed apps (put banking apps there). Screenshots stay in this app only, " +
                     "she keeps the newest ${Peek.KEEP}. If nothing shows up after updating, switch her watch off and on in Accessibility.",
             )
+        }
+
+        FoldCard("Porn block", config.pornBlock.on) {
+            val supported = PornScanner.supported()
+            SwitchRow(
+                "Porn block",
+                "Every ${PornBlock.SCAN_SECONDS} seconds in a browser or social app (X, Reddit, Instagram and more) she checks your screen. " +
+                    "If she sees porn, she locks your phone.",
+                config.pornBlock.on,
+            ) { v -> if (supported || !v) update { it.copy(pornBlock = it.pornBlock.copy(on = v)) } }
+            Stepper(
+                "Locked for",
+                formatMinutes(config.pornBlock.lockMinutes),
+                onMinus = { update { it.copy(pornBlock = it.pornBlock.copy(lockMinutes = PornBlock.stepLock(it.pornBlock.lockMinutes, up = false))) } },
+                onPlus = { update { it.copy(pornBlock = it.pornBlock.copy(lockMinutes = PornBlock.stepLock(it.pornBlock.lockMinutes, up = true))) } },
+            )
+            SwitchRow(
+                "Lock the screen too",
+                "The moment she catches you, the screen locks. When you unlock it, her caught screen is waiting.",
+                config.pornBlock.lockScreen,
+            ) { v -> update { it.copy(pornBlock = it.pornBlock.copy(lockScreen = v)) } }
+            SwitchRow(
+                "A catch is a failure",
+                "Costs merit, and adds her punishment and chastity time as you've set them.",
+                config.pornBlock.failure,
+            ) { v -> update { it.copy(pornBlock = it.pornBlock.copy(failure = v)) } }
+            SwitchRow(
+                "Private tabs count",
+                "Private and incognito tabs hide the screen from her. In a browser, a screen she can't see for about 15 seconds counts as porn.",
+                config.pornBlock.privateTabs,
+            ) { v -> update { it.copy(pornBlock = it.pornBlock.copy(privateTabs = v)) } }
+            if (!supported) {
+                Text("Needs Android 11 or later.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            Muted(
+                "While locked, only your Always-allowed apps, the phone and her app open. Quit for now always works. " +
+                    "She checks with her nudity detector on the phone. Nothing she scans is saved or leaves the phone. " +
+                    "She never looks at Always-allowed apps, so keep browsers off that list. " +
+                    "She can miss small pictures and drawings, and can mistake swimwear for porn. Needs her watch (Accessibility).",
+            )
+            if (config.lockGuard) Muted("Lock guard: switching any of this off or a shorter lock takes 30 minutes, and nothing here changes while you're locked.")
+            state.catches.lastOrNull()?.let { last ->
+                val time = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(last.at))
+                Muted("Caught ${state.catches.size} ${if (state.catches.size == 1) "time" else "times"}. Last: ${last.app}, $time.")
+                OutlinedButton(onClick = { Guardian.clearCatches() }) { Text("Forget her catches") }
+            }
         }
 
         FoldCard("Daily report", config.report.on) {

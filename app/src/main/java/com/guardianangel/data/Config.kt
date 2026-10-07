@@ -23,6 +23,8 @@ data class GuardianConfig(
     val peek: PeekSettings = PeekSettings(),
     /** Daily report (round 68): she counts unlocks and time in each app, then grades your day. */
     val report: ReportSettings = ReportSettings(),
+    /** Porn block (round 71): she scans your browsers and social apps, and porn locks your phone. See core/PornBlock. */
+    val pornBlock: PornBlockSettings = PornBlockSettings(),
     val chastity: ChastitySettings = ChastitySettings(),
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
     /** What she can ask you to photograph when it isn't about chastity. */
@@ -171,6 +173,23 @@ data class ReportSettings(
     val screenGoalMinutes: Int = 180,
     /** An F counts as a failure (punishment, chastity time, as set). Off: an F only costs merit. */
     val failOnF: Boolean = false,
+)
+
+/**
+ * Porn block (round 71). Every few seconds in a browser or social app she checks the screen with the
+ * on-device nudity detector. Porn locks the phone for [lockMinutes]: everything but Always-allowed apps
+ * and the phone. Needs Android 11 or later. Nothing she scans is kept. See core/PornBlock.
+ */
+@Serializable
+data class PornBlockSettings(
+    val on: Boolean = false,
+    val lockMinutes: Int = 60,
+    /** She also locks the screen the moment she catches you. */
+    val lockScreen: Boolean = true,
+    /** A catch counts as a failure (merit, punishment, chastity time, as set). */
+    val failure: Boolean = true,
+    /** A browser screen she can't see (private tabs block screenshots) for about 15 seconds counts as porn. */
+    val privateTabs: Boolean = true,
 )
 
 enum class MarkCorner(val label: String, val top: Boolean, val left: Boolean) {

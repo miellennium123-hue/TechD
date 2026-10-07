@@ -57,6 +57,8 @@ enum class Line(val group: String, val label: String, val note: String) {
     PEEK_CHAT("She peeks", "Messages", "She peeked and you were messaging someone"),
     PEEK_BROWSER("She peeks", "Browsing", "She peeked and you were in a browser"),
     PEEK_OTHER("She peeks", "Anything else", "She peeked at any other app"),
+    CAUGHT_PORN("Porn block", "Caught", "She saw porn on your screen and locked your phone"),
+    CAUGHT_HIDING("Porn block", "Hiding", "A private tab hid your browser from her, so she locked your phone"),
     REPORT_A("Daily report", "Grade A", "Her nightly report: well under both of your goals"),
     REPORT_B("Daily report", "Grade B", "Her nightly report: within both of your goals"),
     REPORT_C("Daily report", "Grade C", "Her nightly report: a little over a goal"),
@@ -141,6 +143,16 @@ object Voice {
             "Peeked at you, pet. I see everything.",
             "There you are. Just checking on my pet.",
             "I took a little look. You're always in my sight.",
+        ),
+        Line.CAUGHT_PORN to listOf(
+            "Oh, pet. I saw that. Phone down, you're locked until I say.",
+            "Naughty thing. That's not what your eyes are for. Locked.",
+            "I caught you, sweetie. Now you can sit and think about who you belong to.",
+        ),
+        Line.CAUGHT_HIDING to listOf(
+            "A private tab, pet? You can't hide from me. Locked.",
+            "Hiding things from your angel? That only makes me curious. Phone down.",
+            "If you have to hide it from me, you shouldn't be looking at it. Locked.",
         ),
         Line.REPORT_A to listOf(
             "An A today, pet. You barely touched your phone. I'm so proud of you.",
@@ -579,6 +591,16 @@ object Voice {
             "Peeked at you. Nothing you do on this phone is yours alone.",
             "I see everything, pet. Remember that.",
             "Caught you. Whatever that was, I kept a copy.",
+        ),
+        Line.CAUGHT_PORN to listOf(
+            "Caught you. Pathetic. Your phone is mine until I'm done with you.",
+            "Porn, pet? Locked. You don't get to look at anything but me.",
+            "I saw exactly what that was. Phone locked. Kneel and wait.",
+        ),
+        Line.CAUGHT_HIDING to listOf(
+            "A private tab. Did you really think you could hide from me? Locked.",
+            "Sneaking behind my back. Phone locked, and I'm not done with you.",
+            "Hiding it only proves you knew it was wrong. Locked.",
         ),
         Line.REPORT_A to listOf(
             "An A. You actually obeyed. Don't expect me to say it often.",

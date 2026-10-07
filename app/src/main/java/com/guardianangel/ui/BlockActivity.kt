@@ -142,13 +142,14 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
                         RestrictionKind.PUNISHMENT -> "locked as punishment"
                         RestrictionKind.RULE -> "locked by her rule"
                         RestrictionKind.SUMMONS -> "locked. She wants you, and you kept her waiting."
+                        RestrictionKind.CAUGHT -> "locked. She caught you looking at porn."
                     }
                 }",
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
             )
             when (block.kind) {
-                RestrictionKind.PUNISHMENT, RestrictionKind.RULE, RestrictionKind.LOCKOUT ->
+                RestrictionKind.PUNISHMENT, RestrictionKind.RULE, RestrictionKind.LOCKOUT, RestrictionKind.CAUGHT ->
                     Text("${formatDuration(block.until - now)} left", fontWeight = FontWeight.Bold)
                 RestrictionKind.BEDTIME -> Text("Until ${formatMinuteOfDay(config.bedtime.endMinute)}", fontWeight = FontWeight.Bold)
                 else -> Unit
@@ -197,7 +198,7 @@ private fun BlockScreen(pkg: String, resumes: Int, onOpen: () -> Unit, onHome: (
             if (block.kind == RestrictionKind.RULE) state.task?.let { Text(it.text, textAlign = TextAlign.Center) }
             when (block.kind) {
                 RestrictionKind.BEDTIME -> Muted("No way in until bedtime ends.")
-                RestrictionKind.PUNISHMENT, RestrictionKind.RULE -> Muted("Blocked until the timer ends.")
+                RestrictionKind.PUNISHMENT, RestrictionKind.RULE, RestrictionKind.CAUGHT -> Muted("Blocked until the timer ends.")
                 else -> Unit
             }
 
