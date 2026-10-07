@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.27.1 (The ruin you owe after a Porn block catch: a minute of filmed CBT, then a quickshot watching it). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 87)
+> **Last updated:** 2026-10-07 (round 89)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -889,7 +889,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Safety rules (fixed, not settings):** you set each channel's maximum, and she writes it to the box as its ceiling every time it connects; she never goes above it. Strength rises gradually, never jumps. Stop, Pause, leaving the app, Quit for now, a dropped connection or her switching off all send strength 0 at once. Never during quiet hours or bedtime. A setup screen on electrode placement: below the waist only, never across the chest or heart, never with a pacemaker or heart condition. Mood never changes strength. "Too much" always lowers it
   - **To test when the box is back:** finding and connecting to it, whether output stops by itself when commands stop (the protocol doesn't say), how strength feels per channel, and the battery reading
 
-- **Windows port (round 87, plan only, no code):** the user asked how possible a Windows version is, without Guided sessions. Answer: very possible, most of her works on a PC, and some parts work better than on Android. Lock guard is the weak spot
+- **Windows port (shelved round 89):** the user decided not to do a Windows version. The plan below stays as a record in case they ever revisit. Original note (round 87, plan only, no code): the user asked how possible a Windows version is, without Guided sessions. Answer: very possible, most of her works on a PC, and some parts work better than on Android. Lock guard is the weak spot
   - **Reuse:** about 3,700 lines of pure Kotlin (Rules, Voice and her lines, Config, State, Lock guard rules, Peek, Porn block, Usage, Rating, Tasks) have no Android code and carry over as is. `Guardian.kt` only needs Android for `Context` and `Toast`
   - **How (Claude's pick): Kotlin Multiplatform plus Compose for Desktop.** Move the pure code into a shared module both apps use, so her lines and rules never drift apart. Most Compose screens port with small changes. Windows calls through JNA. Packaged as an installer (.msi or .exe) built on a GitHub Actions Windows runner. Other way: a C# (.NET) rewrite, best Windows fit but two codebases to keep in step
   - **Easy on Windows:** watching the foreground app (replaces Accessibility), her block, bedtime and Caught screens (full-screen topmost windows), her mark (click-through overlay), peeks (screen capture, more reliable than Android), Porn block (same NudeNet model through ONNX Runtime), locking the PC, wallpapers, notifications, open sites, shows up, daily report (unlocks and app time), her spoken voice
@@ -1014,3 +1014,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 85, v0.27.1):** Hotfix. The ruin you owe after a Porn block catch is now always her CBT quickshot: a full minute of hard CBT she films, then fast strokes, the edge and the ruin while that CBT loops above you and you watch yourself below, then the replay. Details in section 8
 - **2026-10-07 (round 86):** No code changes. User wants to give her more control in the next update. Proposed ideas in section 10 (surrender period, ratchet, hidden settings, her whims, daily orders, her bedtime, app rationing, muted notifications, cage and wear orders, her orgasms, morning verdict, her shop, strike ladder), waiting on the user's picks
 - **2026-10-07 (round 87):** No code changes. User asked how possible a Windows port is, minus Guided sessions. Answer: very possible with Kotlin Multiplatform and Compose for Desktop, reusing the pure Kotlin core. Lock guard is the hard part. Plan and open questions in section 10
+- **2026-10-07 (round 89):** No code changes. User decided to stop the Windows port, so it's not happening. Closed the round 88 doc PR and marked the plan shelved in section 10
