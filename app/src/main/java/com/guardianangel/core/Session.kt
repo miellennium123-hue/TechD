@@ -192,14 +192,16 @@ object Session {
     /**
      * A quickshot (round 49): about two minutes, fast to her beat, always a ruin she films.
      * Ignores the kink menu, the length and the ending sliders. During a lock: unlock first, cage back on after.
+     * [watchClip] (round 78): she plays one of your clips after the first strokes, like every session.
      */
-    fun quickshot(caged: Boolean, random: Random): SessionScript = SessionScript(
+    fun quickshot(caged: Boolean, random: Random, watchClip: Boolean = false): SessionScript = SessionScript(
         SessionEnding.RUINED,
         caged,
         buildList {
             add(Step(StepKind.INTRO, 4, line = Line.SESSION_QUICKSHOT))
             if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
             add(Step(StepKind.STROKE, 15, bpm = random.nextInt(130, 151)))
+            if (watchClip) add(Step(StepKind.WATCH, WATCH_MAX_SECONDS))
             add(Step(StepKind.FASTER, 10, bpm = random.nextInt(170, 191)))
             add(Step(StepKind.EDGE, QUICKSHOT_EDGE_SECONDS, bpm = 150))
             add(Step(StepKind.COUNTDOWN, 3))

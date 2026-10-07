@@ -80,10 +80,12 @@ class ClipsTest {
         val s = SessionSettings()
         assertTrue(Clips.inSession(s, clips = 1, roll = 0.0))
         assertFalse(Clips.inSession(s, clips = 0, roll = 0.0))
-        assertFalse(Clips.inSession(s, clips = 1, roll = 0.99))
+        // Every session (round 78), as long as there's something to watch.
+        assertTrue(Clips.inSession(s, clips = 1, roll = 0.99))
         assertFalse(Clips.inSession(s.copy(watchInSessions = false), clips = 1, roll = 0.0))
         assertTrue(Clips.onLockScreen(on, clips = 1, roll = 0.0))
-        assertFalse(Clips.onLockScreen(on, clips = 1, roll = 0.99))
+        assertTrue(Clips.onLockScreen(on, clips = 1, roll = 0.4))
+        assertFalse(Clips.onLockScreen(on, clips = 1, roll = 0.6))
         assertFalse(Clips.onLockScreen(on.copy(enabled = false), clips = 1, roll = 0.0))
         assertFalse(Clips.onLockScreen(on.copy(session = s.copy(watchOnLockScreens = false)), clips = 1, roll = 0.0))
     }
@@ -104,6 +106,11 @@ class ClipsTest {
         val quiet = on.copy(quietHours = QuietHoursSettings(on = true, startMinute = noon + 1, endMinute = noon + 60))
         assertEquals(CheckInAction.PLAIN, Rules.checkInAction(quiet, GuardianState(), noon, true, sure, clips = 2))
         assertEquals(CheckInAction.QUIET, Rules.checkInAction(quiet, GuardianState(), noon + 5, true, sure, clips = 2))
+        // About every other check-in, and it comes before a task or summons.
+        val busy = quietOff.copy(tasksOn = true, showsUpOn = true)
+        val all = CheckInRolls(task = 0.0, summons = 0.0, proof = 0.0, watch = 0.4)
+        assertEquals(CheckInAction.WATCH, Rules.checkInAction(busy, GuardianState(), noon, true, all, clips = 2))
+        assertEquals(CheckInAction.TASK, Rules.checkInAction(busy, GuardianState(), noon, true, all.copy(watch = 0.6), clips = 2))
         // The old default rolls never send one, so earlier check-ins stay as they were.
         val old = CheckInRolls(task = 0.99, summons = 0.99, proof = 0.99)
         assertEquals(CheckInAction.PLAIN, Rules.checkInAction(quietOff, GuardianState(), noon, true, old, clips = 2))

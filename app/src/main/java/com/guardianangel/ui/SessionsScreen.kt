@@ -100,19 +100,19 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
             Text("She makes you watch your clips", style = MaterialTheme.typography.titleSmall)
             SwitchRow(
                 "During sessions",
-                "About every other session she stops and plays one of your clips. You see yourself in the corner.",
+                "Every session, quickshots too, she stops once and plays one of your clips. You see yourself in the corner.",
                 config.session.watchInSessions,
             ) { v -> update { it.copy(session = it.session.copy(watchInSessions = v)) } }
             SwitchRow(
                 "At check-ins",
-                "Some check-ins send a clip. Open it within a minute or it's a failure. Never in quiet time, and only " +
+                "About every other check-in sends a clip. Open it within a minute or it's a failure. Never in quiet time, and only " +
                     "when she can send notifications.",
                 config.session.watchAtCheckIns,
             ) { v -> update { it.copy(session = it.session.copy(watchAtCheckIns = v)) } }
             SwitchRow(
                 "On her lock screens",
-                "Her bedtime and Caught screens sometimes open by playing a clip, with sound. Phone, Always-allowed apps " +
-                    "and Quit for now stay right there.",
+                "About every other time her bedtime or Caught screen opens, it plays a clip first, with sound. Phone, " +
+                    "Always-allowed apps and Quit for now stay right there.",
                 config.session.watchOnLockScreens,
             ) { v -> update { it.copy(session = it.session.copy(watchOnLockScreens = v)) } }
             if (config.lockGuard) Muted("Lock guard: switching check-ins or lock screens off takes 30 minutes.")

@@ -28,10 +28,13 @@ object Clips {
     /** At a check-in that makes you watch, you have this long to open it. */
     const val WATCH_DUE_SECONDS = 60
 
-    /** How often she makes you watch: per session, per check-in, and per time her lock screen opens. */
-    const val SESSION_CHANCE = 0.5
-    const val CHECK_IN_CHANCE = 0.25
-    const val LOCK_SCREEN_CHANCE = 1.0 / 3
+    /**
+     * How often she makes you watch (round 78): every session, and about every other check-in and
+     * time her lock screen opens (at random, so you never know which).
+     */
+    const val SESSION_CHANCE = 1.0
+    const val CHECK_IN_CHANCE = 0.5
+    const val LOCK_SCREEN_CHANCE = 0.5
 
     fun name(kind: ClipKind, at: Long): String = "clip_${at}_${kind.tag}.mp4"
 
