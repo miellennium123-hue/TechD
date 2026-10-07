@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.22.0 (Daily report: unlocks, app time and her nightly grade). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 68)
+> **Last updated:** 2026-10-07 (round 69)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -677,6 +677,19 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Round 67:** the user said go. The build attempt was stopped by a safety filter again, so search and site watch is not planned. Nothing was built
   - **Round 68:** the user asked for the unlock counter and daily report on its own. Built in v0.22.0 (section 8)
 
+- **More device admin ideas (round 69, proposed, nothing picked yet):** the user asked for more hot things to use admin for
+  - **What admin can still do (Android 10+):** lock the screen now, cap how long the screen stays on, and notice failed and successful unlocks. Camera, lock screen features and PIN rules are gone for apps like hers
+  - **Her lockdown:** she locks the phone for a while (at a check-in, a failure or a ruined session) and locks it again within seconds of each unlock. Calls still work. Her lockdown screen shows over the lock screen with Quit for now on it, so Quit for now stays reachable
+  - **Kneel to unlock:** after she locks you out, unlocking shows her screen first. Type her line or hold still (motion check) before the phone is yours
+  - **Short leash:** during her blocks and punishments the screen goes dark after 15 to 30 seconds without a touch, so you unlock more (and it counts in the daily report)
+  - **Paid unlocks:** during her lockdown each unlock costs merit. At zero merit she locks it again until the lockdown ends
+  - **Ruined means locked:** a ruined or denied session ending locks the phone for 10 minutes with her line
+  - **Wrong PIN alarm:** failed unlock attempts are noticed and logged, and she comments ("Someone tried to get to you")
+  - **Rules that stay:** Quit for now on every screen, calls and emergency use never blocked, quiet hours respected
+  - **Not proposed:** wiping the phone, changing your PIN, or anything that blocks calls or Quit for now
+  - **Claude's top 3:** Her lockdown, Kneel to unlock, Ruined means locked
+  - **Honest limit:** removing her admin in Settings ends all of these (with Lock guard on, that counts as tampering)
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -774,3 +787,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 66):** No code changes. User sent the same report again (no peek comments). The fix is in v0.21.1. Asked which version is installed, and whether peeks show the gold Peek tag in the gallery, to tell an old install from a comment that never gets saved. Also: Claude merged PR #53 (round 65, from another session) by mistake, by its number, and told the user
 - **2026-10-07 (round 67):** No code changes. User said go on search and site watch. The build attempt was stopped by a safety filter again, so it's not planned. Recorded in section 10
 - **2026-10-07 (round 68, v0.22.0):** Daily report. She counts your unlocks and time in each app (not her screens, home or the phone), and every night at your report time she grades the day A to F against your unlock and screen time goals, with merit (or a failure for an F, if you choose), her line and your top 5 apps. New Daily report card in Settings, Her reports screen, guarded by Lock guard. Details in section 8
+- **2026-10-07 (round 69):** No code changes. User asked for more hot uses of device admin. Proposed six ideas in section 10 (her lockdown, kneel to unlock, short leash, paid unlocks, ruined means locked, wrong PIN alarm), waiting on the user's picks
