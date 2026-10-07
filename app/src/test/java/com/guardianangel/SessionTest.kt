@@ -82,16 +82,16 @@ class SessionTest {
         val ruinOnly = all.copy(permissionWeight = 0, ruinWeight = 100, denialWeight = 0)
         val script = Session.build(ruinOnly, caged = true, Random(3))
         val kinds = script.steps.map { it.kind }
-        assertEquals(StepKind.RELOCK, kinds.last())
+        assertEquals(listOf(StepKind.RELOCK, StepKind.COOL), kinds.takeLast(2))
         assertTrue(kinds.indexOf(StepKind.UNLOCK) < kinds.indexOf(StepKind.RUIN))
         // Without a lock there's nothing to unlock.
-        val free = Session.build(ruinOnly, caged = false, Random(3)).steps.map { it.kind }
+        val free = Session.build(ruinOnly, caged = false, Random(3)).steps.map { it.kind }.dropLast(1)
         assertFalse(StepKind.UNLOCK in free)
         // Round 79: she replays the ruin right after it, and you stroke through it with "Keep going".
         assertEquals(listOf(StepKind.RUIN, StepKind.REPLAY), free.takeLast(2))
-        assertTrue(Session.build(ruinOnly, caged = false, Random(3)).steps.last().bpm > 0)
+        assertTrue(Session.build(ruinOnly, caged = false, Random(3)).steps.last { it.kind == StepKind.REPLAY }.bpm > 0)
         val noPost = Session.build(ruinOnly.copy(kinks = ruinOnly.kinks - Kink.POST_ORGASM), caged = false, Random(3))
-        assertEquals(0, noPost.steps.last().bpm)
+        assertEquals(0, noPost.steps.last { it.kind == StepKind.REPLAY }.bpm)
     }
 
     @Test
@@ -117,7 +117,8 @@ class SessionTest {
     @Test
     fun endingsEndRight() {
         val noPost = all.copy(kinks = all.kinks - Kink.POST_ORGASM)
-        fun last(p: Int, r: Int, d: Int) = Session.build(noPost.copy(permissionWeight = p, ruinWeight = r, denialWeight = d), false, Random(1)).steps.last().kind
+        fun last(p: Int, r: Int, d: Int) = Session.build(noPost.copy(permissionWeight = p, ruinWeight = r, denialWeight = d), false, Random(1))
+            .steps.last { it.kind != StepKind.COOL }.kind
         assertEquals(StepKind.FINISH, last(100, 0, 0))
         assertEquals(StepKind.REPLAY, last(0, 100, 0))
         assertEquals(StepKind.DENIED, last(0, 0, 100))
@@ -194,7 +195,7 @@ class SessionTest {
         builds(SessionSettings(kinks = emptySet()), caged = false).forEach { script ->
             val allowed = setOf(
                 StepKind.INTRO, StepKind.STROKE, StepKind.COUNT, StepKind.EDGE, StepKind.EDGE_HOLD, StepKind.COUNTDOWN,
-                StepKind.FINISH, StepKind.RUIN, StepKind.REPLAY, StepKind.DENIED, StepKind.DEAL,
+                StepKind.FINISH, StepKind.RUIN, StepKind.REPLAY, StepKind.DENIED, StepKind.DEAL, StepKind.COOL,
             )
             script.steps.forEach { assertTrue("${it.kind}", it.kind in allowed) }
         }
@@ -243,7 +244,7 @@ class SessionTest {
     fun keepGoingAfterFinishingNeverDuringALock() {
         val permission = all.copy(permissionWeight = 100, ruinWeight = 0, denialWeight = 0)
         val kinds = Session.build(permission, false, Random(2)).steps.map { it.kind }
-        assertEquals(listOf(StepKind.FINISH, StepKind.POST), kinds.takeLast(2))
+        assertEquals(listOf(StepKind.FINISH, StepKind.POST, StepKind.COOL), kinds.takeLast(3))
         builds(all, caged = true).forEach { script -> assertTrue(script.steps.none { it.kind == StepKind.POST }) }
         assertFalse(Kink.POST_ORGASM in Session.kinks(all, caged = true))
     }
@@ -360,11 +361,11 @@ class SessionTest {
         scripts.forEach { s ->
             val i = s.steps.indexOfFirst { it.line == Line.SESSION_NOT_YET }
             if (i >= 0) assertEquals(StepKind.COUNTDOWN, s.steps[i - 1].kind)
-            assertEquals(StepKind.FINISH, s.steps.last { it.kind != StepKind.POST }.kind)
+            assertEquals(StepKind.FINISH, s.steps.last { it.kind != StepKind.POST && it.kind != StepKind.COOL }.kind)
         }
         // A denial at the end of a countdown.
         val denied = builds(all.copy(permissionWeight = 0, ruinWeight = 0, denialWeight = 100), caged = false)
-        assertTrue(denied.any { s -> s.steps.last().line == Line.SESSION_NO })
+        assertTrue(denied.any { s -> s.steps.last { it.kind != StepKind.COOL }.line == Line.SESSION_NO })
         // Taunts hold on a number she actually reaches.
         builds(all, caged = false).flatMap { it.steps }.filter { it.kind == StepKind.COUNTDOWN && it.tauntAt > 0 }.forEach {
             assertTrue(it.tauntAt in 1..it.seconds)
@@ -382,5 +383,53 @@ class SessionTest {
         assertFalse(Session.whisper(s, 12 * 60))
         assertFalse(Session.whisper(s.copy(whisper = false), 23 * 60))
         assertFalse(Session.whisper(s.copy(voice = false), 23 * 60))
+    }
+
+    // ---- Round 84 ---------------------------------------------------------------------------
+
+    @Test
+    fun warmUpFirstCoolDownLast() {
+        builds(all, caged = false).forEach { script ->
+            assertTrue(script.steps[1].warmup)
+            assertEquals(Line.SESSION_WARMUP, script.steps[1].line)
+            assertTrue(script.steps.filter { it.warmup }.all { it.bpm in 1..70 })
+            assertEquals(StepKind.COOL, script.steps.last().kind)
+            assertEquals("Cool-down", Session.chapter(script.steps.last()))
+            assertEquals("Warm-up", Session.chapter(script.steps[1]))
+        }
+        builds(all, caged = true).forEach { script ->
+            assertEquals(StepKind.HOLD, script.steps[1].kind)
+            assertTrue(script.steps[1].warmup)
+        }
+        val body = Step(StepKind.STROKE, 30, bpm = 90)
+        assertEquals("Her session", Session.chapter(body))
+        assertEquals("The ending", Session.chapter(body.copy(ending = true)))
+    }
+
+    @Test
+    fun clampsOnTheirTimerAtMostTwice() {
+        val clamps = SessionSettings(on = true, kinks = setOf(Kink.CLAMPS), minutes = 30)
+        builds(clamps, caged = true).forEach { script ->
+            val kinds = script.steps.map { it.kind }
+            assertTrue(kinds.count { it == StepKind.CLAMP } <= Session.CLAMPS_PER_SESSION)
+            script.steps.forEachIndexed { i, step ->
+                if (step.kind == StepKind.CLAMP) {
+                    assertTrue(step.seconds <= Session.CLAMP_MAX_SECONDS)
+                    assertEquals(StepKind.CLAMP_ON, kinds[i - 1])
+                    assertEquals(StepKind.CLAMP_OFF, kinds[i + 1])
+                    assertTrue(step.kind.skippable)
+                }
+            }
+        }
+        assertTrue(builds(clamps, caged = false).any { s -> s.steps.any { it.kind == StepKind.CLAMP } })
+    }
+
+    @Test
+    fun sizeRemarksNeedARating() {
+        val sph = SessionSettings(on = true, kinks = setOf(Kink.SMALL_SIZE, Kink.EDGING))
+        val without = seeds.map { Session.build(sph, false, Random(it)) }.flatMap { it.steps }
+        assertTrue(without.none { it.comment == Line.SESSION_SPH })
+        val with = seeds.map { Session.build(sph, false, Random(it), sizeKnown = true) }.flatMap { it.steps }
+        assertTrue(with.any { it.comment == Line.SESSION_SPH })
     }
 }

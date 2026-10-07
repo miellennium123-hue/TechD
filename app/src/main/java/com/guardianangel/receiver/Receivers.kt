@@ -16,6 +16,10 @@ class AlarmReceiver : BroadcastReceiver() {
             Scheduler.ACTION_TASK -> Guardian.onTaskAlarm()
             Scheduler.ACTION_SUMMONS -> Guardian.onSummonsAlarm()
             Scheduler.ACTION_WATCH -> Guardian.onWatchDeadline()
+            Scheduler.ACTION_BOOK_REMIND -> Guardian.onBookRemind()
+            Scheduler.ACTION_BOOK_NOW -> Guardian.onBookNow()
+            Scheduler.ACTION_BOOK_MISS -> Guardian.onBookMiss()
+            Scheduler.ACTION_RUIN_DUE -> Guardian.onRuinDue()
         }
     }
 }

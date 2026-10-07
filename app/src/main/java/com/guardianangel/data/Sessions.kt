@@ -35,7 +35,33 @@ data class SessionSettings(
     val whisper: Boolean = true,
     /** Round 79: her words big enough to read from across the room. */
     val bigText: Boolean = false,
+    /** Round 84: the theme you picked last time, kept for the next session. */
+    val theme: SessionTheme = SessionTheme.YOURS,
+    /** Round 84: she picks the length (5 to 45 minutes) and doesn't tell you. */
+    val herLength: Boolean = false,
+    /** Round 84: her training program. Sessions get longer and harsher every week since you started. */
+    val training: Boolean = false,
+    /** Round 84: after any failure, your next session is a punishment session (CBT-heavy, always ruined). */
+    val punishmentSessions: Boolean = true,
+    /** Round 84: when Porn block catches you, you owe her a ruined session within a day, or it's a failure. */
+    val ruinAfterCatch: Boolean = true,
+    /** Round 84: she books your next session for a time she picks. Miss it and it's a failure. */
+    val booked: Boolean = false,
 )
+
+/**
+ * Session themes (round 84). Each one uses only kinks you've switched on, and sets her endings and the
+ * length for that session. See core/SessionPlan.
+ */
+enum class SessionTheme(val label: String, val note: String) {
+    YOURS("Your settings", "Your kink menu, endings and length, as set below"),
+    TEASE_NIGHT("Tease night", "Slow teasing, stops and countdowns. Almost always denied"),
+    EDGE_MARATHON("Edge marathon", "Edge after edge for half an hour. Rarely a full release"),
+    PUNISHMENT("Punishment", "CBT, humiliation and edges. Always ruined"),
+    REWARD("Reward", "Sweet and teasing, and she usually lets you cum"),
+    RUIN_TRAINING("Ruin training", "Short and fast. Always ruined"),
+    CBT_DISCIPLINE("CBT discipline", "CBT counts, countdowns and humiliation. Never a full release"),
+}
 
 /** One kink in the kink menu. [cageSafe] runs during a lock; [uncaged] runs without one. */
 enum class Kink(val label: String, val note: String, val cageSafe: Boolean, val uncaged: Boolean = true) {
@@ -54,6 +80,10 @@ enum class Kink(val label: String, val note: String, val cageSafe: Boolean, val 
     SOUNDING("Sounding", "Sound in, hold, out. Slow and never rushed", cageSafe = false),
     /** Round 79. */
     POST_ORGASM("Keep going", "After you finish or ruin, keep stroking right through it", cageSafe = false),
+    /** Round 84. */
+    CLAMPS("Clamps and pins", "Clamps or clothes pins on, then off, on her timer (3 minutes at most)", cageSafe = true),
+    /** Round 84: uses your Rate me result. */
+    SMALL_SIZE("Small-size humiliation", "Remarks about your size, using your Rate me result", cageSafe = true),
 }
 
 enum class CbtLevel(val label: String) {
@@ -85,6 +115,8 @@ data class SessionRecord(
     val filmed: Int = 0,
     val fastestEdge: Int = 0,
     val deal: String = "",
+    /** Round 84: the theme it ran with, and whether it paid off a punishment. */
+    val theme: SessionTheme = SessionTheme.YOURS,
 )
 
 enum class SessionOutcome {
@@ -99,6 +131,8 @@ enum class SessionOutcome {
 object Sessions {
     const val MIN_MINUTES = 5
     const val MAX_MINUTES = 30
+    /** Round 84: her own lengths, themes and training can run longer than the stepper. */
+    const val HER_MAX_MINUTES = 45
     const val DEFAULT_MINUTES = 10
     const val HISTORY = 30
 

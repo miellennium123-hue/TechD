@@ -21,10 +21,13 @@ import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Session
 import com.guardianangel.core.SessionClips
+import com.guardianangel.core.SessionPlan
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.SessionOutcome
+import com.guardianangel.data.SessionTheme
 import com.guardianangel.data.Sessions
+import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -108,6 +111,49 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
                 "Her words, the beat and the edge button big enough to read and hit from across the room.",
                 config.session.bigText,
             ) { v -> update { it.copy(session = it.session.copy(bigText = v)) } }
+            Text("Her plans", style = MaterialTheme.typography.titleSmall)
+            SwitchRow(
+                "She decides the length",
+                "Each session runs ${Sessions.MIN_MINUTES} to ${Sessions.HER_MAX_MINUTES} minutes, her choice, and she doesn't tell you how long.",
+                config.session.herLength,
+            ) { v -> update { it.copy(session = it.session.copy(herLength = v)) } }
+            SwitchRow(
+                "Her training program",
+                "Every week since you started: 3 more minutes, and she lets you cum less often. Up to week ${SessionPlan.MAX_WEEK}.",
+                config.session.training,
+            ) { v -> update { it.copy(session = it.session.copy(training = v)) } }
+            if (config.session.training) {
+                Muted("You're in week ${SessionPlan.week(state.trainingStart, Guardian.now()).coerceAtLeast(1)}. Switching it off and on starts over at week 1.")
+            }
+            SwitchRow(
+                "Punishment sessions",
+                "After any failure your next session is a punishment: CBT-heavy if you've allowed CBT, and always ruined.",
+                config.session.punishmentSessions,
+            ) { v -> update { it.copy(session = it.session.copy(punishmentSessions = v)) } }
+            if (config.session.punishmentSessions && state.owedPunishment) {
+                Text("You owe her a punishment session.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            SwitchRow(
+                "A ruin after a Porn block catch",
+                "When Porn block catches you, you owe her a ruined session within ${SessionPlan.RUIN_OWED_HOURS} hours. Miss it and it's a failure. " +
+                    "Only when she can send notifications.",
+                config.session.ruinAfterCatch,
+            ) { v -> update { it.copy(session = it.session.copy(ruinAfterCatch = v)) } }
+            if (state.ruinOwedBy > Guardian.now()) {
+                val by = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(state.ruinOwedBy))
+                Text("You owe her a ruin by $by.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            SwitchRow(
+                "Booked sessions",
+                "She books your next session a day or two ahead, at a time she picks (never in quiet hours). A reminder 15 minutes " +
+                    "before; start within 15 minutes of her time or it's a failure. Then she books the next.",
+                config.session.booked,
+            ) { v -> update { it.copy(session = it.session.copy(booked = v)) } }
+            state.booked?.takeIf { !it.kept }?.let { b ->
+                val at = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(b.at))
+                Text("Your next session: $at", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            }
+            if (config.lockGuard) Muted("Lock guard: switching off her training, punishment sessions, the ruin after a catch or booked sessions takes 30 minutes.")
             Muted(
                 "The camera is on for every session, so you watch yourself the whole time. She always films a ruin. " +
                     "Clips have sound if you allow the microphone, and stay private to this app.",
@@ -163,6 +209,7 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
                                 outcomeLabel(r.outcome),
                                 "${r.edges} edges".takeIf { r.edges > 0 },
                                 "fastest ${r.fastestEdge}s".takeIf { r.fastestEdge > 0 },
+                                r.theme.label.takeIf { r.theme != SessionTheme.YOURS },
                                 r.deal.ifBlank { null },
                                 "${r.filmed} saved".takeIf { r.filmed > 0 },
                                 "locked".takeIf { r.caged },

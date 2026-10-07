@@ -53,7 +53,8 @@ object LockGuard {
      * higher daily report goals, or an F no longer a failure. Since round 73 also: any Porn block
      * switch off, or a shorter lock. Since round 74 also: checking less often, an app off her list,
      * an adult app taken off, her hours switched on, or her hours moved. Since round 77 also: her clips
-     * at check-ins or on her lock screens switched off. Those take the slow way while guarding.
+     * at check-ins or on her lock screens switched off. Since round 84 also: punishment sessions, the ruin
+     * after a catch, booked sessions or her training switched off. Those take the slow way while guarding.
      * Anything that makes her stricter, and every other detail, changes instantly.
      */
     fun loosens(before: GuardianConfig, after: GuardianConfig): Boolean {
@@ -77,6 +78,10 @@ object LockGuard {
             off(before.peek.on, after.peek.on) ||
             off(before.session.watchAtCheckIns, after.session.watchAtCheckIns) ||
             off(before.session.watchOnLockScreens, after.session.watchOnLockScreens) ||
+            off(before.session.punishmentSessions, after.session.punishmentSessions) ||
+            off(before.session.ruinAfterCatch, after.session.ruinAfterCatch) ||
+            off(before.session.booked, after.session.booked) ||
+            off(before.session.training, after.session.training) ||
             off(before.report.on, after.report.on) ||
             off(before.pornBlock.on, after.pornBlock.on) ||
             off(before.pornBlock.lockScreen, after.pornBlock.lockScreen) ||

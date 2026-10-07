@@ -213,6 +213,20 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        // Round 84: sessions she's expecting from you.
+        val booked = state.booked?.takeIf { !it.kept }
+        val ruinDue = state.ruinOwedBy.takeIf { it > now }
+        val punish = config.session.punishmentSessions && state.owedPunishment
+        if (config.enabled && config.session.on && (booked != null || ruinDue != null || punish)) {
+            SectionCard("She's expecting a session") {
+                val fmt = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)
+                ruinDue?.let { Text("A ruin you owe her, by ${fmt.format(java.util.Date(it))}.", color = MaterialTheme.colorScheme.error) }
+                if (punish) Text("A punishment session for your last failure.", color = MaterialTheme.colorScheme.error)
+                booked?.let { Text("Booked for ${fmt.format(java.util.Date(it.at))}. Start within 15 minutes of it.") }
+                Button(onClick = { context.startActivity(SessionActivity.intent(context)) }) { Text("Start a session") }
+            }
+        }
+
         OutlinedButton(onClick = { navigate(Screen.SESSIONS) }, modifier = Modifier.fillMaxWidth()) {
             Text("Guided sessions")
         }

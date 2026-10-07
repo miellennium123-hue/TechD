@@ -16,6 +16,7 @@ import com.guardianangel.R
 import com.guardianangel.ui.MainActivity
 import com.guardianangel.ui.Screen
 import com.guardianangel.ui.ShowUpActivity
+import com.guardianangel.ui.SessionActivity
 import com.guardianangel.ui.WatchActivity
 
 /** Discreet mode keeps every notification neutral, so nothing explicit shows on the lock screen. */
@@ -29,6 +30,7 @@ object Notifier {
     const val ID_PEEK = 6
     const val ID_REPORT = 7
     const val ID_WATCH = 8
+    const val ID_SESSION = 9
 
     fun createChannel(context: Context) {
         val channel = NotificationChannel(CHANNEL_ID, "Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -56,6 +58,10 @@ object Notifier {
     /** Round 77: tapping it plays her clip full screen. You have a minute. */
     fun watch(context: Context, line: String) =
         post(context, ID_WATCH, line, "You have something to do. Open within a minute.", WatchActivity.intent(context))
+
+    /** Round 84: booked sessions and the ruin you owe. Tapping it opens her session screen. */
+    fun session(context: Context, line: String, silent: Boolean = false) =
+        post(context, ID_SESSION, line, "You have something to do.", SessionActivity.intent(context), silent = silent)
 
     /** Tapping it brings her up full screen. */
     fun summon(context: Context, line: String) =

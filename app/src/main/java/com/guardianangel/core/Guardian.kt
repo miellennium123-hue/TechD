@@ -30,6 +30,8 @@ import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
 import com.guardianangel.data.UsageDay
 import com.guardianangel.data.WatchRequest
+import com.guardianangel.data.BookedSession
+import com.guardianangel.data.SessionTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 import java.util.Calendar
@@ -51,6 +53,8 @@ enum class Failure(val merit: Int) {
     CAUGHT_PORN(10),
     MISSED_CLIP(5),
     MISSED_COMMAND(5),
+    MISSED_RUIN(8),
+    MISSED_SESSION(5),
 }
 
 sealed interface AskResult {
@@ -146,11 +150,15 @@ object Guardian {
             Scheduler.scheduleAll(appContext)
             WallpaperController.applyIfWanted(appContext)
             say(Line.GREETING)
+            if (config.value.session.booked && state.value.booked == null) bookNext()
         } else {
             val proofs = state.value.proofs
             config.update { it.copy(enabled = false) }
             state.update {
-                it.copy(proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null, visit = null, watch = null)
+                it.copy(
+                    proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null, visit = null, watch = null,
+                    booked = null, ruinOwedBy = 0, owedPunishment = false,
+                )
             }
             Scheduler.cancelAll(appContext, proofs)
             Notifier.cancelAll(appContext)
@@ -177,6 +185,9 @@ object Guardian {
                 summons = null,
                 visit = null,
                 watch = null,
+                booked = null,
+                ruinOwedBy = 0,
+                owedPunishment = false,
             )
         }
         Scheduler.cancelAll(appContext, proofs)
@@ -284,7 +295,14 @@ object Guardian {
         if (before.sitesOn && !after.sitesOn) clearVisit()
         if (before.lockouts.on && !after.lockouts.on) state.update { it.copy(lockoutUntil = 0) }
         if (before.pornBlock.on && !after.pornBlock.on) state.update { it.copy(caughtUntil = 0) }
+        // Round 84: training starts the day you switch it on; booked sessions and owed ruins follow their switches.
+        if (!before.session.training && after.session.training) state.update { it.copy(trainingStart = now()) }
+        if (before.session.training && !after.session.training) state.update { it.copy(trainingStart = 0) }
+        if (before.session.booked && !after.session.booked) cancelBooking()
+        if (before.session.ruinAfterCatch && !after.session.ruinAfterCatch) clearRuinOwed()
+        if (before.session.punishmentSessions && !after.session.punishmentSessions) state.update { it.copy(owedPunishment = false) }
         if (!after.enabled) return
+        if (!before.session.booked && after.session.booked) bookNext()
         if (after.checkInMinutes != before.checkInMinutes) Scheduler.scheduleNextCheckIn(appContext)
         val wallpaperChanged = after.wallpaper.on &&
             (!before.wallpaper.on || after.wallpaper.mode != before.wallpaper.mode)
@@ -316,6 +334,8 @@ object Guardian {
                 it.copy(punishmentUntil = max(it.punishmentUntil, t) + c.punishment.length.minutes * MINUTE)
             }
         }
+        // Round 84: your next session will be a punishment session.
+        if (c.session.on && c.session.punishmentSessions) state.update { it.copy(owedPunishment = true) }
         Notifier.message(appContext, line)
         return line
     }
@@ -912,6 +932,7 @@ object Guardian {
             )
         }
         Notifier.message(appContext, line)
+        oweRuin()
         return line
     }
 
@@ -1012,6 +1033,9 @@ object Guardian {
      */
     fun finishSession(record: SessionRecord): Pair<String, Long?> {
         state.update { it.copy(sessions = (it.sessions + record).takeLast(Sessions.HISTORY)) }
+        // Round 84: a punishment session pays off the punishment; a ruin pays off the ruin you owed.
+        if (record.theme == SessionTheme.PUNISHMENT) state.update { it.copy(owedPunishment = false) }
+        if (record.outcome == SessionOutcome.RUINED && state.value.ruinOwedBy > 0) clearRuinOwed()
         val line = if (record.outcome == SessionOutcome.RUIN_FAILED) {
             fail(Failure.RUIN_FAILED)
         } else if (record.outcome == SessionOutcome.MISSED_COMMAND) {
@@ -1026,6 +1050,93 @@ object Guardian {
             null
         }
         return line to relock
+    }
+
+    // ---- Session plans (round 84) -----------------------------------------------------------
+
+    /** The session you're about to start, with what you owe her. */
+    fun planSession(chosen: SessionTheme): SessionPlanned =
+        SessionPlan.plan(config.value, state.value, chosen, now(), random.nextDouble())
+
+    /** You tapped Start: a session started inside her booked window keeps the booking. */
+    fun sessionStarted() {
+        val b = state.value.booked ?: return
+        if (b.kept || !SessionPlan.keepsBooking(b.at, now())) return
+        state.update { it.copy(booked = b.copy(kept = true)) }
+        Scheduler.cancelBooking(appContext)
+        Notifier.cancel(appContext, Notifier.ID_SESSION)
+        addMerit(3)
+        bookNext()
+    }
+
+    /** She books your next session, if you let her and she can tell you about it. */
+    private fun bookNext() {
+        val c = config.value
+        if (!c.enabled || !c.session.on || !c.session.booked || !Notifier.canNotify(appContext)) {
+            state.update { it.copy(booked = null) }
+            return
+        }
+        val at = SessionPlan.nextBooking(c, now(), minuteOfDay(), random.nextDouble(), random.nextDouble()) ?: return
+        state.update { it.copy(booked = BookedSession(at)) }
+        Scheduler.scheduleBooking(appContext, at)
+        val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(at))
+        val day = java.text.SimpleDateFormat("EEEE", java.util.Locale.getDefault()).format(java.util.Date(at))
+        Notifier.session(appContext, "${say(Line.SESSION_BOOKED)} $day, $time.", silent = true)
+    }
+
+    private fun cancelBooking() {
+        state.update { it.copy(booked = null) }
+        Scheduler.cancelBooking(appContext)
+        Notifier.cancel(appContext, Notifier.ID_SESSION)
+    }
+
+    /** 15 minutes before her booked session. */
+    fun onBookRemind() {
+        val b = state.value.booked ?: return
+        if (b.kept || !config.value.enabled) return
+        val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(b.at))
+        Notifier.session(appContext, "${say(Line.SESSION_BOOKED)} $time.")
+    }
+
+    /** Her booked session is now. */
+    fun onBookNow() {
+        val b = state.value.booked ?: return
+        if (b.kept || !config.value.enabled) return
+        Notifier.session(appContext, say(Line.SESSION_BOOK_NOW))
+    }
+
+    /** 15 minutes after: you never started. A failure, and she books the next one. */
+    fun onBookMiss() {
+        val b = state.value.booked ?: return
+        if (b.kept || !config.value.enabled) return
+        state.update { it.copy(booked = null) }
+        Notifier.cancel(appContext, Notifier.ID_SESSION)
+        fail(Failure.MISSED_SESSION)
+        bookNext()
+    }
+
+    /** Porn block caught you: a ruined session within a day (only if she can tell you, and sessions are on). */
+    private fun oweRuin() {
+        val c = config.value
+        if (!c.session.on || !c.session.ruinAfterCatch || !Notifier.canNotify(appContext)) return
+        val t = now()
+        val due = state.value.ruinOwedBy.takeIf { it > t } ?: (t + SessionPlan.RUIN_OWED_HOURS * 60 * MINUTE)
+        state.update { it.copy(ruinOwedBy = due) }
+        Scheduler.scheduleRuinDue(appContext, due)
+        Notifier.session(appContext, say(Line.SESSION_RUIN_OWED))
+    }
+
+    private fun clearRuinOwed() {
+        state.update { it.copy(ruinOwedBy = 0) }
+        Scheduler.cancelRuinDue(appContext)
+    }
+
+    /** The day is up and you never ruined for her: a failure. */
+    fun onRuinDue() {
+        val due = state.value.ruinOwedBy
+        if (due <= 0 || now() < due) return
+        clearRuinOwed()
+        if (config.value.enabled) fail(Failure.MISSED_RUIN)
     }
 
     fun clearSessions() {
