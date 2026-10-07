@@ -1,9 +1,15 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.27.1 (the owed ruin). Sections 0 to 0z cover what 0.6.0 to 0.27.1 changed
+> **Version under test:** 0.27.2 (edge face camera). Sections 0 to 0z2 cover what 0.6.0 to 0.27.2 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z2. Fixed in 0.27.2: edge face camera
+- [ ] Settings > About shows **Version 0.27.2**
+- [ ] Session on the **back** camera: at "I'm at the edge" the screen flips to the front camera for about a second, then back
+- [ ] Her videos: the "Your face at edge N" photo shows your face
+- [ ] Session on the **front** camera: no flip, the photo is what the front camera sees
 
 ## 0z. New in 0.27.1: the owed ruin
 Get caught by Porn block (or test with Debug mode) so you owe her a ruin.
@@ -481,6 +487,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-07 | 0.27.1 | Edge face photo | User: the photo came from the camera aimed at their crotch, not their face. Fixed in 0.27.2 (front camera) |
 | 2026-10-06 | 0.21.0 | She peeks comments | User: screenshots save but no comments shown. Gallery pushed them off screen, Discreet hid them in notifications. Fixed in 0.21.1 |
 | 2026-10-06 | 0.21.0 | Her mark and She peeks | User: "Seems to work" |
 | 2026-10-06 | 0.6.0 | General use | User: "Looks like it works." No specific checklist items reported yet |
