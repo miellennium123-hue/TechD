@@ -46,6 +46,8 @@ data class GuardianState(
     val caughtUntil: Long = 0,
     /** Her catches, newest last. No screenshots, just when and where. Quit for now keeps them. */
     val catches: List<CatchRecord> = emptyList(),
+    /** Round 79: her caption on each clip, by file name. Quit for now keeps them. */
+    val clipCaptions: Map<String, String> = emptyMap(),
     /** Round 77: a check-in wants you to watch one of your clips. Quit for now clears it. */
     val watch: WatchRequest? = null,
     /** Lock guard: the app version when her watch last started, to tell a restart from an update. */

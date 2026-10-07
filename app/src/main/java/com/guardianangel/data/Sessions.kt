@@ -29,6 +29,12 @@ data class SessionSettings(
     val watchInSessions: Boolean = true,
     val watchAtCheckIns: Boolean = true,
     val watchOnLockScreens: Boolean = true,
+    /** Round 79: she speaks every command aloud and counts CBT out loud (the phone's own voice). */
+    val voice: Boolean = true,
+    /** Round 79: from 22:00 to 06:00 her voice drops to a slow whisper. */
+    val whisper: Boolean = true,
+    /** Round 79: her words big enough to read from across the room. */
+    val bigText: Boolean = false,
 )
 
 /** One kink in the kink menu. [cageSafe] runs during a lock; [uncaged] runs without one. */
@@ -46,6 +52,8 @@ enum class Kink(val label: String, val note: String, val cageSafe: Boolean, val 
     TOYS("Toys", "Vibrator or plug commands", cageSafe = true),
     CBT("CBT", "Counted ball play to her beat. Soft or hard", cageSafe = true),
     SOUNDING("Sounding", "Sound in, hold, out. Slow and never rushed", cageSafe = false),
+    /** Round 79. */
+    POST_ORGASM("Keep going", "After you finish or ruin, keep stroking right through it", cageSafe = false),
 }
 
 enum class CbtLevel(val label: String) {
@@ -72,6 +80,11 @@ data class SessionRecord(
     val outcome: SessionOutcome,
     /** A quickshot (round 49). */
     val quick: Boolean = false,
+    /** Round 79: edges you did, clips she filmed, your fastest edge in seconds (0: none), and her deal. */
+    val edges: Int = 0,
+    val filmed: Int = 0,
+    val fastestEdge: Int = 0,
+    val deal: String = "",
 )
 
 enum class SessionOutcome {
@@ -79,6 +92,8 @@ enum class SessionOutcome {
     RUINED,
     RUIN_FAILED,
     DENIED,
+    /** Round 79: you came too early or too late for her command. A failure. */
+    MISSED_COMMAND,
 }
 
 object Sessions {

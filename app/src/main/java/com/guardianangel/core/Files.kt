@@ -104,6 +104,9 @@ object SessionClips {
 
     fun list(context: Context): List<File> = infos(context).map { file(context, it.name) }
 
+    /** Round 79: only her videos (no edge photos), for the clips she makes you watch. */
+    fun videos(context: Context): List<ClipInfo> = infos(context).filter { it.kind.video }
+
     /** After a new clip: deletes the oldest past her limit. */
     fun prune(context: Context) {
         Clips.overflow(infos(context)).forEach { file(context, it.name).delete() }

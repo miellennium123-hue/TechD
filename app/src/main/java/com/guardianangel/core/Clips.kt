@@ -4,11 +4,16 @@ import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.SessionSettings
 import kotlin.random.Random
 
-/** What a clip shows. [tag] is part of its file name. */
-enum class ClipKind(val label: String, val tag: String) {
+/** What a clip shows. [tag] and [ext] make its file name. [FACE] (round 79) is a photo, not a video. */
+enum class ClipKind(val label: String, val tag: String, val ext: String = "mp4") {
     RUIN("Ruin", "ruin"),
     EDGE("Edge", "edge"),
     CBT("CBT", "cbt"),
+    /** Round 79: her snapshot of your face the moment you tap "I'm at the edge". */
+    FACE("Edge face", "face", "jpg"),
+    ;
+
+    val video: Boolean get() = ext == "mp4"
 }
 
 /** One of her videos: its file name, when she filmed it, and what it shows. */
@@ -36,14 +41,15 @@ object Clips {
     const val CHECK_IN_CHANCE = 0.5
     const val LOCK_SCREEN_CHANCE = 0.5
 
-    fun name(kind: ClipKind, at: Long): String = "clip_${at}_${kind.tag}.mp4"
+    fun name(kind: ClipKind, at: Long): String = "clip_${at}_${kind.tag}.${kind.ext}"
 
     /** Reads a clip's file name back, or null if it isn't one of hers. */
     fun parse(name: String): ClipInfo? {
-        val parts = name.removeSuffix(".mp4").split('_')
-        if (!name.endsWith(".mp4") || parts.size != 3 || parts[0] != "clip") return null
+        val ext = name.substringAfterLast('.', "")
+        val parts = name.substringBeforeLast('.').split('_')
+        if (parts.size != 3 || parts[0] != "clip") return null
         val at = parts[1].toLongOrNull() ?: return null
-        val kind = ClipKind.entries.firstOrNull { it.tag == parts[2] } ?: return null
+        val kind = ClipKind.entries.firstOrNull { it.tag == parts[2] && it.ext == ext } ?: return null
         return ClipInfo(name, at, kind)
     }
 
@@ -70,8 +76,9 @@ object Clips {
         else -> null
     }
 
-    /** One clip for her to play: any of them, a little more often a ruin. */
-    fun pick(clips: List<ClipInfo>, random: Random): ClipInfo? {
+    /** One clip for her to play: any video (never an edge photo), a little more often a ruin. */
+    fun pick(all: List<ClipInfo>, random: Random): ClipInfo? {
+        val clips = all.filter { it.kind.video }
         if (clips.isEmpty()) return null
         val ruins = clips.filter { it.kind == ClipKind.RUIN }
         return if (ruins.isNotEmpty() && random.nextDouble() < 0.5) ruins[random.nextInt(ruins.size)] else clips[random.nextInt(clips.size)]
@@ -84,6 +91,27 @@ object Clips {
     /** Her bedtime or caught screen opens with a clip: she's on, the setting is on, you have clips, and [roll] says so. */
     fun onLockScreen(config: GuardianConfig, clips: Int, roll: Double): Boolean =
         config.enabled && config.session.watchOnLockScreens && clips > 0 && roll < LOCK_SCREEN_CHANCE
+
+    /** Round 79: her ruin reel, every ruin clip back to back, oldest first. */
+    fun reel(clips: List<ClipInfo>): List<ClipInfo> = clips.filter { it.kind == ClipKind.RUIN }.sortedBy { it.at }
+
+    /**
+     * Round 79: her caption on a clip she just saved. [number]: which ruin this is, or which edge of the
+     * session. [seconds]: how long that edge took. [reps]: CBT count.
+     */
+    fun caption(kind: ClipKind, number: Int, seconds: Int = 0, reps: Int = 0, edges: Int = 0): String = when (kind) {
+        ClipKind.RUIN -> "Ruin #$number" + if (edges > 0) " · after $edges ${if (edges == 1) "edge" else "edges"}" else ""
+        ClipKind.EDGE -> "Edge $number" + when {
+            seconds <= 0 -> ""
+            Session.edgeFast(seconds) -> " · ${seconds}s to the edge. Too quick"
+            else -> " · ${seconds}s to the edge"
+        }
+        ClipKind.CBT -> "CBT · $reps ${if (reps == 1) "slap" else "slaps"}"
+        ClipKind.FACE -> "Your face at edge $number"
+    }
+
+    /** Captions of clips that still exist. */
+    fun keepCaptions(captions: Map<String, String>, names: Set<String>): Map<String, String> = captions.filterKeys { it in names }
 
     /** A check-in can make you watch: the setting is on and you have clips. Rules.checkInAction decides. */
     fun atCheckIns(config: GuardianConfig, clips: Int): Boolean = config.session.watchAtCheckIns && clips > 0
