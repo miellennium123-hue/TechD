@@ -174,6 +174,14 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        if ((config.enabled && config.report.on) || state.reports.isNotEmpty()) {
+            SectionCard("Daily report") {
+                if (config.enabled && config.report.on) TodayText(state)
+                state.reports.lastOrNull()?.let { Text("Last report: ${it.grade.name}. ${it.line}") }
+                OutlinedButton(onClick = { navigate(Screen.REPORTS) }) { Text("Her reports") }
+            }
+        }
+
         val photoTaskOpen = state.proofs.any { it.reason == ProofReason.TASK }
         if (config.enabled && config.tasksOn && state.task == null && !photoTaskOpen) {
             OutlinedButton(onClick = { Guardian.issueTask() }, modifier = Modifier.fillMaxWidth()) { Text("Ask her for a task") }

@@ -26,6 +26,7 @@ object Notifier {
     const val ID_SUMMON = 4
     const val ID_TASK = 5
     const val ID_PEEK = 6
+    const val ID_REPORT = 7
 
     fun createChannel(context: Context) {
         val channel = NotificationChannel(CHANNEL_ID, "Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -41,6 +42,10 @@ object Notifier {
     /** She peeks (round 60): every 5 minutes, so it replaces the last one and never buzzes. */
     fun peek(context: Context, line: String) =
         post(context, ID_PEEK, line, "You have a new message.", MainActivity.intent(context, Screen.GALLERY), silent = true)
+
+    /** Daily report (round 68): tapping it opens her reports. Silent in quiet time. */
+    fun report(context: Context, line: String, silent: Boolean) =
+        post(context, ID_REPORT, line, "Your daily report is ready.", MainActivity.intent(context, Screen.REPORTS), silent = silent)
 
     /** Tapping it opens her task screen directly. */
     fun task(context: Context, line: String) =

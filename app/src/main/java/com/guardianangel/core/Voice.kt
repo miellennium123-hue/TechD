@@ -57,6 +57,11 @@ enum class Line(val group: String, val label: String, val note: String) {
     PEEK_CHAT("She peeks", "Messages", "She peeked and you were messaging someone"),
     PEEK_BROWSER("She peeks", "Browsing", "She peeked and you were in a browser"),
     PEEK_OTHER("She peeks", "Anything else", "She peeked at any other app"),
+    REPORT_A("Daily report", "Grade A", "Her nightly report: well under both of your goals"),
+    REPORT_B("Daily report", "Grade B", "Her nightly report: within both of your goals"),
+    REPORT_C("Daily report", "Grade C", "Her nightly report: a little over a goal"),
+    REPORT_D("Daily report", "Grade D", "Her nightly report: well over a goal"),
+    REPORT_F("Daily report", "Grade F", "Her nightly report: far over a goal"),
     RATE_TOP("Rate me", "Score 8 to 10", "Her verdict when she rates you 8 to 10"),
     RATE_GOOD("Rate me", "Score 6 to 7", "Her verdict when she rates you 6 or 7"),
     RATE_MID("Rate me", "Score 4 to 5", "Her verdict when she rates you 4 or 5"),
@@ -136,6 +141,31 @@ object Voice {
             "Peeked at you, pet. I see everything.",
             "There you are. Just checking on my pet.",
             "I took a little look. You're always in my sight.",
+        ),
+        Line.REPORT_A to listOf(
+            "An A today, pet. You barely touched your phone. I'm so proud of you.",
+            "Look at you, hardly on your phone at all. A for my good pet.",
+            "Grade A. You kept your hands off it, just like I wanted.",
+        ),
+        Line.REPORT_B to listOf(
+            "A B today, pet. You kept to your goals. Good.",
+            "Within your limits. A solid B, sweetheart.",
+            "B for today. Nicely done. Let's aim for an A tomorrow.",
+        ),
+        Line.REPORT_C to listOf(
+            "A C, pet. A little too much phone today. Tomorrow, less.",
+            "You went a bit over. C. I know you can do better for me.",
+            "Grade C. Not bad, not good. Put it down more tomorrow.",
+        ),
+        Line.REPORT_D to listOf(
+            "A D, pet. That was a lot of phone. I'm disappointed.",
+            "Well over your goals today. D. We'll fix that together.",
+            "Grade D. Tomorrow you put it down when I say.",
+        ),
+        Line.REPORT_F to listOf(
+            "An F, pet. You were glued to it all day. That makes me sad.",
+            "Grade F. Far too much. Tomorrow you'll try harder for me.",
+            "F today, sweetheart. You forgot who you should be paying attention to.",
         ),
         Line.SESSION_START to listOf(
             "Lie back and get comfortable, pet. I'm in charge now.",
@@ -549,6 +579,31 @@ object Voice {
             "Peeked at you. Nothing you do on this phone is yours alone.",
             "I see everything, pet. Remember that.",
             "Caught you. Whatever that was, I kept a copy.",
+        ),
+        Line.REPORT_A to listOf(
+            "An A. You actually obeyed. Don't expect me to say it often.",
+            "Grade A. Barely touched it. That's how it should always be.",
+            "A. Good. Now do it again tomorrow.",
+        ),
+        Line.REPORT_B to listOf(
+            "A B. You stayed in your limits. That's the minimum I expect.",
+            "Grade B. Acceptable. Only just.",
+            "B. You did what you were told. Nothing more.",
+        ),
+        Line.REPORT_C to listOf(
+            "A C. Over your limits. Sloppy.",
+            "Grade C. You couldn't keep your hands off it. Noted.",
+            "C. I set you goals and you ignored them.",
+        ),
+        Line.REPORT_D to listOf(
+            "A D. Far over your goals. Pathetic.",
+            "Grade D. Every unlock was a little act of disobedience. I counted them all.",
+            "D. You'll pay for that in merit.",
+        ),
+        Line.REPORT_F to listOf(
+            "F. You lived on that phone today. Disgraceful.",
+            "Grade F. Glued to your screen like an addict. I saw every minute.",
+            "An F. You have no self-control at all, do you?",
         ),
         Line.SESSION_START to listOf(
             "Phone up. Eyes on me. We start now.",

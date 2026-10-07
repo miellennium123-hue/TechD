@@ -47,8 +47,9 @@ object LockGuard {
     /**
      * Whether a settings change loosens her control: one of her controls switched off, Quiet hours
      * switched on, or a new always-allowed app. Since round 53 also: lockout scope narrowed to social
-     * media, shorter blocks, and any change to bedtime hours while bedtime is on. Those take the slow
-     * way while guarding. Anything that makes her stricter, and every other detail, changes instantly.
+     * media, shorter blocks, and any change to bedtime hours while bedtime is on. Since round 68 also:
+     * higher daily report goals, or an F no longer a failure. Those take the slow way while guarding.
+     * Anything that makes her stricter, and every other detail, changes instantly.
      */
     fun loosens(before: GuardianConfig, after: GuardianConfig): Boolean {
         fun off(b: Boolean, a: Boolean) = b && !a
@@ -69,6 +70,10 @@ object LockGuard {
             off(before.mark.on, after.mark.on) ||
             off(before.mark.tint, after.mark.tint) ||
             off(before.peek.on, after.peek.on) ||
+            off(before.report.on, after.report.on) ||
+            off(before.report.failOnF, after.report.failOnF) ||
+            after.report.unlockGoal > before.report.unlockGoal ||
+            after.report.screenGoalMinutes > before.report.screenGoalMinutes ||
             off(before.chastity.on, after.chastity.on) ||
             off(before.photoProof.on, after.photoProof.on) ||
             off(before.tasksOn, after.tasksOn) ||

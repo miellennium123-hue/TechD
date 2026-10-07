@@ -38,6 +38,7 @@ import com.guardianangel.core.SiteOpener
 import com.guardianangel.core.Voice
 import com.guardianangel.core.Peek
 import com.guardianangel.core.ScreenPeek
+import com.guardianangel.core.Usage
 import com.guardianangel.core.WallpaperController
 import com.guardianangel.data.AppLists
 import com.guardianangel.data.Backgrounds
@@ -236,6 +237,40 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
                 "Never with the screen off or locked, never while the keyboard is up, and never at the phone, " +
                     "her own screens or your Always-allowed apps (put banking apps there). Screenshots stay in this app only, " +
                     "she keeps the newest ${Peek.KEEP}. If nothing shows up after updating, switch her watch off and on in Accessibility.",
+            )
+        }
+
+        FoldCard("Daily report", config.report.on) {
+            SwitchRow(
+                "Daily report",
+                "She counts your unlocks and time in each app, and every night she grades your day against your goals.",
+                config.report.on,
+            ) { v -> update { it.copy(report = it.report.copy(on = v)) } }
+            FilledTonalButton(onClick = {
+                pickTime(config.report.reportMinute) { m -> update { it.copy(report = it.report.copy(reportMinute = m)) } }
+            }) { Text("Report at ${formatMinuteOfDay(config.report.reportMinute)}") }
+            Stepper(
+                "Unlocks a day",
+                "${config.report.unlockGoal}",
+                onMinus = { update { it.copy(report = it.report.copy(unlockGoal = (it.report.unlockGoal - Usage.UNLOCK_STEP).coerceIn(Usage.MIN_UNLOCKS, Usage.MAX_UNLOCKS))) } },
+                onPlus = { update { it.copy(report = it.report.copy(unlockGoal = (it.report.unlockGoal + Usage.UNLOCK_STEP).coerceIn(Usage.MIN_UNLOCKS, Usage.MAX_UNLOCKS))) } },
+            )
+            Stepper(
+                "Time in apps a day",
+                formatMinutes(config.report.screenGoalMinutes),
+                onMinus = { update { it.copy(report = it.report.copy(screenGoalMinutes = (it.report.screenGoalMinutes - Usage.SCREEN_STEP).coerceIn(Usage.MIN_SCREEN_MINUTES, Usage.MAX_SCREEN_MINUTES))) } },
+                onPlus = { update { it.copy(report = it.report.copy(screenGoalMinutes = (it.report.screenGoalMinutes + Usage.SCREEN_STEP).coerceIn(Usage.MIN_SCREEN_MINUTES, Usage.MAX_SCREEN_MINUTES))) } },
+            )
+            SwitchRow(
+                "An F is a failure",
+                "Off: an F only costs merit. On: it counts as a failure, with her punishment and chastity time as you've set them.",
+                config.report.failOnF,
+            ) { v -> update { it.copy(report = it.report.copy(failOnF = v)) } }
+            Muted(
+                "Grades: A for a quarter under both goals, B within both, then C, D and F the further over you go. " +
+                    "A and B earn merit, D and F cost it. Her day ends at your report time. " +
+                    "Her own screens, the home screen and the phone don't count. Only counts are kept, never what was on screen. " +
+                    "Needs her watch (Accessibility).",
             )
         }
 

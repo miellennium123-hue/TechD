@@ -1,9 +1,28 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.21.1 (her mark and she peeks, peek comments visible). Sections 0 to 0q cover what 0.6.0 to 0.21.0 changed
+> **Version under test:** 0.22.0 (daily report). Sections 0 to 0r cover what 0.6.0 to 0.22.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0r. New in 0.22.0: daily report
+Settings > Phone control > **Daily report** on. For a quick test, set **Report at** to 5 minutes from now.
+- [ ] Settings > About shows **Version 0.22.0**
+- [ ] Home shows a **Daily report** card: unlocks and time in apps so far
+- [ ] Lock and unlock the phone a few times: the unlock count goes up
+- [ ] Use an ordinary app for a couple of minutes: time in apps goes up (checked about every 30 seconds)
+- [ ] Time on her own screens, the home screen and the phone doesn't count
+- [ ] With the screen off or locked, time doesn't count
+- [ ] At the report time (within about 30 seconds): a notification with her grade and line (Discreet off to see the words)
+- [ ] Tapping it opens **Her reports**: date, grade, her line, unlocks and time against your goals, and your top 5 apps
+- [ ] After the report, today's count starts again from zero
+- [ ] Merit goes up for an A or B, down for a D or F
+- [ ] **An F is a failure** on, and go far over a goal: an F counts as a failure (her punishment and chastity time as set)
+- [ ] Report time inside quiet hours: the notification comes silently
+- [ ] Her lines has a **Daily report** group with Grade A to F, and editing one changes what she says
+- [ ] **Delete all reports** clears them; today's count keeps going
+- [ ] **Lock guard on:** switching Daily report off, raising a goal, or switching **An F is a failure** off opens the 30 minute screen. Lowering a goal or moving the report time is instant
+- [ ] Quit for now keeps your reports
 
 ## 0q. New in 0.21.0: her mark
 - [ ] Settings > About shows **Version 0.21.0**

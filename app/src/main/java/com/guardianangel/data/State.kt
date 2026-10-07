@@ -39,6 +39,9 @@ data class GuardianState(
     /** She peeks (round 60): her peeks, newest last, and when she last looked. Quit for now keeps them. */
     val peeks: List<PeekRecord> = emptyList(),
     val lastPeekAt: Long = 0,
+    /** Daily report (round 68): today's counts so far, and her reports, newest last. Quit for now keeps them. */
+    val usage: UsageDay = UsageDay(),
+    val reports: List<DayReport> = emptyList(),
     /** Lock guard: the app version when her watch last started, to tell a restart from an update. */
     val guardVersion: Int = 0,
     /** Lock guard: she already punished her watch being off; cleared when it starts again. */
@@ -53,6 +56,49 @@ data class PeekRecord(
     val app: String,
     val line: String,
 )
+
+/**
+ * Her count for one day (round 68). [day] is her day number (see Usage.dayKey), -1 before she starts.
+ * [appMs] is time in each app by package name. Only counts, never what was on screen.
+ */
+@Serializable
+data class UsageDay(
+    val day: Long = -1,
+    val unlocks: Int = 0,
+    val appMs: Map<String, Long> = emptyMap(),
+) {
+    val screenMs: Long get() = appMs.values.sum()
+}
+
+/** One app's time in a report, by its name. */
+@Serializable
+data class AppTime(
+    val app: String,
+    val ms: Long,
+)
+
+/** Her nightly report on one day (round 68). */
+@Serializable
+data class DayReport(
+    val at: Long,
+    val unlocks: Int,
+    val screenMs: Long,
+    /** Your most used apps that day, most first. */
+    val top: List<AppTime>,
+    val grade: Grade,
+    val line: String,
+    val unlockGoal: Int,
+    val screenGoalMinutes: Int,
+)
+
+/** Her grade for a day. Merit for A and B, a cost for D and F. */
+enum class Grade(val merit: Int) {
+    A(5),
+    B(2),
+    C(0),
+    D(-3),
+    F(-5),
+}
 
 /** One of her ratings. Sizes in cm. [presentation] is -1 when she rated without seeing it. */
 @Serializable
