@@ -40,10 +40,10 @@ sealed interface Decision {
 enum class AskOutcome { GRANT, PROOF, DENY }
 
 /** What a check-in turns into. QUIET: during bedtime she lets you sleep (no notification, no demands). */
-enum class CheckInAction { SITE, TASK, SUMMONS, PROOF, PLAIN, QUIET }
+enum class CheckInAction { SITE, TASK, SUMMONS, PROOF, WATCH, PLAIN, QUIET }
 
 /** Random rolls for one check-in, each in 0 until 1. Kept separate so [Rules.checkInAction] stays pure. */
-data class CheckInRolls(val task: Double, val summons: Double, val proof: Double, val site: Double = 1.0)
+data class CheckInRolls(val task: Double, val summons: Double, val proof: Double, val site: Double = 1.0, val watch: Double = 1.0)
 
 /**
  * What a change of app in front means for an open site visit. ON_SITE: back in her browser.
@@ -354,6 +354,7 @@ object Rules {
         canNotify: Boolean,
         rolls: CheckInRolls,
         canOpenSites: Boolean = false,
+        clips: Int = 0,
     ): CheckInAction {
         if (isQuiet(config, minuteOfDay)) return CheckInAction.QUIET
         val canSite = canOpenSites && config.sitesOn && config.siteList.isNotEmpty() && state.visit == null &&
@@ -365,9 +366,12 @@ object Rules {
         val canSummon = config.showsUpOn && state.summons == null && state.visit == null &&
             !reachesQuiet(config, minuteOfDay, SUMMON_LOCK_MINUTES)
         val canProof = !proofPending && !reachesQuiet(config, minuteOfDay, CHECK_IN_PROOF_MINUTES)
+        // Round 77: watch one of your clips within a minute. Needs a notification, like every deadline.
+        val canWatch = Clips.atCheckIns(config, clips) && state.watch == null && !reachesQuiet(config, minuteOfDay, 1)
         return when {
             canTask && rolls.task < TASK_CHANCE -> CheckInAction.TASK
             canSummon && rolls.summons < SUMMON_CHANCE -> CheckInAction.SUMMONS
+            canWatch && rolls.watch < Clips.CHECK_IN_CHANCE -> CheckInAction.WATCH
             canProof && rolls.proof < proofChance(config, state) -> CheckInAction.PROOF
             else -> CheckInAction.PLAIN
         }

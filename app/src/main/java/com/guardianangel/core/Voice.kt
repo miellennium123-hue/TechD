@@ -91,9 +91,7 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_COUNTDOWN("Guided sessions", "Countdown", "Countdowns: she counts you down to her next command"),
     SESSION_PRAISE("Guided sessions", "Praise remark", "Praise: a remark during a command"),
     SESSION_HUMILIATION("Guided sessions", "Humiliation remark", "Humiliation: a remark during a command"),
-    SESSION_CAUGHT("Guided sessions", "Caught", "She caught you (out of view): a reprimand, then an extra edge"),
-    SESSION_OFF_BEAT("Guided sessions", "Off beat", "She caught you off her beat or stopping: a reprimand, then an extra edge"),
-    SESSION_MOVED("Guided sessions", "Didn't stop", "She caught you moving when she said stop: a reprimand, then an extra edge"),
+    SESSION_WATCH("Guided sessions", "Watch yourself", "Mid-session she plays one of your clips and you watch"),
     SESSION_UNLOCK("Guided sessions", "Unlock", "Ruined ending during a lock: take the cage off"),
     SESSION_FINISH("Guided sessions", "Permission", "Permission ending: you may finish"),
     SESSION_RUIN("Guided sessions", "Ruin", "Ruined ending: hands off at the edge. She films it"),
@@ -101,6 +99,9 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_DENIED("Guided sessions", "Denied", "Denied ending: hands off, no release"),
     SESSION_RELOCK("Guided sessions", "Lock back up", "After a ruin during a lock: cage back on, then a photo"),
     SESSION_END("Guided sessions", "Session over", "The session is over"),
+    WATCH_CLIP("Her videos", "Watch this", "A check-in makes you watch one of your clips within a minute"),
+    WATCH_LOCKED("Her videos", "On her lock screen", "Her bedtime or caught screen opens by playing one of your clips"),
+    WATCH_DONE("Her videos", "Watched", "You watched the clip she sent you"),
 }
 
 /**
@@ -290,20 +291,25 @@ object Voice {
             "So easy to control, aren't you?",
             "Pathetic little thing, doing everything I say.",
         ),
-        Line.SESSION_CAUGHT to listOf(
-            "Where did you go, pet? I can't see you. Back to the edge for that.",
-            "Tsk. Out of sight? That earns you another edge.",
-            "Naughty. Stay where I can see you. Edge for me again.",
+        Line.SESSION_WATCH to listOf(
+            "Hands still for a moment, pet. Watch yourself. This is what you look like for me.",
+            "Look at you. I kept this one just for us. Watch every second.",
+            "Eyes on the screen, sweetie. Remember how desperate you were?",
         ),
-        Line.SESSION_OFF_BEAT to listOf(
-            "You lost my beat, pet. Follow it, and give me another edge for that.",
-            "Tsk, that's not my rhythm. One more edge, sweetheart.",
-            "Listen to my beat, not your own. Edge for me again.",
+        Line.WATCH_CLIP to listOf(
+            "I have something to show you, pet. Open it within a minute.",
+            "Remember this? Come and watch it for me. Quickly.",
+            "A little reminder of what you are. You have one minute.",
         ),
-        Line.SESSION_MOVED to listOf(
-            "I said stop, pet. I saw that. Another edge for you.",
-            "Naughty. Hands off means hands off. Edge again.",
-            "You couldn't keep still for me? One more edge, then.",
+        Line.WATCH_LOCKED to listOf(
+            "Before anything else, pet, watch yourself.",
+            "Locked out, and look what I'm showing you. Watch.",
+            "This is why you're locked away. Watch it.",
+        ),
+        Line.WATCH_DONE to listOf(
+            "Good pet. You watched every second.",
+            "There. Now you know exactly what I see.",
+            "Well done. Keep that picture in your head.",
         ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock for me, pet. Just this once.",
@@ -743,20 +749,25 @@ object Voice {
             "So desperate. It's embarrassing.",
             "You'll do anything I say, won't you? Pathetic.",
         ),
-        Line.SESSION_CAUGHT to listOf(
-            "I can't see you. Another edge. Now.",
-            "Out of sight? That's an edge you've earned.",
-            "Hiding from me? Edge. Again.",
+        Line.SESSION_WATCH to listOf(
+            "Stop. Watch yourself. Pathetic, isn't it?",
+            "Eyes on the screen. That's you. Look at it.",
+            "Watch what you were. Every second. Then back to work.",
         ),
-        Line.SESSION_OFF_BEAT to listOf(
-            "That's not my beat. Another edge.",
-            "Off rhythm. You follow me, not yourself. Edge.",
-            "Can't keep a simple beat? Edge. Again.",
+        Line.WATCH_CLIP to listOf(
+            "Open this. You have one minute.",
+            "I'm sending you something to watch. A minute. Don't make me wait.",
+            "One minute to start watching yourself. Go.",
         ),
-        Line.SESSION_MOVED to listOf(
-            "I said stop. I saw that. Edge, now.",
-            "Hands off means still. Another edge.",
-            "You moved. Edge again, and this time obey.",
+        Line.WATCH_LOCKED to listOf(
+            "You want your phone? Watch this first.",
+            "Locked out, and still you get to watch yourself. Look.",
+            "This is what got you here. Watch it.",
+        ),
+        Line.WATCH_DONE to listOf(
+            "Watched it all. Good. Remember it.",
+            "Now you know what I think of you.",
+            "Done. That's what you are.",
         ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock. Quickly. Tap when you're out.",

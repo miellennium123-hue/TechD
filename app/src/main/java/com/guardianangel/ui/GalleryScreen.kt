@@ -64,7 +64,7 @@ fun GalleryScreen() {
     val peeks = remember(state.peeks) { state.peeks.associateBy { it.file } }
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Muted("Photos, ruin clips and her peeks at your screen, stored only inside this app. Not in your gallery, not backed up.")
+        Muted("Photos and her peeks at your screen, stored only inside this app. Not in your gallery, not backed up. Session videos are in Guided sessions > Her videos.")
         if (files.isEmpty()) {
             Text("No photos yet.")
         } else {

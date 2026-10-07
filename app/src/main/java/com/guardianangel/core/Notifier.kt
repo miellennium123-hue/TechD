@@ -16,6 +16,7 @@ import com.guardianangel.R
 import com.guardianangel.ui.MainActivity
 import com.guardianangel.ui.Screen
 import com.guardianangel.ui.ShowUpActivity
+import com.guardianangel.ui.WatchActivity
 
 /** Discreet mode keeps every notification neutral, so nothing explicit shows on the lock screen. */
 object Notifier {
@@ -27,6 +28,7 @@ object Notifier {
     const val ID_TASK = 5
     const val ID_PEEK = 6
     const val ID_REPORT = 7
+    const val ID_WATCH = 8
 
     fun createChannel(context: Context) {
         val channel = NotificationChannel(CHANNEL_ID, "Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -50,6 +52,10 @@ object Notifier {
     /** Tapping it opens her task screen directly. */
     fun task(context: Context, line: String) =
         post(context, ID_TASK, line, "You have something to do.", MainActivity.intent(context, Screen.TASK))
+
+    /** Round 77: tapping it plays her clip full screen. You have a minute. */
+    fun watch(context: Context, line: String) =
+        post(context, ID_WATCH, line, "You have something to do. Open within a minute.", WatchActivity.intent(context))
 
     /** Tapping it brings her up full screen. */
     fun summon(context: Context, line: String) =

@@ -38,6 +38,10 @@ object Permissions {
     fun camera(context: Context): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
+    /** Round 77: sound in her session videos. Without it she films silently. */
+    fun microphone(context: Context): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
     fun coreReady(context: Context): Boolean =
         accessibility(context) && notifications(context) && exactAlarms(context)
 }

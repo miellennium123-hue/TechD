@@ -50,6 +50,7 @@ enum class Screen(val title: String) {
     LINES("Her lines"),
     LINE("Her lines"),
     SESSIONS("Guided sessions"),
+    CLIPS("Her videos"),
     BACKGROUNDS("Backgrounds"),
     KINKS("Kink menu"),
     REPORTS("Daily reports"),
@@ -114,7 +115,7 @@ private fun MainContent(requested: MutableState<Screen?>) {
     val back = {
         screen = when (screen) {
             Screen.LINE -> Screen.LINES
-            Screen.KINKS -> Screen.SESSIONS
+            Screen.KINKS, Screen.CLIPS -> Screen.SESSIONS
             Screen.ALLOWED, Screen.PORN_APPS, Screen.ADULT_APPS, Screen.PROMPTS, Screen.TASKS, Screen.QUESTIONS, Screen.SITES, Screen.LINES, Screen.BACKGROUNDS -> Screen.SETTINGS
             else -> Screen.HOME
         }
@@ -157,7 +158,8 @@ private fun MainContent(requested: MutableState<Screen?>) {
                     screen = Screen.LINE
                 }
                 Screen.LINE -> LineScreen(config, line)
-                Screen.SESSIONS -> SessionsScreen(config, state) { screen = Screen.KINKS }
+                Screen.SESSIONS -> SessionsScreen(config, state, { screen = Screen.KINKS }, { screen = Screen.CLIPS })
+                Screen.CLIPS -> ClipsScreen()
                 Screen.KINKS -> KinksScreen(config)
                 Screen.BACKGROUNDS -> BackgroundsScreen(config)
                 Screen.REPORTS -> ReportsScreen(config, state)

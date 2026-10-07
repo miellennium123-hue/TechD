@@ -135,6 +135,18 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        state.watch?.let { watch ->
+            SectionCard("She sent you a clip") {
+                if (!watch.started) {
+                    val left = watch.dueAt - now
+                    Text(if (left > 0) "Open within ${formatDuration(left)}" else "Time's up", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
+                } else {
+                    Muted("Watch it to the end.")
+                }
+                Button(onClick = { context.startActivity(WatchActivity.intent(context)) }) { Text("Watch it") }
+            }
+        }
+
         if (Rules.blockRunning(config, state, now)) {
             SectionCard("Apps locked") {
                 Text("${formatDuration(state.lockoutUntil - now)} left", fontWeight = FontWeight.Bold)

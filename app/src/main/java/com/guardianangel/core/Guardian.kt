@@ -29,6 +29,7 @@ import com.guardianangel.data.Store
 import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
 import com.guardianangel.data.UsageDay
+import com.guardianangel.data.WatchRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 import java.util.Calendar
@@ -48,6 +49,7 @@ enum class Failure(val merit: Int) {
     TAMPERED(10),
     BAD_DAY(5),
     CAUGHT_PORN(10),
+    MISSED_CLIP(5),
 }
 
 sealed interface AskResult {
@@ -87,6 +89,7 @@ object Guardian {
         state = Store(appContext, "state", GuardianState.serializer(), GuardianState())
         Notifier.createChannel(appContext)
         migrate()
+        runCatching { SessionClips.migrate(appContext) }
     }
 
     /** Small fix-ups for data saved by older versions. */
@@ -146,7 +149,7 @@ object Guardian {
             val proofs = state.value.proofs
             config.update { it.copy(enabled = false) }
             state.update {
-                it.copy(proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null, visit = null)
+                it.copy(proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null, visit = null, watch = null)
             }
             Scheduler.cancelAll(appContext, proofs)
             Notifier.cancelAll(appContext)
@@ -172,6 +175,7 @@ object Guardian {
                 task = null,
                 summons = null,
                 visit = null,
+                watch = null,
             )
         }
         Scheduler.cancelAll(appContext, proofs)
@@ -526,9 +530,10 @@ object Guardian {
         checkVisit()
         val st = state.value
         val lock = st.chastity
-        val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble())
+        val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble())
         val canOpenSites = Permissions.accessibility(appContext) && SiteOpener.browserPackage(appContext) != null
-        val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls, canOpenSites)
+        val clips = SessionClips.list(appContext).size
+        val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls, canOpenSites, clips)
         val handled = when (action) {
             CheckInAction.QUIET -> true // bedtime: let her pet sleep
             CheckInAction.SITE -> startVisit(asked = false)
@@ -539,6 +544,7 @@ object Guardian {
                 requestProof(reason, Rules.CHECK_IN_PROOF_MINUTES, notify = true)
                 true
             }
+            CheckInAction.WATCH -> startWatch()
             CheckInAction.PLAIN -> false
         }
         if (!handled) {
@@ -839,6 +845,46 @@ object Guardian {
     /** The gallery deleted screenshots: forget their peeks too. */
     fun forgetPeeks(files: Set<String>?) {
         state.update { st -> st.copy(peeks = if (files == null) emptyList() else st.peeks.filter { it.file !in files }) }
+    }
+
+    // ---- Her videos (round 77) -------------------------------------------------------------
+
+    /** A check-in makes you watch one of your clips: open it within a minute. False if there's nothing to watch. */
+    private fun startWatch(): Boolean {
+        val clip = Clips.pick(SessionClips.infos(appContext), random) ?: return false
+        val t = now()
+        val request = WatchRequest(clip.name, t, t + Clips.WATCH_DUE_SECONDS * 1_000L)
+        state.update { it.copy(watch = request) }
+        Notifier.watch(appContext, say(Line.WATCH_CLIP))
+        Scheduler.scheduleWatch(appContext, request.dueAt)
+        return true
+    }
+
+    /** You opened it in time: the deadline is met. Watching to the end clears it. */
+    fun watchStarted() {
+        val w = state.value.watch ?: return
+        if (w.started) return
+        state.update { it.copy(watch = w.copy(started = true)) }
+        Scheduler.cancelWatch(appContext)
+        Notifier.cancel(appContext, Notifier.ID_WATCH)
+    }
+
+    /** You watched it to the end. Returns her line. */
+    fun watchFinished(): String {
+        state.update { it.copy(watch = null) }
+        Scheduler.cancelWatch(appContext)
+        Notifier.cancel(appContext, Notifier.ID_WATCH)
+        addMerit(2)
+        return say(Line.WATCH_DONE)
+    }
+
+    /** A minute went by and you never opened it: a failure. */
+    fun onWatchDeadline() {
+        val w = state.value.watch ?: return
+        if (w.started) return
+        state.update { it.copy(watch = null) }
+        Notifier.cancel(appContext, Notifier.ID_WATCH)
+        if (config.value.enabled) fail(Failure.MISSED_CLIP)
     }
 
     // ---- Porn block ---------------------------------------------------------------------------

@@ -11,10 +11,10 @@ import kotlin.random.Random
 /**
  * One kind of command in a session.
  * [tap]: the button you press to move on (the step waits for it, up to its seconds).
- * [still]: hands off, she expects no movement. [stroking]: she expects movement to her beat and to see you.
- * [watched]: being caught here earns a reprimand and an extra edge. Never during sounding or the ending.
+ * [still]: hands off. [stroking]: stroking to her beat.
+ * [watched]: her praise or humiliation remarks can come with it. Never during sounding or the ending.
  * [skippable]: shows "Too much", which moves on with no penalty.
- * [beat]: with motion checks, she checks your rhythm matches her beat.
+ * Round 77: no more motion checks or catching you out of view; the camera only shows you yourself and films.
  */
 enum class StepKind(
     val line: Line,
@@ -23,14 +23,13 @@ enum class StepKind(
     val stroking: Boolean = false,
     val watched: Boolean = true,
     val skippable: Boolean = false,
-    val beat: Boolean = false,
-    /** Expected length of a [tap] step, for the time estimate. */
+    /** Expected length of a [tap] or [WATCH] step, for the time estimate. */
     val expected: Int = 0,
 ) {
     INTRO(Line.SESSION_START, watched = false),
-    STROKE(Line.SESSION_STROKE, stroking = true, beat = true),
-    FASTER(Line.SESSION_FASTER, stroking = true, beat = true),
-    SLOWER(Line.SESSION_SLOWER, stroking = true, beat = true),
+    STROKE(Line.SESSION_STROKE, stroking = true),
+    FASTER(Line.SESSION_FASTER, stroking = true),
+    SLOWER(Line.SESSION_SLOWER, stroking = true),
     TEASE(Line.SESSION_TEASE, stroking = true),
     EDGE(Line.SESSION_EDGE, tap = "I'm at the edge", stroking = true, expected = 45),
     EDGE_HOLD(Line.SESSION_EDGE_HOLD, still = true),
@@ -44,7 +43,8 @@ enum class StepKind(
     SOUND_HOLD(Line.SESSION_SOUND_HOLD, still = true, watched = false, skippable = true),
     SOUND_OUT(Line.SESSION_SOUND_OUT, watched = false, skippable = true),
     COUNTDOWN(Line.SESSION_COUNTDOWN, watched = false),
-    CAUGHT(Line.SESSION_CAUGHT, watched = false),
+    /** Round 77: she plays one of your clips and you watch yourself. Moves on when it ends. */
+    WATCH(Line.SESSION_WATCH, watched = false, expected = 40),
     UNLOCK(Line.SESSION_UNLOCK, tap = "Unlocked", watched = false, expected = 30),
     FINISH(Line.SESSION_FINISH, tap = "Done", watched = false, expected = 30),
     RUIN(Line.SESSION_RUIN, still = true, watched = false),
@@ -65,7 +65,7 @@ data class Step(
     val comment: Line? = null,
 ) {
     /** Roughly how long it takes, for the time estimate. */
-    val estimate: Int get() = if (kind.tap != null) minOf(seconds, kind.expected) else seconds
+    val estimate: Int get() = if (kind.tap != null || kind == StepKind.WATCH) minOf(seconds, kind.expected) else seconds
 }
 
 /** [quick]: a quickshot (round 49), short and always ruined. */
@@ -80,10 +80,8 @@ object Session {
     const val RUIN_CLIP_SECONDS = 20
     /** A quickshot's edge waits at most this long for your tap. */
     const val QUICKSHOT_EDGE_SECONDS = 120
-    /** Out of view this long during a stroking command and she catches you. */
-    const val UNSEEN_SECONDS = 10
-    /** At most this many reprimands per session, so it can't go on forever. */
-    const val CAUGHT_LIMIT = 5
+    /** A clip she plays can run this long at most (a whole edge is up to 3 minutes). */
+    const val WATCH_MAX_SECONDS = EDGE_MAX_SECONDS + 30
     const val CBT_SOFT_LIMIT = 2
     const val CBT_HARD_LIMIT = 4
 
@@ -121,8 +119,15 @@ object Session {
     /**
      * The whole session. [soundingReady] is your "sterile sound and lube ready" tick; without it
      * there's no sounding. During a lock ([caged]) only cage-safe commands run until the ending.
+     * [watchClip] (round 77, see Clips.inSession): somewhere in the middle she plays one of your clips.
      */
-    fun build(settings: SessionSettings, caged: Boolean, random: Random, soundingReady: Boolean = false): SessionScript {
+    fun build(
+        settings: SessionSettings,
+        caged: Boolean,
+        random: Random,
+        soundingReady: Boolean = false,
+        watchClip: Boolean = false,
+    ): SessionScript {
         val kinks = kinks(settings, caged).let { if (soundingReady) it else it - Kink.SOUNDING }
         val target = settings.minutes.coerceIn(Sessions.MIN_MINUTES, Sessions.MAX_MINUTES) * 60
         val ending = pickEnding(settings, caged, random.nextDouble())
@@ -170,7 +175,18 @@ object Session {
                 elapsed += commented.estimate
             }
         }
+        if (watchClip) insertWatch(steps, random)
         return SessionScript(ending, caged, steps + endingSteps)
+    }
+
+    /** One "watch yourself" break in the middle half of the body, never inside sounding. */
+    private fun insertWatch(steps: MutableList<Step>, random: Random) {
+        val inSounding = setOf(StepKind.SOUND_IN, StepKind.SOUND_HOLD)
+        val places = (1..steps.size).filter { i ->
+            steps[i - 1].kind !in inSounding && steps[i - 1].kind != StepKind.COUNTDOWN
+        }
+        val middle = places.filter { it >= steps.size / 4 && it <= steps.size * 3 / 4 }.ifEmpty { places }
+        steps.add(middle[random.nextInt(middle.size)], Step(StepKind.WATCH, WATCH_MAX_SECONDS))
     }
 
     /**
@@ -192,28 +208,6 @@ object Session {
         },
         quick = true,
     )
-
-    /**
-     * What she inserts when she catches you: a reprimand ([why]: out of view, off beat or moved),
-     * then an extra edge (a hold during a lock).
-     */
-    fun caughtSteps(caged: Boolean, why: Line = Line.SESSION_CAUGHT): List<Step> =
-        if (caged) {
-            listOf(Step(StepKind.CAUGHT, 5, line = why), Step(StepKind.HOLD, 30))
-        } else {
-            listOf(Step(StepKind.CAUGHT, 5, line = why), Step(StepKind.EDGE, EDGE_MAX_SECONDS, bpm = 130), Step(StepKind.EDGE_HOLD, 20))
-        }
-
-    /**
-     * What the camera checks during [step]: her beat on plain stroking commands, stillness on
-     * watched hands-off commands. Teasing, edging, sounding, CBT, countdowns and the ending aren't checked.
-     */
-    fun motionCheck(step: Step): MotionCheck = when {
-        !step.kind.watched -> MotionCheck.NONE
-        step.kind.beat && step.bpm > 0 -> MotionCheck.BEAT
-        step.kind.still -> MotionCheck.STILL
-        else -> MotionCheck.NONE
-    }
 
     fun endingSteps(ending: SessionEnding, caged: Boolean, kinks: Set<Kink>, random: Random): List<Step> = when (ending) {
         SessionEnding.PERMISSION -> buildList {
