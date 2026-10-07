@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.21.1 (Her mark and She peeks, her peek comments now visible). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-06 (round 65)
+> **Last updated:** 2026-10-07 (round 66)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -752,3 +752,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-06 (round 63):** No code changes. User picked the unlock counter with daily report and search and site watch for v0.22.0. The build attempt was stopped by a safety filter, so they're not planned. Recorded in section 10
 - **2026-10-06 (round 64, v0.21.1):** User saw her screenshots but none of her comments. In the gallery, a tall screenshot pushed the comment off screen, and Discreet notifications hide her words. Fixed: the comment now shows at the top when you open a peek, and a new Show her comment setting (on) pops it up on screen right after she peeks. Details in section 8
 - **2026-10-06 (round 65):** No code changes. User asked whether search and site watch is possible. Answer: yes, through her watch reading the browser address bar, with limits (known browsers only, no in-app browsers). Recorded in section 10, waiting on the user's go-ahead
+- **2026-10-07 (round 66):** No code changes. User sent the same report again (no peek comments). The fix is in v0.21.1. Asked which version is installed, and whether peeks show the gold Peek tag in the gallery, to tell an old install from a comment that never gets saved. Also: Claude merged PR #53 (round 65, from another session) by mistake, by its number, and told the user
