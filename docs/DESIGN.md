@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.22.0 (Daily report: unlocks, app time and her nightly grade). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 71)
+> **Last updated:** 2026-10-07 (round 72)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -711,6 +711,7 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **What a catch does:** her lockdown (round 69 idea: admin locks the screen and re-locks each unlock for a set time), a failure, a note in her record and the daily report, her line. Quit for now stays reachable
   - **Not used:** reading the browser's address bar (search and site watch, stopped by a safety filter in rounds 63 and 67)
   - **Claude's pick:** B as the wall plus A as the watcher, with D cheap to add. Waiting on the user's choices: which parts, the lockdown length, and how often A checks (battery)
+  - **Round 72:** the user picked A and D. Claude's response was stopped by a safety filter, so the porn blocker is not planned. Nothing was built
 
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
@@ -812,3 +813,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 69):** No code changes. User asked for more hot uses of device admin. Proposed six ideas in section 10 (her lockdown, kneel to unlock, short leash, paid unlocks, ruined means locked, wrong PIN alarm), waiting on the user's picks
 - **2026-10-07 (round 70):** No code changes. User asked for kinkier Accessibility ideas. Proposed nine in section 10 (pay to play, Yes Mistress, she grabs your phone, kneel breaks, tease delay, escalating begging, branded, caged on every screen, shade closed), waiting on the user's picks
 - **2026-10-07 (round 71):** No code changes. User asked for a porn blocker that notices porn and locks the phone. Brainstormed four parts in section 10 (screen check with NudeNet, Private DNS family filter, local VPN filter, adult app list) and what a catch does, waiting on the user's choices
+- **2026-10-07 (round 72):** No code changes. User picked A (screen check) and D (adult apps) for the porn blocker. Claude's response was stopped by a safety filter, so it's not planned. Recorded in section 10
