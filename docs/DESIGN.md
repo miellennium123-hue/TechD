@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.27.2 (Edge face from the front camera). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 90)
+> **Last updated:** 2026-10-07 (round 91)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -1020,3 +1020,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 87):** No code changes. User asked how possible a Windows port is, minus Guided sessions. Answer: very possible with Kotlin Multiplatform and Compose for Desktop, reusing the pure Kotlin core. Lock guard is the hard part. Plan and open questions in section 10
 - **2026-10-07 (round 89):** No code changes. User decided to stop the Windows port, so it's not happening. Closed the round 88 doc PR and marked the plan shelved in section 10
 - **2026-10-07 (round 90, v0.27.2):** Fix. Her edge face photo now always comes from the front camera: filming with the back camera, she flips to the front for a moment at your edge tap, takes it and flips back
+- **2026-10-07 (round 91):** No code changes. User asked how the ruin compilation works. Answer: Her videos > Play her ruin reel plays every saved ruin clip back to back, oldest first, with her caption on each (a playlist, not one stitched file)
