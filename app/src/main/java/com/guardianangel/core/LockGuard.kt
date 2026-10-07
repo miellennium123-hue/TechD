@@ -49,7 +49,7 @@ object LockGuard {
      * Whether a settings change loosens her control: one of her controls switched off, Quiet hours
      * switched on, or a new always-allowed app. Since round 53 also: lockout scope narrowed to social
      * media, shorter blocks, and any change to bedtime hours while bedtime is on. Since round 68 also:
-     * higher daily report goals, or an F no longer a failure. Since round 71 also: any Porn block
+     * higher daily report goals, or an F no longer a failure. Since round 73 also: any Porn block
      * switch off, or a shorter lock. Those take the slow way while guarding.
      * Anything that makes her stricter, and every other detail, changes instantly.
      */
@@ -93,7 +93,7 @@ object LockGuard {
     }
 
     /**
-     * Option C (round 53): while her timed block or bedtime (since round 71 also her porn block lock) is running, its settings can't be changed
+     * Option C (round 53): while her timed block or bedtime (since round 73 also her porn block lock) is running, its settings can't be changed
      * at all, no app can be added to Always-allowed, and Lock guard can't be switched off. Checked while guarding, before [loosens].
      * Returns what's frozen, for her refusal, or null if the change can go ahead.
      */

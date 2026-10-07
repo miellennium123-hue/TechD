@@ -42,7 +42,7 @@ data class GuardianState(
     /** Daily report (round 68): today's counts so far, and her reports, newest last. Quit for now keeps them. */
     val usage: UsageDay = UsageDay(),
     val reports: List<DayReport> = emptyList(),
-    /** Porn block (round 71): she caught you, so the phone is locked until this time. Quit for now clears it. */
+    /** Porn block (round 73): she caught you, so the phone is locked until this time. Quit for now clears it. */
     val caughtUntil: Long = 0,
     /** Her catches, newest last. No screenshots, just when and where. Quit for now keeps them. */
     val catches: List<CatchRecord> = emptyList(),
@@ -61,7 +61,7 @@ data class PeekRecord(
     val line: String,
 )
 
-/** One of her porn block catches (round 71). [hiding]: a private tab hid the screen from her. */
+/** One of her porn block catches (round 73). [hiding]: a private tab hid the screen from her. */
 @Serializable
 data class CatchRecord(
     val at: Long,

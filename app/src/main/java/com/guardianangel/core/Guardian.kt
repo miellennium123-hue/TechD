@@ -324,7 +324,7 @@ object Guardian {
     fun bedtimeScreen(decision: Decision, launcher: Boolean): Boolean =
         Rules.bedtimeScreen(config.value, minuteOfDay(), decision, launcher)
 
-    /** Whether her caught screen should cover this app or the home screen right now (round 71). */
+    /** Whether her caught screen should cover this app or the home screen right now (round 73). */
     fun caughtScreen(decision: Decision, launcher: Boolean): Boolean =
         Rules.caughtScreen(config.value, state.value, now(), decision, launcher)
 
@@ -844,7 +844,7 @@ object Guardian {
     // ---- Porn block ---------------------------------------------------------------------------
 
     /**
-     * Porn block (round 71): she saw porn in [app], or a private tab hid it from her ([hiding]). The
+     * Porn block (round 73): she saw porn in [app], or a private tab hid it from her ([hiding]). The
      * phone locks for your lock length (everything but Always-allowed and the phone), it's a failure if
      * you set that, and she keeps the catch (never a screenshot). Her watch sends you home, shows her
      * caught screen and locks the screen. Returns her line.

@@ -141,7 +141,7 @@ object Rules {
         if (isBedtime(config.bedtime, minuteOfDay)) {
             result += Restriction(RestrictionKind.BEDTIME, false)
         }
-        // Porn block (round 71): she caught you, so everything but Always-allowed is locked.
+        // Porn block (round 73): she caught you, so everything but Always-allowed is locked.
         if (PornBlock.locked(config, state, now)) {
             result += Restriction(RestrictionKind.CAUGHT, false)
         }
@@ -209,7 +209,7 @@ object Rules {
             (launcher || (decision is Decision.Block && decision.kind == RestrictionKind.BEDTIME))
 
     /**
-     * Her caught screen (round 71): while her porn block lock runs, it covers the home screen
+     * Her caught screen (round 73): while her porn block lock runs, it covers the home screen
      * ([launcher]) and every app it blocks. Always-allowed apps stay open.
      */
     fun caughtScreen(config: GuardianConfig, state: GuardianState, now: Long, decision: Decision, launcher: Boolean): Boolean =

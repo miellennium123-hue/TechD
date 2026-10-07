@@ -93,7 +93,7 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
 }
 
 /**
- * Her full-screen lock (bedtime since round 54, her porn block since round 71): her line, how long,
+ * Her full-screen lock (bedtime since round 54, her porn block since round 73): her line, how long,
  * then only your Always-allowed apps, the phone and her own app. Quit for now is always here.
  */
 @Composable

@@ -23,7 +23,7 @@ data class GuardianConfig(
     val peek: PeekSettings = PeekSettings(),
     /** Daily report (round 68): she counts unlocks and time in each app, then grades your day. */
     val report: ReportSettings = ReportSettings(),
-    /** Porn block (round 71): she scans your browsers and social apps, and porn locks your phone. See core/PornBlock. */
+    /** Porn block (round 73): she scans your browsers and social apps, and porn locks your phone. See core/PornBlock. */
     val pornBlock: PornBlockSettings = PornBlockSettings(),
     val chastity: ChastitySettings = ChastitySettings(),
     val photoProof: PhotoProofSettings = PhotoProofSettings(),
@@ -176,7 +176,7 @@ data class ReportSettings(
 )
 
 /**
- * Porn block (round 71). Every few seconds in a browser or social app she checks the screen with the
+ * Porn block (round 73). Every few seconds in a browser or social app she checks the screen with the
  * on-device nudity detector. Porn locks the phone for [lockMinutes]: everything but Always-allowed apps
  * and the phone. Needs Android 11 or later. Nothing she scans is kept. See core/PornBlock.
  */

@@ -18,7 +18,7 @@ import com.guardianangel.core.PornBlock
 import com.guardianangel.ui.theme.GuardianTheme
 
 /**
- * Her caught screen (round 71): after Porn block catches you, it covers the home screen and every
+ * Her caught screen (round 73): after Porn block catches you, it covers the home screen and every
  * app until her lock ends. Only your Always-allowed apps and the phone open from here. Back does
  * nothing; Quit for now is always here. Closes itself when the lock ends.
  */

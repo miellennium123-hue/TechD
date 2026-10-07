@@ -81,7 +81,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         }
     }
 
-    /** Porn block (round 71): a look every few seconds while a browser or social app is in front. */
+    /** Porn block (round 73): a look every few seconds while a browser or social app is in front. */
     private val pornTick = object : Runnable {
         override fun run() {
             scanForPorn()
@@ -167,7 +167,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         peek?.maybePeek(pkg, pkg != null && pkg in launchers, browsers, protectedPackages)
     }
 
-    /** Porn block (round 71): rules in core/PornBlock. Cheap when it's off: no screenshot is taken. */
+    /** Porn block (round 73): rules in core/PornBlock. Cheap when it's off: no screenshot is taken. */
     private fun scanForPorn() {
         val pkg = currentPackage
         porn?.maybeScan(pkg, pkg != null && pkg in launchers, browsers, protectedPackages) { onCaught() }
@@ -320,7 +320,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         val decision = Guardian.decide(pkg, protectedPackages)
         // Bedtime screen (round 54): covers the home screen and bedtime's blocked apps.
         val bedtime = Guardian.bedtimeScreen(decision, pkg in launchers)
-        // Caught screen (round 71): the same, while her porn block lock runs.
+        // Caught screen (round 73): the same, while her porn block lock runs.
         val caught = !bedtime && Guardian.caughtScreen(decision, pkg in launchers)
         if (decision !is Decision.Block && !bedtime && !caught) return
         val t = Guardian.now()

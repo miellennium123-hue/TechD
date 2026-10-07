@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.23.0 (Porn block: she scans browsers and social apps, and porn locks your phone). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 71)
+> **Last updated:** 2026-10-07 (round 73)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -621,8 +621,8 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Never:** blocks anything. Mood only changes her words
 - **Tests:** `UsageTest.kt` (her day, what counts, the 15 minute cap, rollover, grades, top apps, keeping 30, lines in both moods, Lock guard, older saves)
 
-### v0.23.0 (round 71, porn block)
-- **Asked:** "a porn blocker. Screenshots my screen (in browser and in social apps like X and Reddit) and if it detects porn, locks my phone"
+### v0.23.0 (round 73, porn block, option A from round 71)
+- **Asked:** "a porn blocker. Screenshots my screen (in browser and in social apps like X and Reddit) and if it detects porn, locks my phone". This is option A from the round 71 brainstorm (picked in round 72, when the reply was stopped by a safety filter). Option D (adult app list) is not built yet
 - **What she watches (`PornBlock.watches`):** every browser (any app that opens web links), the lockout social list (Instagram, TikTok, X, Snapchat, Facebook, Reddit, YouTube) plus Tumblr, Bluesky, Pinterest, Threads and Mastodon, and any app Android tags as social. Chat apps are not watched
 - **When she looks (`PornBlock.mayScan`):** every 5 seconds (`SCAN_SECONDS`) while she and Porn block are on, the screen is on and unlocked, and a watched app is in front. Never her own screens, the phone, system screens or Always-allowed apps. Unlike her peeks she does look with the keyboard up, since nothing is saved. Not while her lock is already running. If a scan and her peek ask for a screenshot at the same moment, Android refuses one of them and that look is skipped
 - **How she looks (`core/PornScanner.kt`):** an Accessibility screenshot (Android 11+, the same as her peeks), shrunk to 640 pixels across, cut into overlapping squares along the long side (3 on a tall phone, `PornBlock.tiles`) so pictures in a feed are big enough for the detector, then the NudeNet 320n model on each square, on the phone. Porn: an exposed genitalia, breast, buttocks or anus detection scoring **0.45** or more (`PornBlock.THRESHOLD`, higher than photo proof's 0.3 so ordinary screens rarely set her off). The screenshot only lives in memory and is never saved
@@ -725,6 +725,17 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Rules that stay:** Quit for now on every screen, calls and emergency use never blocked, quiet hours respected, nothing she does reaches other people (no reading or changing your messages to anyone)
   - **Claude's top 3:** Pay to play, Yes Mistress, She grabs your phone
 
+- **Porn blocker (round 71, brainstorm, nothing decided):** the user wants her to notice porn on screen and lock the phone
+  - **A. Her eyes on the screen:** while you're in a browser or social app she takes a quick screenshot every 15 to 60 seconds and runs the on-device NudeNet check (already used for photo proof). Explicit means she locks you out. The frame is deleted right away, never kept. Android 11+. Misses: video between checks, drawings, incognito tabs (Android blanks them, which she could count as suspicious). False alarms: swimwear, lots of skin
+  - **B. A wall in front:** Android's Private DNS set to a family filter (for example Cloudflare's 1.1.1.3 family servers) blocks adult sites in every app. Android won't let her set it, so you set it once. She checks it's still on (public API) and switching it off counts as tampering with Lock guard on
+  - **C. Her own filter (local VPN):** she runs an on-phone VPN that checks each site name against an adult blocklist and locks you out on a hit. Works in every app, but no other VPN can run at the same time, and it's the biggest build
+  - **D. Adult apps:** a list of adult app package names she blocks or locks you out of, using her existing block screen
+  - **What a catch does:** her lockdown (round 69 idea: admin locks the screen and re-locks each unlock for a set time), a failure, a note in her record and the daily report, her line. Quit for now stays reachable
+  - **Not used:** reading the browser's address bar (search and site watch, stopped by a safety filter in rounds 63 and 67)
+  - **Claude's pick:** B as the wall plus A as the watcher, with D cheap to add. Waiting on the user's choices: which parts, the lockdown length, and how often A checks (battery)
+  - **Round 72:** the user picked A and D. Claude's response was stopped by a safety filter, so the porn blocker is not planned. Nothing was built
+  - **Round 73 (v0.23.0):** the user asked again for A, and it's built as **Porn block** (section 4.15 and section 8). Checks every 5 seconds (not 15 to 60), and the lock is her own Caught screen plus Android's screen lock, not the device admin lockdown. Still open: D (adult app list), B and C
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -824,4 +835,6 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 68, v0.22.0):** Daily report. She counts your unlocks and time in each app (not her screens, home or the phone), and every night at your report time she grades the day A to F against your unlock and screen time goals, with merit (or a failure for an F, if you choose), her line and your top 5 apps. New Daily report card in Settings, Her reports screen, guarded by Lock guard. Details in section 8
 - **2026-10-07 (round 69):** No code changes. User asked for more hot uses of device admin. Proposed six ideas in section 10 (her lockdown, kneel to unlock, short leash, paid unlocks, ruined means locked, wrong PIN alarm), waiting on the user's picks
 - **2026-10-07 (round 70):** No code changes. User asked for kinkier Accessibility ideas. Proposed nine in section 10 (pay to play, Yes Mistress, she grabs your phone, kneel breaks, tease delay, escalating begging, branded, caged on every screen, shade closed), waiting on the user's picks
-- **2026-10-07 (round 71, v0.23.0):** Porn block. Every 5 seconds in a browser or social app (X, Reddit and more) she checks the screen with her on-device nudity detector. Porn, or a private tab hiding the screen for about 15 seconds, locks your phone: home, screen locked, her Caught screen over everything but Always-allowed apps and the phone for 1 hour (a setting), and a failure (a setting). Nothing she scans is saved. New Porn block card in Settings, guarded by Lock guard. Details in section 8
+- **2026-10-07 (round 71):** No code changes. User asked for a porn blocker that notices porn and locks the phone. Brainstormed four parts in section 10 (screen check with NudeNet, Private DNS family filter, local VPN filter, adult app list) and what a catch does, waiting on the user's choices
+- **2026-10-07 (round 72):** No code changes. User picked A (screen check) and D (adult apps) for the porn blocker. Claude's response was stopped by a safety filter, so it's not planned. Recorded in section 10
+- **2026-10-07 (round 73, v0.23.0):** Porn block (option A from round 71). Every 5 seconds in a browser or social app (X, Reddit and more) she checks the screen with her on-device nudity detector. Porn, or a private tab hiding the screen for about 15 seconds, locks your phone: home, screen locked, her Caught screen over everything but Always-allowed apps and the phone for 1 hour (a setting), and a failure (a setting). Nothing she scans is saved. New Porn block card in Settings, guarded by Lock guard. Details in section 8

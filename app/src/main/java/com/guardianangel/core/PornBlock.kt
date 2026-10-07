@@ -13,7 +13,7 @@ import kotlin.math.sqrt
 data class Tile(val x: Int, val y: Int, val size: Int)
 
 /**
- * Porn block (round 71): every few seconds in a browser or social app she screenshots the screen and
+ * Porn block (round 73): every few seconds in a browser or social app she screenshots the screen and
  * runs the on-device nudity detector on it. Porn locks the phone. Pure Kotlin, tested in PornBlockTest.
  * The screenshot itself is in core/PornScanner. Nothing she scans is saved or leaves the phone.
  */

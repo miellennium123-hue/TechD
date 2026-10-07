@@ -15,7 +15,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * Porn block (round 71): her watch screenshots the screen in browsers and social apps (Accessibility
+ * Porn block (round 73): her watch screenshots the screen in browsers and social apps (Accessibility
  * screenshots, Android 11 or later) and runs the NudeNet detector on it, all on the phone. The
  * screenshot is only held in memory and never saved. Rules in core/PornBlock.
  */

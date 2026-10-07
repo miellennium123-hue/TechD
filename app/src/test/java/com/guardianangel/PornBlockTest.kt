@@ -18,7 +18,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Porn block (round 71): what she watches, when she scans, what counts, and her lock. */
+/** Porn block (round 73): what she watches, when she scans, what counts, and her lock. */
 class PornBlockTest {
     private val now = 100 * 60_000L
     private val noon = 12 * 60
