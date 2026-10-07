@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.23.1 (Porn block: adult apps list, set hours, your own app list and check rate). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 75)
+> **Last updated:** 2026-10-07 (round 76)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -762,6 +762,20 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Rules that stay:** Quit for now on every screen, calls and emergency use never blocked, quiet hours respected, nothing she does reaches other people, recordings and photos never leave the phone
   - **Claude's top 3:** Hidden timer, Her wheel, Wagers. They build on chastity, check-ins and merit, which already work
 
+- **Release calendar (round 76, brainstorm, nothing decided):** the user wants a new screen like Chastity and Guided sessions for a release calendar (the round 38 "denial calendar" and "she sets the next release date" ideas)
+  - **Where:** a **Release calendar** button on Home next to Chastity and Guided sessions, plus a Home card with the next release day and your denial streak. Its own settings card in Settings
+  - **The screen, top to bottom:** her picture and line. **Next release:** the day and a countdown (or "?" if she hides it). **Denied for:** days since your last release, and your best streak. A **month grid**: each day marked gold (released), red (ruined), grey (edged or denied), a lock (caged that day), a star (her release day), a cross (a failure or catch). Tap a day for what happened. **This month:** releases, ruins, denials, edges, catches. Buttons: **Beg for an earlier day**, **Confess a release**
+  - **She sets the day:** when you switch it on, and after every release, she picks the next release day between your shortest and longest wait (say 3 to 14 days)
+  - **What moves it:** each failure, Porn block catch and F grade adds days (a setting). Begging can move it earlier or later (like begging in chastity). Maybe A grades take a day off
+  - **Release day:** her notification in the morning (not in quiet time). You get one release that day: a guided session that ends in permission, or permission to finish on your own and report back. A setting lets her still ruin it sometimes. Miss the day and it's gone: counted as denied, and she sets the next one
+  - **Other days:** guided sessions can only end ruined or denied (no permission endings)
+  - **Chastity:** on release day she can end your lock early, and after the release she wants you locked again with a photo (like after a ruin)
+  - **Confess a release:** finished without her permission? You report it. A failure, extra days, and your streak resets. Honor based: the phone can't know
+  - **History:** its own log of every day (kept a year), since sessions keep only the last 30. Quit for now keeps it
+  - **Ties in later:** Hidden timer (hide the day), Her wheel (spin on release day), Orgasm budget (releases per month)
+  - **Rules that stay:** Quit for now on every screen, quiet hours respected, mood only changes her words (begging odds as in chastity), Lock guard makes loosening settings slow
+  - **Questions for the user:** how she picks the day, whether you see it, what release day looks like, what moves the day, what Quit for now does to the day, and how strict confessing is
+
 ### Fixed issues
 - **Vague permission proof prompt (round 8):** "Earn it. Send her a photo." didn't say what to photograph. Fixed in v0.2: every request names its subject
 
@@ -866,3 +880,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 73, v0.23.0):** Porn block (option A from round 71). Every 5 seconds in a browser or social app (X, Reddit and more) she checks the screen with her on-device nudity detector. Porn, or a private tab hiding the screen for about 15 seconds, locks your phone: home, screen locked, her Caught screen over everything but Always-allowed apps and the phone for 1 hour (a setting), and a failure (a setting). Nothing she scans is saved. New Porn block card in Settings, guarded by Lock guard. Details in section 8
 - **2026-10-07 (round 74, v0.23.1):** Porn block additions. An Adult apps list you pick (opening one is a catch, even if Always-allowed), Only at set hours (porn off limits only inside your hours, for both checks and adult apps), Apps she checks (tick any app, games included, or untick hers) and Check every (3 to 60 seconds). Claude asked three questions first. Details in section 8
 - **2026-10-07 (round 75):** No code changes. User asked for more hot ideas, nothing about stillness. Proposed ten in section 10 (hidden timer, her wheel, beg out loud, her texts, wagers, orgasm budget, confession after a catch, tally marks, good boy chime, her weekly letter), waiting on the user's picks
+- **2026-10-07 (round 76):** No code changes. User asked for a Release calendar screen like Chastity and Guided sessions, and to brainstorm how it looks and works. Proposed the screen, how she sets and moves the release day, release day, history and links to chastity and sessions in section 10, with questions for the user
