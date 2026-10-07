@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.27.1 (The ruin you owe after a Porn block catch: a minute of filmed CBT, then a quickshot watching it). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 87)
+> **Last updated:** 2026-10-07 (round 88)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -895,7 +895,8 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Easy on Windows:** watching the foreground app (replaces Accessibility), her block, bedtime and Caught screens (full-screen topmost windows), her mark (click-through overlay), peeks (screen capture, more reliable than Android), Porn block (same NudeNet model through ONNX Runtime), locking the PC, wallpapers, notifications, open sites, shows up, daily report (unlocks and app time), her spoken voice
   - **Awkward:** proof photos need a webcam (could stay phone only), chastity and check-ins work but fit a phone better
   - **Hard:** Lock guard. Ctrl+Alt+Del, Task Manager and Safe Mode can't be fully blocked, and an admin account can always kill or uninstall her. Best fix: she runs as a Windows service and you use a standard (non-admin) account, which is setup work. Her keyboard hooks, screen captures and watchdog can also look like spyware to Windows Defender, and an unsigned installer gets a SmartScreen warning
-  - **Open questions for the user:** a separate PC copy with its own settings, or synced with the phone (one config, one merit count, needs a sync method); and how strong Lock guard must be on the PC
+  - **Decided (round 88): separate copies, same version.** The PC app keeps its own settings and merit, no sync with the phone. Both apps read one shared version number, and every release ships the phone APK and the Windows installer together so they never fall behind each other
+  - **Decided (round 88): Lock guard as strong as Windows allows.** On the PC that means she runs as a background service with a standard (non-admin) sign-in, so you can't just close her. The firm limit stays: Windows never lets an app fully block Ctrl+Alt+Del, Task Manager or Safe Mode, and whoever holds the admin password can always remove her. Quit for now still works everywhere and is never longer
   - **Rules that stay:** Quit for now on every screen and never longer, debug mode rules, photos and peeks stay private on the device
 
 ### Fixed issues
@@ -1014,3 +1015,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 85, v0.27.1):** Hotfix. The ruin you owe after a Porn block catch is now always her CBT quickshot: a full minute of hard CBT she films, then fast strokes, the edge and the ruin while that CBT loops above you and you watch yourself below, then the replay. Details in section 8
 - **2026-10-07 (round 86):** No code changes. User wants to give her more control in the next update. Proposed ideas in section 10 (surrender period, ratchet, hidden settings, her whims, daily orders, her bedtime, app rationing, muted notifications, cage and wear orders, her orgasms, morning verdict, her shop, strike ladder), waiting on the user's picks
 - **2026-10-07 (round 87):** No code changes. User asked how possible a Windows port is, minus Guided sessions. Answer: very possible with Kotlin Multiplatform and Compose for Desktop, reusing the pure Kotlin core. Lock guard is the hard part. Plan and open questions in section 10
+- **2026-10-07 (round 88):** No code changes. User's answers on the Windows port: keep the PC copy separate (its own settings and merit) but pin both apps to the same version number and ship them together; make Lock guard as strong as Windows allows. Recorded in section 10
