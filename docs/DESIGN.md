@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.28.2 (clip timing: edges 10 s before and 8 s after your tap, ruins 10 s before hands off and the whole ruin; wallpaper never guarded). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 98)
+> **Status:** v0.28.3 (sessions no longer reset by her wallpaper; quickshot and owed ruin are straight strokes to the ruin). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 99)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -773,6 +773,15 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Wallpaper never guarded (`LockGuard.loosens`, `LockGuard.guardedPackage`):** switching Wallpaper control off no longer takes the 30 minute slow way; every wallpaper setting changes instantly, Lock guard or not. Her screen check never sends you away from the phone's own wallpaper screens (any package with "wallpaper" in its name)
 - **Tests:** `ClipsTest.kt` (edge take marked at your tap and kept 8 seconds, ruin marked at hands off and kept for the ruin, CBT whole, where the cut goes), `LockGuardTest.kt` (wallpaper never guarded). 240 unit tests passed locally
 
+### v0.28.3 (round 99, sessions reset by the wallpaper; straight strokes to the ruin)
+- **Reported (testing v0.28.2):** guided sessions broke: somewhere after the warm-up she quit you out of the session, back to the start screen with the themes. Wallpaper Lock guard test passes
+- **Cause:** her background cycle (set to 1 minute for the Quit for now test). On Android 12+ a new wallpaper reloads every open screen, and a reloaded session screen starts over at its start screen. The same reload likely cut the edge clip the user missed in round 98
+- **Fix (`Backgrounds.waits`, `WallpaperController.enforce`):** she never changes the wallpaper (cycle or Set and lock) while one of her own screens is in front, or her slow exit is open. You can't see the wallpaper then anyway; the cycle carries on once you leave her app
+- **Asked:** no edge in a quickshot, just straight strokes to the ruin. Same for the punishment (owed) ruin: CBT, then strokes, then the ruin, no edge
+- **Built (`StepKind.RUSH`, `Session.rush`, new line Straight to the ruin):** quickshot is intro, (unlock), strokes, faster, then straight to the ruin: faster and faster to her beat until you tap **I'm about to cum**, and it's hands off right then (no edge, no countdown). The owed ruin is the minute of CBT, (unlock), strokes, faster, the same straight ruin. Guided session ruins keep the edge, countdown, hands off (round 95)
+- **Ruin clip:** for a straight ruin, one take from the start of the strokes to the end of the ruin, cut to the 10 seconds before your tap and the whole ruin (`Clips.ruinStart` knows both kinds of ruin)
+- **Tests:** `SessionTest.kt` (quickshot and owed ruin have no edge or countdown, rush right before the ruin), `ClipsTest.kt` (a straight ruin is one take marked at hands off), `BackgroundsTest.kt` (she waits while her screens are in front). 243 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -1079,3 +1088,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 96, v0.28.1):** Fix. Quit for now was wiped about 5 minutes in, most likely by her background cycle: a new wallpaper makes Android 12+ reload every screen. The slow exit now keeps its progress through a reload, and while it's in front she holds still (no wallpaper change, none of her screens). Details in section 8
 - **2026-10-08 (round 97):** No code changes. User prefers test steps in the chat, not the test doc. From now on every update's reply says exactly how to test it; `docs/TESTING.md` stays as the record. Gave steps for v0.28.1 (Quit for now), v0.27.3 (full-screen clips) and v0.28.0 (sessions)
 - **2026-10-08 (round 98, v0.28.2):** Edge clips are now 10 seconds before your tap and 8 after; ruin clips 10 seconds before hands off and the whole ruin; CBT whole. The session screen shows when a clip is saved or couldn't be. Lock guard never guards her wallpaper settings. Test results: full-screen clips and the Quit for now fix work
+- **2026-10-08 (round 99, v0.28.3):** Fix: guided sessions no longer restart partway through. Her wallpaper cycle reloaded the screen; she now never changes the wallpaper while her own screens are open. Quickshots and the owed ruin are straight strokes to the ruin: tap when you're about to cum, then hands off. No edge, no countdown

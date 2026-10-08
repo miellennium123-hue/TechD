@@ -124,6 +124,7 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_RUIN("Guided sessions", "Ruin", "Ruins: hands off when her countdown hits zero. She films it"),
     SESSION_RUIN_EDGE("Guided sessions", "Ruin: get to the edge", "Every ruin starts here: get to the edge and tap, then she counts you down"),
     SESSION_RUIN_COUNTDOWN("Guided sessions", "Ruin: her countdown", "Right after the ruin edge: keep stroking while she counts down, hands off at zero"),
+    SESSION_RUSH("Guided sessions", "Straight to the ruin", "Quickshot and the owed ruin: stroke faster and faster, tap the moment you're about to cum, then hands off"),
     SESSION_RUIN_DONE("Guided sessions", "Ruin done", "You report the ruin went as she ordered"),
     SESSION_DENIED("Guided sessions", "Denied", "Denied ending: hands off, no release"),
     SESSION_RELOCK("Guided sessions", "Lock back up", "After a ruin during a lock: cage back on, then a photo"),
@@ -494,6 +495,11 @@ object Voice {
             "Keep stroking, pet. I'm counting you down. At zero, hands off.",
             "Don't stop yet, sweetie. Listen to my count. Zero means let go.",
             "Stroke to my count. When I reach zero, hands away and let it be ruined.",
+        ),
+        Line.SESSION_RUSH to listOf(
+            "Faster, pet. Don't stop, don't slow down. Tap the moment you're about to cum, and hands off.",
+            "Keep going, sweetie, faster and faster. The second you're about to cum, tap and let go.",
+            "All the way, pet. When it's coming, tap, and take your hands away.",
         ),
         Line.SESSION_RUIN to listOf(
             "Hands off, now! Ruin it for me. I'm watching.",
@@ -1097,6 +1103,11 @@ object Voice {
             "Keep stroking. At zero, hands off. Not a second later.",
             "Counting you down. Zero means let go.",
             "Stroke. Listen. At zero you ruin it.",
+        ),
+        Line.SESSION_RUSH to listOf(
+            "Faster. Don't you dare stop. Tap the second you're about to cum.",
+            "Stroke. No slowing down. About to cum? Tap. Hands off.",
+            "Keep going until it's coming. Then tap and let go.",
         ),
         Line.SESSION_RUIN to listOf(
             "Hands off. Now. Ruin it.",

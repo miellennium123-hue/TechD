@@ -385,14 +385,14 @@ private fun Setup(
             // Round 85: the ruin you owe her after a Porn block catch, whichever button you came from.
             Text("The ruin you owe her", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.error)
             Text(
-                "For what Porn block caught. A full minute of hard CBT that she films, then a quickshot: fast strokes, then " +
-                    "the edge, her countdown, and hands off.",
+                "For what Porn block caught. A full minute of hard CBT that she films, then a quickshot: straight strokes, " +
+                    "faster and faster, and the moment you're about to cum, hands off.",
             )
             Muted("Stop if it ever hurts sharply. \"Too much\" skips the CBT with no penalty.")
             if (caged) Muted("You're locked: the CBT with the cage on, then she has you take it off, and put it back on after.")
         } else if (quick) {
             Text("Quickshot", style = MaterialTheme.typography.headlineSmall)
-            Text("About 2 minutes, fast to her beat. Then the edge, her countdown, and hands off: always ruined, and she films it.")
+            Text("About 2 minutes, straight strokes to her beat, faster and faster. Tap the moment you're about to cum: hands off. Always ruined, and she films it.")
             if (caged) Muted("You're locked: she has you take the cage off first, and put it back on after.")
         } else {
             Text("Guided session", style = MaterialTheme.typography.headlineSmall)
@@ -727,6 +727,11 @@ private fun Running(
                 onClick = { onEdge(((System.currentTimeMillis() - startedAt) / 1_000).toInt()) },
                 modifier = Modifier.fillMaxWidth().height(if (bigText || dark) 72.dp else 56.dp),
             ) { Text("I'm at the edge", style = MaterialTheme.typography.titleMedium) }
+            // Round 99: straight to the ruin. One tap and it's hands off.
+            StepKind.RUSH -> Button(
+                onClick = onNext,
+                modifier = Modifier.fillMaxWidth().height(if (bigText || dark) 72.dp else 56.dp),
+            ) { Text("I'm about to cum", style = MaterialTheme.typography.titleMedium) }
             StepKind.DEAL -> {
                 Button(onClick = { onDeal(DealChoice.RUIN_NOW) }, modifier = Modifier.fillMaxWidth()) { Text("A sure ruin, now") }
                 OutlinedButton(onClick = { onDeal(DealChoice.EDGES) }, modifier = Modifier.fillMaxWidth()) {

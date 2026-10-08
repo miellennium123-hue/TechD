@@ -172,6 +172,28 @@ class ClipsTest {
     }
 
     @Test
+    fun aStraightRuinIsOneTakeFromItsStrokes() {
+        // Round 99: rush then ruin (quickshot, owed ruin): one ruin take from the rush, marked at hands off.
+        val steps = listOf(
+            Step(StepKind.FASTER, 10, bpm = 180),
+            Step(StepKind.RUSH, 120, bpm = 170, bpmTo = 200),
+            Step(StepKind.RUIN, 20),
+        )
+        val s = SessionSettings(filmTasks = false)
+        assertNull(Clips.take(steps, 0, s))
+        assertEquals(ClipTake(1, ClipKind.RUIN), Clips.take(steps, 1, s))
+        assertEquals(ClipTake(1, ClipKind.RUIN), Clips.take(steps, 2, s))
+        val rush = Clips.nextTake(null, steps, 1, s, 10_000, 1)!!
+        assertEquals(0L, rush.markAt)
+        val ruin = Clips.nextTake(rush, steps, 2, s, 50_000, 1)!!
+        assertEquals(1, ruin.id)
+        assertEquals(50_000L, ruin.markAt)
+        assertEquals(50_000L + Clips.RUIN_AFTER_MS, ruin.stopAt)
+        // A rush with no ruin after it isn't filmed as one.
+        assertNull(Clips.ruinStart(listOf(Step(StepKind.RUSH, 120), Step(StepKind.COOL, 45)), 0))
+    }
+
+    @Test
     fun cbtIsFilmedWhole() {
         val steps = listOf(Step(StepKind.CBT, 20, bpm = 20, reps = 5), Step(StepKind.STROKE, 30, bpm = 100))
         val cbt = Clips.nextTake(null, steps, 0, SessionSettings(), 1_000, 1)!!

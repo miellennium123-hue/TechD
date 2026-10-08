@@ -61,6 +61,13 @@ object Backgrounds {
         return all.ifEmpty { listOf(BackgroundRef.BuiltIn(BUILT_IN.first().id)) }
     }
 
+    /**
+     * Round 99: she leaves the wallpaper alone while one of her own screens is in front ([ownApp]) or
+     * her slow exit is open ([quitting]). On Android 12+ a new wallpaper reloads every open screen, which
+     * threw you out of a session and wiped Quit for now. You can't see the wallpaper then anyway.
+     */
+    fun waits(ownApp: Boolean, quitting: Boolean): Boolean = ownApp || quitting
+
     /** Time for the next one: [minutes] since she last changed it. */
     fun due(now: Long, changedAt: Long, minutes: Int): Boolean =
         now - changedAt >= minutes.coerceIn(MIN_CYCLE_MINUTES, MAX_CYCLE_MINUTES) * 60_000L

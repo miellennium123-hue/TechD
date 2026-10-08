@@ -74,4 +74,12 @@ class BackgroundsTest {
         val st = json.decodeFromString(GuardianState.serializer(), "{\"wallpaperId\":5}")
         assertEquals(-1, st.wallpaperIndex)
     }
+
+    @Test
+    fun sheLeavesTheWallpaperAloneWhileYouUseHer() {
+        // Round 99: a new wallpaper reloads open screens on Android 12+, so never while her screens are in front.
+        assertTrue(Backgrounds.waits(ownApp = true, quitting = false))
+        assertTrue(Backgrounds.waits(ownApp = false, quitting = true))
+        assertFalse(Backgrounds.waits(ownApp = false, quitting = false))
+    }
 }
