@@ -14,6 +14,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -164,6 +165,9 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
         if (config.enabled && state.punishmentUntil > now) {
             SectionCard("Punishment lockout") {
                 Text("${formatDuration(state.punishmentUntil - now)} left", fontWeight = FontWeight.Bold)
+                // Round 94: why.
+                state.failures.lastOrNull()?.let { Muted("Last failure: ${it.label}.") }
+                OutlinedButton(onClick = { navigate(Screen.RECORD) }) { Text("Her record") }
             }
         }
 
@@ -185,12 +189,21 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
             }
         }
 
+        if (!config.meritOn && state.failures.isNotEmpty()) {
+            OutlinedButton(onClick = { navigate(Screen.RECORD) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Her record (${state.failures.size} failures)")
+            }
+        }
+
         if (config.meritOn) {
             val level = Rules.meritLevel(state.merit)
             SectionCard("Merit") {
                 Text("Level ${level.level}: ${level.title}", style = MaterialTheme.typography.titleLarge)
                 Text("${state.merit} points" + (level.next?.let { " (next level at $it)" } ?: ""))
                 LinearProgressIndicator(progress = { level.progress(state.merit) }, modifier = Modifier.fillMaxWidth())
+                if (state.failures.isNotEmpty()) {
+                    TextButton(onClick = { navigate(Screen.RECORD) }) { Text("Her record (${state.failures.size} failures)") }
+                }
             }
         }
 

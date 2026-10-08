@@ -67,6 +67,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `core/Peek.kt`, `core/ScreenPeek.kt` | She peeks: when she may look, what you were doing, keeping 100 (tested in `PeekTest.kt`), and the screenshot itself (Android 11+) |
 | `core/PornBlock.kt`, `core/PornScanner.kt`, `ui/CaughtActivity.kt` | Porn block: what she watches (your app list), how often, your hours, adult apps, the screenshot tiles, private tabs, her lock (tested in `PornBlockTest.kt`), the screenshot and detector run, her full-screen Caught screen (shares `LockedOutScreen` with bedtime) |
 | `ui/AllowedAppsScreen.kt` | The shared app picker (`AppPicker`): Always-allowed, Apps she checks, Adult apps |
+| `FailureRecord` in `data/State.kt`, `ui/RecordScreen.kt` | Her record (round 94): every failure, when, why and what it cost. The punishment cap is `Rules.punishmentUntil` |
 | `core/Usage.kt`, `ui/ReportsScreen.kt` | Daily report: her day (ends at your report time), what counts, grades A to F, keeping 30 reports (tested in `UsageTest.kt`). Her watch counts unlocks and app time |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen, Lock guard's screen check |
 | `ui/` | Compose screens and the Block and Proof activities |

@@ -66,6 +66,7 @@ class LockGuardTest {
             strict.copy(sitesOn = false),
             strict.copy(quietHours = QuietHoursSettings(on = true)),
             strict.copy(alwaysAllowed = strict.alwaysAllowed + "com.instagram.android"),
+            strict.copy(punishment = PunishmentSettings(on = true, capMinutes = 150)),
         ).forEach { assertTrue(it.toString(), LockGuard.loosens(strict, it)) }
     }
 
@@ -76,6 +77,8 @@ class LockGuardTest {
         assertFalse(LockGuard.loosens(before, before.copy(chastity = ChastitySettings(on = true))))
         assertFalse(LockGuard.loosens(before, before.copy(meritOn = !before.meritOn)))
         assertFalse(LockGuard.loosens(before, before.copy(alwaysAllowed = emptySet())))
+        // Round 94: a longer punishment cap is stricter.
+        assertFalse(LockGuard.loosens(before, before.copy(punishment = PunishmentSettings(capMinutes = 240))))
         assertFalse(LockGuard.loosens(before, before))
     }
 
@@ -191,5 +194,8 @@ class LockGuardTest {
         assertEquals(240, lockouts.maxBlockMinutes)
         assertFalse(json.decodeFromString(GuardianConfig.serializer(), "{\"enabled\":true}").debugMode)
         assertTrue(json.decodeFromString(GuardianConfig.serializer(), "{\"bedtime\":{\"on\":true}}").bedtime.screen)
+        // Round 94: older saves get the 3 hour punishment cap and an empty record.
+        assertEquals(180, json.decodeFromString(GuardianConfig.serializer(), "{\"punishment\":{\"on\":true}}").punishment.capMinutes)
+        assertTrue(json.decodeFromString(GuardianState.serializer(), "{\"punishmentUntil\":5}").failures.isEmpty())
     }
 }

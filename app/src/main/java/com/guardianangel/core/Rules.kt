@@ -169,6 +169,21 @@ object Rules {
         return result
     }
 
+    /** Round 94: punishment lockouts never run longer than this from now, and are set in steps of 30 minutes. */
+    const val MIN_PUNISHMENT_CAP = 30
+    const val MAX_PUNISHMENT_CAP = 24 * 60
+
+    /**
+     * Round 94: a failure's punishment. It adds [lengthMinutes] on top of what's left ([until]), but the
+     * lockout never runs more than [capMinutes] from [now]. Returns the new end.
+     */
+    fun punishmentUntil(until: Long, now: Long, lengthMinutes: Int, capMinutes: Int): Long =
+        min(max(until, now) + lengthMinutes * MINUTE, now + capMinutes.coerceAtLeast(MIN_PUNISHMENT_CAP) * MINUTE)
+
+    /** Round 94: a lockout already longer than the cap (a lowered cap, or one from before the cap) is cut to it. */
+    fun capPunishment(until: Long, now: Long, capMinutes: Int): Long =
+        min(until, now + capMinutes.coerceAtLeast(MIN_PUNISHMENT_CAP) * MINUTE).takeIf { until > now } ?: until
+
     /** Opening a blocked app never counts as a failure (round 12). */
     fun decide(
         pkg: String,

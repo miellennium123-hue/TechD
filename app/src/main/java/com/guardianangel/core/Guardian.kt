@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import com.guardianangel.data.ActiveTask
 import com.guardianangel.data.CatchRecord
+import com.guardianangel.data.FailureRecord
 import com.guardianangel.data.ChastityLock
 import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.Grade
@@ -42,21 +43,22 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
-enum class Failure(val merit: Int) {
-    MISSED_PROOF(8),
-    MISSED_TASK(8),
-    TASK_FAILED(5),
-    WRONG_ANSWERS(5),
-    LEFT_SITE(5),
-    RUIN_FAILED(5),
-    SWITCHED_OFF(10),
-    TAMPERED(10),
-    BAD_DAY(5),
-    CAUGHT_PORN(10),
-    MISSED_CLIP(5),
-    MISSED_COMMAND(5),
-    MISSED_RUIN(8),
-    MISSED_SESSION(5),
+/** Every way to fail her. [label] is what her record shows (round 94). */
+enum class Failure(val merit: Int, val label: String) {
+    MISSED_PROOF(8, "Missed a photo proof deadline"),
+    MISSED_TASK(8, "Missed a task deadline"),
+    TASK_FAILED(5, "Failed a task"),
+    WRONG_ANSWERS(5, "Wrong answers to her question"),
+    LEFT_SITE(5, "Left her site early"),
+    RUIN_FAILED(5, "Couldn't stop at the ruin"),
+    SWITCHED_OFF(10, "Switched her off"),
+    TAMPERED(10, "Tampering: her watch was off or restarted during a lock"),
+    BAD_DAY(5, "An F on your daily report"),
+    CAUGHT_PORN(10, "Caught by Porn block"),
+    MISSED_CLIP(5, "Didn't open her clip within a minute"),
+    MISSED_COMMAND(5, "Missed her command to cum"),
+    MISSED_RUIN(8, "Missed the ruin you owed her"),
+    MISSED_SESSION(5, "Missed a booked session"),
 }
 
 sealed interface AskResult {
@@ -104,6 +106,20 @@ object Guardian {
         val questions = config.value.questions
         val upgraded = Questions.upgrade(questions)
         if (upgraded != questions) config.update { it.copy(questions = upgraded) }
+        capPunishment()
+    }
+
+    /** Round 94: a punishment lockout longer than her cap (from before the cap, or a lowered cap) is cut to it. */
+    private fun capPunishment() {
+        val t = now()
+        state.update { it.copy(punishmentUntil = Rules.capPunishment(it.punishmentUntil, t, config.value.punishment.capMinutes)) }
+    }
+
+    /** Round 94: her record keeps this many failures. */
+    const val FAILURE_RECORD_KEEP = 100
+
+    fun clearRecord() {
+        state.update { it.copy(failures = emptyList()) }
     }
 
     fun now(): Long = System.currentTimeMillis()
@@ -298,6 +314,7 @@ object Guardian {
         if (before.sitesOn && !after.sitesOn) clearVisit()
         if (before.lockouts.on && !after.lockouts.on) state.update { it.copy(lockoutUntil = 0) }
         if (before.pornBlock.on && !after.pornBlock.on) state.update { it.copy(caughtUntil = 0) }
+        if (after.punishment.capMinutes < before.punishment.capMinutes) capPunishment()
         // Round 84: training starts the day you switch it on; booked sessions and owed ruins follow their switches.
         if (!before.session.training && after.session.training) state.update { it.copy(trainingStart = now()) }
         if (before.session.training && !after.session.training) state.update { it.copy(trainingStart = 0) }
@@ -331,12 +348,29 @@ object Guardian {
                 else -> Line.DEGRADE_MILD
             },
         )
+        val chastityBefore = state.value.chastity?.endsAt ?: 0L
         if (c.chastity.on) addChastityTime(announce = false)
+        val chastityAdded = ((state.value.chastity?.endsAt ?: 0L) - chastityBefore).coerceAtLeast(0) / MINUTE
+        var punishmentAdded = 0L
         if (c.punishment.on) {
+            // Round 94: it adds up, but never past her cap.
             state.update {
-                it.copy(punishmentUntil = max(it.punishmentUntil, t) + c.punishment.length.minutes * MINUTE)
+                val before = max(it.punishmentUntil, t)
+                val after = Rules.punishmentUntil(it.punishmentUntil, t, c.punishment.length.minutes, c.punishment.capMinutes)
+                punishmentAdded = ((after - before) / MINUTE).coerceAtLeast(0)
+                it.copy(punishmentUntil = after)
             }
         }
+        // Round 94: her record.
+        val record = FailureRecord(
+            at = t,
+            kind = failure.name,
+            label = failure.label,
+            merit = if (c.meritOn) failure.merit else 0,
+            punishmentMinutes = punishmentAdded.toInt(),
+            chastityMinutes = chastityAdded.toInt(),
+        )
+        state.update { it.copy(failures = (it.failures + record).takeLast(FAILURE_RECORD_KEEP)) }
         // Round 84: your next session will be a punishment session.
         if (c.session.on && c.session.punishmentSessions) state.update { it.copy(owedPunishment = true) }
         Notifier.message(appContext, line)
