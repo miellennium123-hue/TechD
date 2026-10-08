@@ -1,5 +1,7 @@
 package com.guardianangel
 
+import com.guardianangel.data.SessionOutcome
+import com.guardianangel.core.PaidOff
 import com.guardianangel.core.LockGuard
 import com.guardianangel.core.MINUTE
 import com.guardianangel.core.Rules
@@ -160,5 +162,28 @@ class SessionPlanTest {
         assertEquals(0L, state.trainingStart)
         assertEquals(null, state.booked)
         assertFalse(state.owedPunishment)
+    }
+
+    @Test
+    fun theOwedRuinPaysOffEverythingTheCatchCost() {
+        // Round 104: a catch owes a ruin and (as a failure) a punishment session. The ruin pays both.
+        assertEquals(PaidOff(punishment = true, ruin = true), SessionPlan.paysOff(SessionTheme.RUIN_TRAINING, SessionOutcome.RUINED, ruinOwed = true))
+        // A punishment session pays the punishment; a ruin in it also pays an owed ruin.
+        assertEquals(PaidOff(punishment = true, ruin = false), SessionPlan.paysOff(SessionTheme.PUNISHMENT, SessionOutcome.DENIED, ruinOwed = false))
+        assertEquals(PaidOff(punishment = true, ruin = true), SessionPlan.paysOff(SessionTheme.PUNISHMENT, SessionOutcome.RUINED, ruinOwed = true))
+        // An ordinary ruin with nothing owed pays nothing; a failed ruin never pays the ruin.
+        assertEquals(PaidOff(punishment = false, ruin = false), SessionPlan.paysOff(SessionTheme.YOURS, SessionOutcome.RUINED, ruinOwed = false))
+        assertEquals(PaidOff(punishment = false, ruin = false), SessionPlan.paysOff(SessionTheme.RUIN_TRAINING, SessionOutcome.RUIN_FAILED, ruinOwed = true))
+    }
+
+    @Test
+    fun theOldBugsLeftoverPunishmentIsCleared() {
+        // Round 104: owed after a catch whose ruin is done: cleared once on update.
+        assertTrue(SessionPlan.leftoverFromCatch(owedPunishment = true, ruinOwedBy = 0, lastFailureKind = "CAUGHT_PORN"))
+        // The ruin still owed, a later failure, or nothing owed: left alone.
+        assertFalse(SessionPlan.leftoverFromCatch(owedPunishment = true, ruinOwedBy = 5_000, lastFailureKind = "CAUGHT_PORN"))
+        assertFalse(SessionPlan.leftoverFromCatch(owedPunishment = true, ruinOwedBy = 0, lastFailureKind = "MISSED_TASK"))
+        assertFalse(SessionPlan.leftoverFromCatch(owedPunishment = true, ruinOwedBy = 0, lastFailureKind = null))
+        assertFalse(SessionPlan.leftoverFromCatch(owedPunishment = false, ruinOwedBy = 0, lastFailureKind = "CAUGHT_PORN"))
     }
 }

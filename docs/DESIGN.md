@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.28.3 (sessions no longer reset by her wallpaper; quickshot and owed ruin are straight strokes to the ruin). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 103)
+> **Status:** v0.28.4 (fix: the owed ruin also pays off the punishment session). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 104)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -782,6 +782,13 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Ruin clip:** for a straight ruin, one take from the start of the strokes to the end of the ruin, cut to the 10 seconds before your tap and the whole ruin (`Clips.ruinStart` knows both kinds of ruin)
 - **Tests:** `SessionTest.kt` (quickshot and owed ruin have no edge or countdown, rush right before the ruin), `ClipsTest.kt` (a straight ruin is one take marked at hands off), `BackgroundsTest.kt` (she waits while her screens are in front). 243 unit tests passed locally
 
+### v0.28.4 (round 104, fix: owed ruin left a punishment session owed)
+- **Reported:** after completing the punishment ruin, Home still said you owe her a session, just without the date and time
+- **Cause:** a Porn block catch owes two things: the ruin (with its deadline) and, because the catch counts as a failure, a punishment session (no date). The owed ruin always comes first and only paid off the ruin, so "A punishment session for your last failure" stayed
+- **Fix (`SessionPlan.paysOff`):** a finished ruin that pays the ruin you owed also pays the punishment session, since it's her punishment for the catch. A punishment session still pays its own. A failed ruin ("I couldn't stop") pays nothing, and its failure owes a new punishment as before
+- **Once on update (`SessionPlan.leftoverFromCatch`):** a punishment session left owed by this bug (your last failure was the catch, its ruin is done) is cleared
+- **Tests:** `SessionPlanTest.kt`. 245 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -1097,3 +1104,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 101):** No code changes. User asked what counts as a failure and how to see one. Answer: the 14 failures in `Failure` (some only with their setting on), what each costs, and Her record on Home (round 94) plus her notification
 - **2026-10-08 (round 102):** No code changes. User asked for all the merit ranks. Answer: the 8 levels in `Rules.LEVELS` (Stray 0 to Her favorite 1200), how merit is earned and lost, and that buying 10 minutes in a block costs 15
 - **2026-10-08 (round 103):** No code changes. Picked the Release calendar brainstorm back up (section 10): new tie-ins with booked sessions, Her record, merit, wallpaper, clips and an edge quota. Asked the user four questions: random range, date shown or hidden is a setting, release day is her choice (sometimes ruined), nothing moves the day. Then the extras (filmed release, her reel, countdown wallpaper, her wheel), no permission endings outside release day, confess is a failure, a missed day carries over one day
+- **2026-10-08 (round 104, v0.28.4):** Fix. Doing the ruin you owe after a Porn block catch now also pays off the punishment session the catch owed, so Home stops asking for one. A leftover from this bug is cleared on update. The release calendar comes next as its own update
