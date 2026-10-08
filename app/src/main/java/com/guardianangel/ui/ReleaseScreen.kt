@@ -415,7 +415,7 @@ private fun ReleaseSettingsCard(config: GuardianConfig) {
             onPlus = { update { it.copy(maxDays = (it.maxDays + 1).coerceAtMost(Release.MAX_DAYS)) } },
             enabled = s.on,
         )
-        Muted("A new range counts from her next pick, after your next release day.")
+        Muted("Change your range and her day follows: if it no longer fits, she picks again from today.")
         SwitchRow("Show the date", "Off: \"?\" until the morning of release day.", s.showDate) { v -> update { it.copy(showDate = v) } }
         Stepper(
             "Her wheel: a ruin",

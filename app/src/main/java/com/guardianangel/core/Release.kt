@@ -46,6 +46,19 @@ object Release {
     fun start(today: Long, settings: ReleaseSettings, roll: Double): ReleaseState =
         ReleaseState(nextDay = pickDay(today, settings, roll), startDay = today)
 
+    /**
+     * Round 105: you changed your range. If her day no longer fits it (counting from today), she picks
+     * again; otherwise it stays. Never on release day itself. Null when nothing changes.
+     */
+    fun refit(release: ReleaseState, today: Long, settings: ReleaseSettings, roll: Double): ReleaseState? {
+        if (isReleaseDay(release, today)) return null
+        val min = settings.minDays.coerceIn(MIN_DAYS, MAX_DAYS)
+        val max = settings.maxDays.coerceIn(min, MAX_DAYS)
+        val left = release.nextDay - today
+        if (left in min..max) return null
+        return release.copy(nextDay = pickDay(today, settings, roll), notifiedDay = -1)
+    }
+
     /** Today you may use her release day: the day itself, or the day after (carried over). */
     fun isReleaseDay(release: ReleaseState, today: Long): Boolean =
         today in release.nextDay..release.nextDay + CARRY_DAYS

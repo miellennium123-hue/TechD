@@ -119,6 +119,15 @@ object Guardian {
         if (SessionPlan.leftoverFromCatch(st.owedPunishment, st.ruinOwedBy, st.failures.lastOrNull()?.kind)) {
             state.update { it.copy(owedPunishment = false) }
         }
+        // Round 105, once: before v0.29.1 a new range only counted from her next pick, so a day set before
+        // you changed it may not fit. She picks again if so. Only once, so her "another week" stays later.
+        if (!st.releaseRefitDone) {
+            val r = st.release
+            if (config.value.release.on && r != null) {
+                Release.refit(r, today(), config.value.release, random.nextDouble())?.let { next -> state.update { it.copy(release = next) } }
+            }
+            state.update { it.copy(releaseRefitDone = true) }
+        }
     }
 
     /** Round 94: a punishment lockout longer than her cap (from before the cap, or a lowered cap) is cut to it. */
@@ -354,6 +363,13 @@ object Guardian {
             state.update { it.copy(release = Release.start(today(), after.release, random.nextDouble())) }
         }
         if (before.release.on && !after.release.on) state.update { it.copy(release = null) }
+        // Round 105: a new range takes effect now: if her day doesn't fit it, she picks again.
+        if (before.release.on && after.release.on &&
+            (before.release.minDays != after.release.minDays || before.release.maxDays != after.release.maxDays)
+        ) {
+            val r = state.value.release
+            if (r != null) Release.refit(r, today(), after.release, random.nextDouble())?.let { next -> state.update { it.copy(release = next) } }
+        }
         if (before.session.training && !after.session.training) state.update { it.copy(trainingStart = 0) }
         if (before.session.booked && !after.session.booked) cancelBooking()
         if (before.session.ruinAfterCatch && !after.session.ruinAfterCatch) clearRuinOwed()

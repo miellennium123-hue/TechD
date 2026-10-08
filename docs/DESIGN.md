@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.29.0 (her release calendar). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 104)
+> **Status:** v0.29.1 (release calendar: a new range takes effect right away). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 105)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -803,6 +803,13 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Her lines:** a new Release calendar group (her calendar, release day, her reel, her wheel and its three results, release session, missed, confessed), sweet and strict, editable
 - **Tests:** `ReleaseTest.kt` (picking and carrying over the day, the wheel, using the day, streaks and confessing, a hidden date, her notice, the wallpaper countdown, no permission outside release day, her reel, Lock guard, day marks, older saves), `SessionTest.kt` (the release session), `ClipsTest.kt` (filming the release). 260 unit tests passed locally
 
+### v0.29.1 (round 105, a new range takes effect right away)
+- **Reported:** set the shortest and longest wait to 1 day, and she still said 11 days
+- **Cause:** by design in v0.29.0, a new range only counted from her next pick (after your next release day). Not what you'd expect
+- **Fix (`Release.refit`):** change your range and her day follows: if the days left no longer fit the new range, she picks again from today. Never on release day or the day after. A day that still fits stays. Lock guard still guards a shorter range
+- **Once on update:** a day set before you changed your range is re-fitted (`GuardianState.releaseRefitDone`), only once so her "another week" still stays later than a short range
+- **Tests:** `ReleaseTest.kt`. 261 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -1120,3 +1127,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 103):** No code changes. Picked the Release calendar brainstorm back up (section 10): new tie-ins with booked sessions, Her record, merit, wallpaper, clips and an edge quota. Asked the user four questions: random range, date shown or hidden is a setting, release day is her choice (sometimes ruined), nothing moves the day. Then the extras (filmed release, her reel, countdown wallpaper, her wheel), no permission endings outside release day, confess is a failure, a missed day carries over one day
 - **2026-10-08 (round 104, v0.28.4):** Fix. Doing the ruin you owe after a Porn block catch now also pays off the punishment session the catch owed, so Home stops asking for one. A leftover from this bug is cleared on update. The release calendar comes next as its own update
 - **2026-10-08 (round 104, v0.29.0):** Her release calendar: she picks your release day at random in your range, you spin her wheel on the day (permission, a ruin or another week) after her reel of the week's ruins, and your release session ends on her command, filmed. A month grid, confessing, a wallpaper countdown, and on and off in its settings. Details in section 8
+- **2026-10-08 (round 105, v0.29.1):** Fix. Changing your release range now moves her day right away if it no longer fits (it only counted from her next pick before). A day set before you changed it is fixed once on update
