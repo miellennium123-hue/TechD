@@ -99,17 +99,86 @@ class ClipsTest {
     }
 
     @Test
-    fun edgeClipsKeepTenSecondsEachSide() {
-        // 60 seconds filmed, stopped 10 seconds after the tap: keep the last 20.
+    fun clipsKeepTenSecondsBeforeTheMoment() {
         val stopped = 1_000_000L
-        assertEquals(40_000L, Clips.trimStartMs(60_000, stopped, stopped - Clips.EDGE_AFTER_MS))
-        // A ruin: stopped 25 seconds after the tap (countdown and ruin), so keep 35.
-        assertEquals(25_000L, Clips.trimStartMs(60_000, stopped, stopped - 25_000))
-        // Too short to cut, or no tap: keep it all.
+        // Edge: 60 seconds filmed, stopped 8 seconds after the tap: keep the last 18.
+        assertEquals(42_000L, Clips.trimStartMs(60_000, stopped, stopped - Clips.EDGE_AFTER_MS))
+        // Ruin: stopped 19 seconds after hands off, so keep 29.
+        assertEquals(31_000L, Clips.trimStartMs(60_000, stopped, stopped - Clips.RUIN_AFTER_MS))
+        // Too short to cut, or no mark: keep it all.
         assertEquals(0L, Clips.trimStartMs(15_000, stopped, stopped - Clips.EDGE_AFTER_MS))
-        assertEquals(0L, Clips.trimStartMs(20_500, stopped, stopped - Clips.EDGE_AFTER_MS))
+        assertEquals(0L, Clips.trimStartMs(18_500, stopped, stopped - Clips.EDGE_AFTER_MS))
         assertEquals(0L, Clips.trimStartMs(60_000, stopped, 0))
         assertEquals(0L, Clips.trimStartMs(0, stopped, stopped - 5_000))
+    }
+
+    @Test
+    fun anEdgeIsFilmedUntilEightSecondsAfterYourTap() {
+        val steps = listOf(
+            Step(StepKind.STROKE, 30, bpm = 100),
+            Step(StepKind.EDGE, 180, bpm = 130),
+            Step(StepKind.EDGE_HOLD, 20),
+            Step(StepKind.STROKE, 30, bpm = 100),
+        )
+        val s = SessionSettings()
+        assertNull(Clips.nextTake(null, steps, 0, s, 1_000, 1))
+        // The edge starts a take, with no mark yet and no stop time.
+        val edge = Clips.nextTake(null, steps, 1, s, 10_000, 1)!!
+        assertEquals(ClipKind.EDGE, edge.kind)
+        assertEquals(1, edge.id)
+        assertEquals(0L, edge.markAt)
+        assertEquals(0L, edge.stopAt)
+        assertEquals(1, edge.number)
+        // Your tap 34 seconds in: marked, filming 8 more seconds, her caption has your time.
+        val tapped = Clips.nextTake(edge, steps, 2, s, 44_000, 1)!!
+        assertEquals(1, tapped.id)
+        assertEquals(44_000L, tapped.markAt)
+        assertEquals(44_000L + Clips.EDGE_AFTER_MS, tapped.stopAt)
+        assertEquals(Clips.caption(ClipKind.EDGE, 1, 34), tapped.caption)
+        // The next command before those 8 seconds are up keeps it; after, it's done.
+        assertEquals(tapped, Clips.nextTake(tapped, steps, 3, s, 48_000, 1))
+        assertNull(Clips.nextTake(tapped, steps, 3, s, 53_000, 1))
+        // Edges not filmed: nothing.
+        assertNull(Clips.nextTake(null, steps, 1, SessionSettings(filmTasks = false), 10_000, 1))
+    }
+
+    @Test
+    fun aRuinKeepsTenSecondsBeforeHandsOffAndTheWholeRuin() {
+        val steps = listOf(
+            Step(StepKind.STROKE, 30, bpm = 100),
+            Step(StepKind.EDGE, 180, bpm = 130),
+            Step(StepKind.COUNTDOWN, 5, bpm = 160),
+            Step(StepKind.RUIN, 20),
+            Step(StepKind.COOL, 45),
+        )
+        val s = SessionSettings(filmTasks = false)
+        val start = Clips.nextTake(null, steps, 1, s, 10_000, 3)!!
+        assertEquals(ClipKind.RUIN, start.kind)
+        assertEquals(3, start.number)
+        // Leaving the edge doesn't mark a ruin: the countdown keeps the same take going.
+        val counting = Clips.nextTake(start, steps, 2, s, 40_000, 3)!!
+        assertEquals(start, counting)
+        // Hands off: marked now, filming the whole ruin.
+        val ruin = Clips.nextTake(counting, steps, 3, s, 45_000, 3)!!
+        assertEquals(1, ruin.id)
+        assertEquals(45_000L, ruin.markAt)
+        assertEquals(45_000L + Clips.RUIN_AFTER_MS, ruin.stopAt)
+        assertTrue(Clips.RUIN_AFTER_MS in 10_000L..20_000L)
+        // She cuts it to start 10 seconds before hands off: the end of your edge and her countdown.
+        val stoppedAt = ruin.stopAt
+        val filmed = stoppedAt - start.startedAt
+        assertEquals(filmed - Clips.RUIN_AFTER_MS - Clips.BEFORE_MS, Clips.trimStartMs(filmed, stoppedAt, ruin.markAt))
+        assertNull(Clips.nextTake(ruin, steps, 4, s, 65_000, 3))
+    }
+
+    @Test
+    fun cbtIsFilmedWhole() {
+        val steps = listOf(Step(StepKind.CBT, 20, bpm = 20, reps = 5), Step(StepKind.STROKE, 30, bpm = 100))
+        val cbt = Clips.nextTake(null, steps, 0, SessionSettings(), 1_000, 1)!!
+        assertEquals(ClipKind.CBT, cbt.kind)
+        assertEquals(0L, cbt.markAt)
+        assertEquals(Clips.caption(ClipKind.CBT, 0, reps = 5), cbt.caption)
+        assertNull(Clips.nextTake(cbt, steps, 1, SessionSettings(), 21_000, 1))
     }
 
     @Test

@@ -55,7 +55,8 @@ object LockGuard {
 
     /** Settings and uninstall screens. When one shows her name while guarding, she sends you away. */
     fun guardedPackage(pkg: String): Boolean =
-        pkg.contains("settings") || pkg.contains("packageinstaller") || pkg.contains("securitycenter") || pkg.contains("safecenter")
+        !pkg.contains("wallpaper") &&
+            (pkg.contains("settings") || pkg.contains("packageinstaller") || pkg.contains("securitycenter") || pkg.contains("safecenter"))
 
     /**
      * Whether a settings change loosens her control: one of her controls switched off, Quiet hours
@@ -66,6 +67,7 @@ object LockGuard {
      * an adult app taken off, her hours switched on, or her hours moved. Since round 77 also: her clips
      * at check-ins or on her lock screens switched off. Since round 84 also: punishment sessions, the ruin
      * after a catch, booked sessions or her training switched off. Those take the slow way while guarding.
+     * Round 98: her wallpaper settings are never guarded (the user's choice); they always change instantly.
      * Anything that makes her stricter, and every other detail, changes instantly.
      */
     fun loosens(before: GuardianConfig, after: GuardianConfig): Boolean {
@@ -83,7 +85,6 @@ object LockGuard {
             off(before.askPermission.on, after.askPermission.on) ||
             off(before.bedtime.on, after.bedtime.on) ||
             off(before.bedtime.screen, after.bedtime.screen) ||
-            off(before.wallpaper.on, after.wallpaper.on) ||
             off(before.mark.on, after.mark.on) ||
             off(before.mark.tint, after.mark.tint) ||
             off(before.peek.on, after.peek.on) ||

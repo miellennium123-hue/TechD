@@ -1,9 +1,15 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.28.1 (Quit for now fix). Sections 0 to 0z6 cover what 0.6.0 to 0.28.1 changed
+> **Version under test:** 0.28.2 (clip timing, save note, wallpaper never guarded). Sections 0 to 0z7 cover what 0.6.0 to 0.28.2 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z7. New in 0.28.2: clip timing
+- [ ] Settings > About shows **Version 0.28.2**
+- [ ] Each edge tap: a few seconds later the screen says "Saved: Edge N"; the clip is about 18 seconds, tap 10 seconds in
+- [ ] Ruin: the clip starts about 10 seconds before hands off and runs to the end of the ruin
+- [ ] With Lock guard on, switching Wallpaper control off is instant
 
 ## 0z6. Fixed in 0.28.1: Quit for now finishes
 Turn on Backgrounds with the cycle set to 1 minute to test it.
@@ -526,6 +532,10 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.28.1 | Quit for now | User: "Seems to work now" |
+| 2026-10-08 | 0.28.1 | Full-screen clips (bedtime screen) | User: "Works" |
+| 2026-10-08 | 0.28.1 | Sessions: no replay | User: no video played afterwards, "which is good" |
+| 2026-10-08 | 0.28.1 | Sessions: edge clips | User: the edge was not recorded. Save note added in 0.28.2 to find out why |
 | 2026-10-08 | 0.28.0 | Quit for now | User: at about 5 minutes in, "she just closes my screen" and it never finishes. Likely her wallpaper cycle reloading the screen. Fixed in 0.28.1 |
 | 2026-10-08 | 0.27.4 | Session videos | User: videos in sessions felt spammed. Removed playback in sessions and the edge face; edge clips cut to 10 seconds each side; ruin is edge, countdown, hands off. In 0.28.0 |
 | 2026-10-08 | 0.27.3 | Punishment lockout length | User: the lockout reached over 4 hours. Failures stacked with no cap and no list of what failed. Her record and a 3 hour cap added in 0.27.4 |

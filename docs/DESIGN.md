@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.28.1 (fix: Quit for now no longer gets wiped partway through). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 97)
+> **Status:** v0.28.2 (clip timing: edges 10 s before and 8 s after your tap, ruins 10 s before hands off and the whole ruin; wallpaper never guarded). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 98)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -765,6 +765,14 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Unchanged:** the timings (about 10 minutes), screen off or leaving starts it over, never penalized
 - **Tests:** `LockGuardTest.kt` (when she holds still, older saves load). 236 unit tests passed locally
 
+### v0.28.2 (round 98, clip timing, a save note, wallpaper never guarded)
+- **Reported (testing v0.28.0 and v0.28.1):** edges weren't recorded. No replay after the ruin (good). Full-screen clips work. Quit for now seems to work now
+- **Asked:** an edge clip is 10 seconds before the edge and 5 to 10 after, so it shows the stroking and the edge. A ruin clip is 10 seconds before and 10 to 20 after, so it shows the whole ruin. CBT is filmed whole. And Lock guard must never lock the wallpaper settings
+- **Clip timing (`Clips.nextTake`, `Clips.BEFORE_MS`, `EDGE_AFTER_MS`, `RUIN_AFTER_MS`):** an edge clip keeps the 10 seconds before your tap and runs 8 seconds after. A ruin clip keeps the 10 seconds before hands off (the end of your edge and her 5 second countdown) and the whole ruin after it (19 seconds). CBT is unchanged: the whole count. The take rules moved from the session screen into `Clips.nextTake`, so they're unit tested
+- **Edges not saved:** no definite cause found in the code; the rules are now tested end to end. To find it on the phone, the session screen now shows a short note for 5 seconds each time a clip is saved ("Saved: Edge 2 · 34s to the edge") or couldn't be ("Couldn't save the edge clip")
+- **Wallpaper never guarded (`LockGuard.loosens`, `LockGuard.guardedPackage`):** switching Wallpaper control off no longer takes the 30 minute slow way; every wallpaper setting changes instantly, Lock guard or not. Her screen check never sends you away from the phone's own wallpaper screens (any package with "wallpaper" in its name)
+- **Tests:** `ClipsTest.kt` (edge take marked at your tap and kept 8 seconds, ruin marked at hands off and kept for the ruin, CBT whole, where the cut goes), `LockGuardTest.kt` (wallpaper never guarded). 240 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -1070,3 +1078,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 95, v0.28.0):** Sessions: no clips play during sessions any more (no watch break, no replay, no CBT loop) and no edge face photo. She still films ruins, edges and CBT. Edge clips are the 10 seconds before your tap and the 10 after. Every ruin goes: get to the edge, her countdown from 5, hands off. Details in section 8
 - **2026-10-08 (round 96, v0.28.1):** Fix. Quit for now was wiped about 5 minutes in, most likely by her background cycle: a new wallpaper makes Android 12+ reload every screen. The slow exit now keeps its progress through a reload, and while it's in front she holds still (no wallpaper change, none of her screens). Details in section 8
 - **2026-10-08 (round 97):** No code changes. User prefers test steps in the chat, not the test doc. From now on every update's reply says exactly how to test it; `docs/TESTING.md` stays as the record. Gave steps for v0.28.1 (Quit for now), v0.27.3 (full-screen clips) and v0.28.0 (sessions)
+- **2026-10-08 (round 98, v0.28.2):** Edge clips are now 10 seconds before your tap and 8 after; ruin clips 10 seconds before hands off and the whole ruin; CBT whole. The session screen shows when a clip is saved or couldn't be. Lock guard never guards her wallpaper settings. Test results: full-screen clips and the Quit for now fix work
