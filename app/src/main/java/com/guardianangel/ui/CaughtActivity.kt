@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.LockGuard
 import com.guardianangel.core.PornBlock
 import com.guardianangel.ui.theme.GuardianTheme
 
@@ -58,7 +59,9 @@ private fun CaughtScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
     val locked = PornBlock.locked(config, state, now)
 
     // Lock over, Porn block or she switched off, or Quit for now: she lets you go.
-    LaunchedEffect(locked) { if (!locked) onDone() }
+    // Round 96: not in the middle of your slow exit, so it isn't lost.
+    val quitting = LockGuard.quitting(state.quittingAt, now)
+    LaunchedEffect(locked, quitting) { if (!locked && !quitting) onDone() }
 
     val last = state.catches.lastOrNull()
     LockedOutScreen(

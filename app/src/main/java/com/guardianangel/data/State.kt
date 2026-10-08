@@ -56,6 +56,11 @@ data class GuardianState(
     val booked: BookedSession? = null,
     /** Round 79: her caption on each clip, by file name. Quit for now keeps them. */
     val clipCaptions: Map<String, String> = emptyMap(),
+    /**
+     * Round 96: the last sign of life from her slow exit screen (Quit for now and the other slow ways out),
+     * while it's in front. While it's fresh she holds still: no wallpaper change, no screens of hers.
+     */
+    val quittingAt: Long = 0,
     /** Round 94: her record of your failures, newest last. Quit for now keeps it. */
     val failures: List<FailureRecord> = emptyList(),
     /** Round 92: a clip she's playing full screen. The phone is hers until it ends. Quit for now clears it. */

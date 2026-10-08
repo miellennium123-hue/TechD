@@ -26,6 +26,17 @@ object LockGuard {
     /** She says something new this often while you wait. */
     const val TALK_EVERY_SECONDS = 15
 
+    /**
+     * Round 96: her slow exit screen checks in this often while it's in front, and she holds still
+     * (no wallpaper change, none of her screens over it) until it's been quiet for [QUIT_STALE_SECONDS].
+     */
+    const val QUIT_BEAT_SECONDS = 10
+    const val QUIT_STALE_SECONDS = 45
+
+    /** Round 96: her slow exit screen is open in front right now, so nothing of hers may interrupt it. */
+    fun quitting(quittingAt: Long, now: Long): Boolean =
+        quittingAt > 0 && now >= quittingAt && now - quittingAt < QUIT_STALE_SECONDS * 1_000L
+
     /** She's in charge right now: a chastity lock, a punishment, one of her rules, a summons, or her porn block lock. */
     fun locked(config: GuardianConfig, state: GuardianState, now: Long): Boolean =
         config.enabled && (

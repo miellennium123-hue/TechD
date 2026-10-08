@@ -102,8 +102,9 @@ private fun WatchScreen(onDone: () -> Unit) {
     fun finished() {
         ended = true
         val said = Guardian.clipEnded()
-        // A lock screen clip hands you straight back to her lock screen.
-        if (said == null) onDone() else line = said
+        // A lock screen clip hands you straight back to her lock screen. Round 96: not while you're on
+        // her slow exit screen; you get the Done button instead, so Quit for now isn't lost.
+        if (said == null && !Guardian.quitting()) onDone() else line = said.orEmpty()
     }
 
     // Nothing to watch (already watched, or the clip was deleted): she lets it go.

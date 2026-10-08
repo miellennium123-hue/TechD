@@ -52,6 +52,9 @@ object WallpaperController {
         lastCheck = t
         val c = Guardian.config.value
         if (!c.enabled || !c.wallpaper.on) return
+        // Round 96: a new wallpaper makes Android 12+ reload every open screen, which wiped her slow exit
+        // screen (Quit for now). She waits until you're done.
+        if (Guardian.quitting()) return
         if (c.wallpaper.cycle && Backgrounds.due(t, Guardian.state.value.wallpaperChangedAt, c.wallpaper.cycleMinutes)) {
             applyAsync(context, advance = true)
             return

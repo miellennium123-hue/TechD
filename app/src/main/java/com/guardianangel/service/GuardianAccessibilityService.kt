@@ -201,6 +201,7 @@ class GuardianAccessibilityService : AccessibilityService() {
      * Unlocking the phone shows her caught screen, not what she caught.
      */
     private fun onCaught() {
+        if (Guardian.quitting()) return
         performGlobalAction(GLOBAL_ACTION_HOME)
         startActivity(CaughtActivity.intent(this))
         updateMark()
@@ -346,6 +347,8 @@ class GuardianAccessibilityService : AccessibilityService() {
     }
 
     private fun evaluate(pkg: String) {
+        // Round 96: while her slow exit screen (Quit for now) is in front, none of her screens go over it.
+        if (Guardian.quitting()) return
         // Round 92: while her clip plays, back to it from anywhere except calls, Settings and her own screens.
         val exempt = pkg in protectedPackages || pkg in AppLists.NEVER_BLOCK
         if (Guardian.clipPullsBack(ownApp = pkg == packageName, launcher = pkg in launchers, exempt = exempt)) {
