@@ -490,4 +490,32 @@ class RulesTest {
             assertTrue("$line strict", Voice.hasLines(line, Mood.STRICT))
         }
     }
+
+    @Test
+    fun punishmentAddsUpButNeverPastTheCap() {
+        val now = 1_000_000_000L
+        val min = 60_000L
+        // Nothing left: just the length.
+        assertEquals(now + 30 * min, Rules.punishmentUntil(0, now, 30, 180))
+        // 2 hours left, 30 more: 2h 30m.
+        assertEquals(now + 150 * min, Rules.punishmentUntil(now + 120 * min, now, 30, 180))
+        // 2h 50m left, 30 more: stops at 3 hours.
+        assertEquals(now + 180 * min, Rules.punishmentUntil(now + 170 * min, now, 30, 180))
+        // Long punishments (3 hours) twice in a row: still 3 hours.
+        val first = Rules.punishmentUntil(0, now, 180, 180)
+        assertEquals(now + 180 * min, Rules.punishmentUntil(first, now, 180, 180))
+        // A cap below the minimum counts as 30 minutes.
+        assertEquals(now + 30 * min, Rules.punishmentUntil(0, now, 180, 0))
+    }
+
+    @Test
+    fun capPunishmentTrimsOnlyWhatsOver() {
+        val now = 1_000_000_000L
+        val min = 60_000L
+        assertEquals(now + 180 * min, Rules.capPunishment(now + 260 * min, now, 180))
+        assertEquals(now + 60 * min, Rules.capPunishment(now + 60 * min, now, 180))
+        // Over or never set: left alone.
+        assertEquals(0L, Rules.capPunishment(0, now, 180))
+        assertEquals(now - min, Rules.capPunishment(now - min, now, 180))
+    }
 }

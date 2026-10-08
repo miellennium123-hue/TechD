@@ -262,6 +262,8 @@ data class DegradationSettings(
 data class PunishmentSettings(
     val on: Boolean = false,
     val length: PunishmentLength = PunishmentLength.SHORT,
+    /** Round 94: failures add up, but the lockout never runs longer than this from now. */
+    val capMinutes: Int = 180,
 )
 
 enum class LockoutScope(val label: String) {

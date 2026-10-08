@@ -1,9 +1,19 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.27.3 (home screen block fix, locked clips). Sections 0 to 0z3 cover what 0.6.0 to 0.27.3 changed
+> **Version under test:** 0.27.4 (her record, punishment cap). Sections 0 to 0z4 cover what 0.6.0 to 0.27.4 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z4. New in 0.27.4: her record, punishment cap
+- [ ] Settings > About shows **Version 0.27.4**
+- [ ] An old lockout over 3 hours drops to 3 hours left after updating
+- [ ] Settings > When you fail shows **Never more than 3h** under Lockout as punishment; minus and plus move it by 30 minutes
+- [ ] Fail a few times (Short length): the lockout adds up but Home never shows more than 3 hours left
+- [ ] Home's Punishment lockout card shows the last failure and a **Her record** button
+- [ ] Her record lists each failure newest first with the time, the reason, and what it added (merit, punishment, chastity)
+- [ ] With Lock guard on during a lock, lowering the cap asks for the slow exit; raising it doesn't
+- [ ] **Clear her record** empties the list but the lockout time stays
 
 ## 0z3. New in 0.27.3: home screen block fix, locked clips
 - [ ] Settings > About shows **Version 0.27.3**
@@ -497,6 +507,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.27.3 | Punishment lockout length | User: the lockout reached over 4 hours. Failures stacked with no cap and no list of what failed. Her record and a 3 hour cap added in 0.27.4 |
 | 2026-10-08 | 0.27.2 | Lockout on the home screen | User: "Google is locked as punishment" over the home screen, had to close it three times. Widget events from the Google app counted as the app in front. Fixed in 0.27.3 |
 | 2026-10-07 | 0.27.1 | Edge face photo | User: the photo came from the camera aimed at their crotch, not their face. Fixed in 0.27.2 (front camera) |
 | 2026-10-06 | 0.21.0 | She peeks comments | User: screenshots save but no comments shown. Gallery pushed them off screen, Discreet hid them in notifications. Fixed in 0.21.1 |

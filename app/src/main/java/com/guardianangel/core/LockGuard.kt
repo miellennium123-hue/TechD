@@ -99,6 +99,7 @@ object LockGuard {
             off(before.sitesOn, after.sitesOn) ||
             off(before.degradation.on, after.degradation.on) ||
             off(before.punishment.on, after.punishment.on) ||
+            after.punishment.capMinutes < before.punishment.capMinutes ||
             off(!before.quietHours.on, !after.quietHours.on) ||
             !before.alwaysAllowed.containsAll(after.alwaysAllowed)
     }

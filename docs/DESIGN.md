@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.27.3 (Home screen block fix; her clips lock the phone until they end). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 93)
+> **Status:** v0.27.4 (her record of failures; punishment lockouts capped at 3 hours). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 94)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -739,6 +739,14 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Safety:** a clip that somehow never ends stops holding the phone after 10 minutes. Quit for now clears it
 - **Tests:** `ClipsTest.kt` (the cooldown, check-ins waiting it out, holding and pulling back, what's exempt). 232 unit tests passed locally
 
+### v0.27.4 (round 94, her record and a punishment cap)
+- **Asked:** after round 93 (a punishment lockout over 4 hours), the user picked "1 + 2 with a cap of 3 hours": her record of failures, and a cap on the punishment lockout
+- **Her record (`GuardianState.failures`, `FailureRecord`, `ui/RecordScreen.kt`):** every failure is saved with the time, what it was (`Failure.label`, written for all 14 failures) and what it cost: merit lost, punishment minutes added (after the cap) and chastity minutes added. She keeps the last 100. Open it from Home: the Punishment lockout card (which now also shows the last failure) and the Merit card (or a button of its own with merit off). Newest first, with a "last 24 hours" total. **Clear her record** only clears the list; nothing she added is taken back. Quit for now keeps it
+- **The cap (`PunishmentSettings.capMinutes`, default 180):** failures still add up, but the lockout never runs more than 3 hours from now (`Rules.punishmentUntil`). Settings > When you fail > **Never more than** (under Lockout as punishment), in 30 minute steps from 30 minutes to 24 hours. A lockout already longer (from before this version, or after you lower the cap) is cut down to it (`Rules.capPunishment`, on start and when the cap changes)
+- **Lock guard:** lowering the cap loosens her, so it's a guarded change like switching the lockout off. Raising it is fine
+- **Not stacking** (a new failure resets to the full length) was not picked, so failures still add up to the cap
+- **Tests:** `RulesTest.kt` (adding up, stopping at the cap, trimming an old lockout), `LockGuardTest.kt` (lowering the cap loosens, older saves get the 3 hour cap and an empty record). 234 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -900,7 +908,8 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Why:** every failure adds the punishment length (Short 30 minutes, Long 3 hours) on top of the time already left (`Guardian.fail`), with no cap. Long: two failures make 6 hours. Short: 8 failures make 4 hours
   - **Failures that can pile up without you noticing:** a check-in clip not opened within a minute (about every other check-in sends one since v0.24.1), a missed photo proof or task deadline, a Porn block catch (with "A catch is a failure" on), a missed booked session or owed ruin, an F grade (if set), "I couldn't stop" or missing her command in a session, and Lock guard tampering (her watch restarting during a lock, which some phones do on their own)
   - **Gap:** the app keeps no list of failures, so it can't show which ones it was
-  - **Proposed fixes, waiting on the user:** her record (a list of every failure with the time and what it added), a cap on the total punishment time, and/or not stacking (a new failure resets to the full length instead of adding)
+  - **Proposed fixes:** her record (a list of every failure with the time and what it added), a cap on the total punishment time, and/or not stacking (a new failure resets to the full length instead of adding)
+  - **Decided (round 94):** her record and a 3 hour cap, built in v0.27.4 (section 8). Failures still stack up to the cap
 
 - **E-stim control (round 82, plan only, no code):** the user asked whether she could control their DG-Lab Coyote 3.0. Answer: very likely. Build only when the user has the box to test
   - **How (Claude's pick): straight over Bluetooth.** DG-Lab publishes the Coyote 3.0 Bluetooth protocol (V3). The app sends one small command every 100 ms with both channels' strength (0 to 200) and the waveform, and a separate command sets a strength ceiling on the box (it has to be set again on every connection). No extra app, works offline, nothing leaves the phone. Needs Android's Bluetooth permissions
@@ -1039,3 +1048,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 91):** No code changes. User asked how the ruin compilation works. Answer: Her videos > Play her ruin reel plays every saved ruin clip back to back, oldest first, with her caption on each (a playlist, not one stitched file)
 - **2026-10-08 (round 92, v0.27.3):** Hotfix. Her block screen no longer comes up over your home screen because of the Google app's widgets. Clips she plays outside sessions (check-ins, her bedtime and Caught screens) now lock the phone full screen until they end, start over if the screen goes off, and come at most once every 5 minutes. Calls and Quit for now always work. Details in section 8
 - **2026-10-08 (round 93):** No code changes. User asked how a punishment lockout reached over 4 hours. Answer: every failure adds the punishment length on top of what's left, with no cap, and there's no failure log to see which. Proposed her record, a cap, or not stacking in section 10
+- **2026-10-08 (round 94, v0.27.4):** Her record: Home now shows every failure with the time, what it was, and what it cost (merit, punishment and chastity time). Punishment lockouts still add up but never run more than 3 hours from now (Settings > When you fail > Never more than). Longer lockouts are cut down to the cap. Details in section 8

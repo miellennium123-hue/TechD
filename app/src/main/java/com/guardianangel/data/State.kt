@@ -56,6 +56,8 @@ data class GuardianState(
     val booked: BookedSession? = null,
     /** Round 79: her caption on each clip, by file name. Quit for now keeps them. */
     val clipCaptions: Map<String, String> = emptyMap(),
+    /** Round 94: her record of your failures, newest last. Quit for now keeps it. */
+    val failures: List<FailureRecord> = emptyList(),
     /** Round 92: a clip she's playing full screen. The phone is hers until it ends. Quit for now clears it. */
     val forcedClip: ForcedClip? = null,
     /** Round 92: when her last full-screen clip ended, for her 5 minute cooldown. */
@@ -75,6 +77,20 @@ data class PeekRecord(
     val file: String,
     val app: String,
     val line: String,
+)
+
+/**
+ * One failure in her record (round 94): when, what for ([kind] is the Failure name, [label] what you
+ * see), and what it cost you: merit, punishment minutes added (after her cap) and chastity minutes added.
+ */
+@Serializable
+data class FailureRecord(
+    val at: Long,
+    val kind: String,
+    val label: String,
+    val merit: Int,
+    val punishmentMinutes: Int = 0,
+    val chastityMinutes: Int = 0,
 )
 
 /** Where a full-screen clip came from (round 92). */

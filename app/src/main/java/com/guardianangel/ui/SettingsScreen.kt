@@ -474,6 +474,15 @@ fun SettingsScreen(config: GuardianConfig, openAllowedApps: () -> Unit, openProm
             ChoiceChips(PunishmentLength.entries, config.punishment.length, { it.label }, config.punishment.on) { v ->
                 update { it.copy(punishment = it.punishment.copy(length = v)) }
             }
+            // Round 94: failures add up, but never past her cap.
+            Stepper(
+                "Never more than",
+                formatMinutes(config.punishment.capMinutes),
+                onMinus = { update { it.copy(punishment = it.punishment.copy(capMinutes = (it.punishment.capMinutes - 30).coerceIn(Rules.MIN_PUNISHMENT_CAP, Rules.MAX_PUNISHMENT_CAP))) } },
+                onPlus = { update { it.copy(punishment = it.punishment.copy(capMinutes = (it.punishment.capMinutes + 30).coerceIn(Rules.MIN_PUNISHMENT_CAP, Rules.MAX_PUNISHMENT_CAP))) } },
+                enabled = config.punishment.on,
+            )
+            Muted("Each failure adds its length on top of what's left, up to this much from now. Her record on Home shows every failure and what it added.")
         }
 
         GroupHeader("Her voice")
