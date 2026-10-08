@@ -66,6 +66,8 @@ data class GuardianState(
     /** Round 104: her release calendar while it's on (null when off), and her log of a year of days. */
     val release: ReleaseState? = null,
     val releaseLog: List<ReleaseLog> = emptyList(),
+    /** Round 105: the one-time check that her day fits your range has run. */
+    val releaseRefitDone: Boolean = false,
     /** Round 92: a clip she's playing full screen. The phone is hers until it ends. Quit for now clears it. */
     val forcedClip: ForcedClip? = null,
     /** Round 92: when her last full-screen clip ended, for her 5 minute cooldown. */

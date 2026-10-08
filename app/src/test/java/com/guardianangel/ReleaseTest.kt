@@ -223,4 +223,21 @@ class ReleaseTest {
         assertNull(state.release)
         assertTrue(state.releaseLog.isEmpty())
     }
+
+    @Test
+    fun aNewRangeTakesEffectNow() {
+        // Round 105: 11 days left, range set to 1 to 1: she picks tomorrow.
+        val r = ReleaseState(nextDay = today + 11, startDay = today - 2, notifiedDay = 5)
+        val one = ReleaseSettings(on = true, minDays = 1, maxDays = 1)
+        val refit = Release.refit(r, today, one, 0.5)!!
+        assertEquals(today + 1, refit.nextDay)
+        assertEquals(-1L, refit.notifiedDay)
+        // Still fits (3 to 14): her day stays.
+        assertNull(Release.refit(r, today, s, 0.5))
+        // A longer range she no longer fits: later.
+        assertEquals(today + 20, Release.refit(r, today, ReleaseSettings(minDays = 20, maxDays = 20), 0.5)!!.nextDay)
+        // Never on release day itself, or the day after.
+        assertNull(Release.refit(r.copy(nextDay = today), today, one, 0.5))
+        assertNull(Release.refit(r.copy(nextDay = today - 1), today, one, 0.5))
+    }
 }

@@ -1,9 +1,14 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.29.0 (release calendar). Sections 0 to 0z10 cover what 0.6.0 to 0.29.0 changed
+> **Version under test:** 0.29.1 (release range fix). Sections 0 to 0z11 cover what 0.6.0 to 0.29.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z11. Fixed in 0.29.1: a new range applies now
+- [ ] Settings > About shows **Version 0.29.1**
+- [ ] With your range at 1 to 1 day, after updating her calendar says tomorrow
+- [ ] Raise the shortest wait above the days left: she picks a later day right away
 
 ## 0z10. New in 0.29.0: her release calendar
 - [ ] Settings > About shows **Version 0.29.0**
@@ -556,6 +561,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.29.0 | Release range | User: set the range to 1 to 1 day, she still said 11 days. A new range only counted from her next pick. Fixed in 0.29.1 |
 | 2026-10-08 | 0.28.3 | Owed ruin | User: after the punishment ruin, Home still asked for a session (no date). Fixed in 0.28.4 |
 | 2026-10-08 | 0.28.3 | Sessions, edge clips, quickshot, owed ruin | User: "All tests pass" |
 | 2026-10-08 | 0.28.2 | Guided sessions | User: after the warm-up she quit the session back to its start screen. Her 1 minute wallpaper cycle reloading the screen. Fixed in 0.28.3 |
