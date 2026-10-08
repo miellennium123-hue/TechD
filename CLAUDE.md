@@ -21,7 +21,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 ## Testing with the user
 
-- `docs/TESTING.md` is the on-device test checklist. Update it when features change, and record results the user reports.
+- **Tell the user how to test in the chat** (round 97): every update's reply ends with short, exact test steps. The user doesn't read the test doc.
+- `docs/TESTING.md` is still the on-device test checklist (the record). Update it when features change, and record results the user reports.
 
 ## Building
 

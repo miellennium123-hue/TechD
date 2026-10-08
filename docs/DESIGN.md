@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.28.1 (fix: Quit for now no longer gets wiped partway through). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 96)
+> **Last updated:** 2026-10-08 (round 97)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -1069,3 +1069,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 94, v0.27.4):** Her record: Home now shows every failure with the time, what it was, and what it cost (merit, punishment and chastity time). Punishment lockouts still add up but never run more than 3 hours from now (Settings > When you fail > Never more than). Longer lockouts are cut down to the cap. Details in section 8
 - **2026-10-08 (round 95, v0.28.0):** Sessions: no clips play during sessions any more (no watch break, no replay, no CBT loop) and no edge face photo. She still films ruins, edges and CBT. Edge clips are the 10 seconds before your tap and the 10 after. Every ruin goes: get to the edge, her countdown from 5, hands off. Details in section 8
 - **2026-10-08 (round 96, v0.28.1):** Fix. Quit for now was wiped about 5 minutes in, most likely by her background cycle: a new wallpaper makes Android 12+ reload every screen. The slow exit now keeps its progress through a reload, and while it's in front she holds still (no wallpaper change, none of her screens). Details in section 8
+- **2026-10-08 (round 97):** No code changes. User prefers test steps in the chat, not the test doc. From now on every update's reply says exactly how to test it; `docs/TESTING.md` stays as the record. Gave steps for v0.28.1 (Quit for now), v0.27.3 (full-screen clips) and v0.28.0 (sessions)
