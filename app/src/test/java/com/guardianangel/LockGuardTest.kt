@@ -218,4 +218,17 @@ class LockGuardTest {
         val json = Json { ignoreUnknownKeys = true }
         assertEquals(0L, json.decodeFromString(GuardianState.serializer(), "{}").quittingAt)
     }
+
+    @Test
+    fun herWallpaperSettingsAreNeverGuarded() {
+        // Round 98: switching her wallpaper off, or any wallpaper detail, is always instant.
+        val strict = on.copy(lockGuard = true)
+        val withWallpaper = strict.copy(wallpaper = strict.wallpaper.copy(on = true))
+        assertFalse(LockGuard.loosens(withWallpaper, withWallpaper.copy(wallpaper = withWallpaper.wallpaper.copy(on = false))))
+        assertFalse(LockGuard.loosens(withWallpaper, withWallpaper.copy(wallpaper = withWallpaper.wallpaper.copy(cycle = false))))
+        // And she never sends you away from the phone's wallpaper screens.
+        assertFalse(LockGuard.guardedPackage("com.google.android.apps.wallpaper"))
+        assertFalse(LockGuard.guardedPackage("com.android.wallpaper.livepicker"))
+        assertTrue(LockGuard.guardedPackage("com.android.settings"))
+    }
 }

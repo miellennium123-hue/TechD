@@ -62,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.ClipKind
+import com.guardianangel.core.ClipRequest
 import com.guardianangel.core.Clips
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.Permissions
@@ -135,6 +136,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
     var clip by remember { mutableStateOf<File?>(null) }
     var clipFailed by remember { mutableStateOf(false) }
     var filmed by remember { mutableIntStateOf(0) }
+    // Round 98: a short note on screen when a clip is saved (or couldn't be).
+    var clipNote by remember { mutableStateOf<String?>(null) }
     // Round 79: what she counts, her deal, your finish on command, and remarks between commands.
     var edges by remember { mutableIntStateOf(0) }
     var fastestEdge by remember { mutableIntStateOf(0) }
@@ -254,6 +257,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     filmAll = owedRuin,
                     backCamera = settings.backCamera,
                     voice = voice,
+                    clipNote = clipNote,
+                    onClipNoteShown = { clipNote = null },
                     secretLength = !quick && running?.secretLength == true,
                     sizeNote = sizeNote,
                     remark = remark,
@@ -287,6 +292,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                         advance()
                     },
                     onClip = { take, file ->
+                        clipNote = if (file != null) "Saved: ${take.caption.ifBlank { take.kind.label }}" else "Couldn't save the ${take.kind.label.lowercase()} clip"
                         if (file != null) {
                             filmed++
                             // Her caption on what she just saved.
@@ -463,6 +469,8 @@ private fun Running(
     filmAll: Boolean,
     backCamera: Boolean,
     voice: SessionVoice?,
+    clipNote: String?,
+    onClipNoteShown: () -> Unit,
     secretLength: Boolean,
     sizeNote: String?,
     remark: String?,
@@ -539,53 +547,14 @@ private fun Running(
         onNext()
     }
 
-    // Round 95: what she films. One take can run across commands: a ruin from 10 seconds before your edge,
-    // through her countdown, to the ruin; an edge until 10 seconds after you tap. The camera cuts the start.
+    // Round 95: what she films. One take can run across commands: a ruin from its edge, through her
+    // countdown, to the end of the ruin; an edge until 8 seconds after you tap. Round 98: the rules are in
+    // Clips.nextTake (tested); the camera cuts each clip to start 10 seconds before its moment.
     val filmSettings = if (filmAll) config.session.copy(filmTasks = true) else config.session
     var take by remember { mutableStateOf<ClipRequest?>(null) }
     LaunchedEffect(index, step) {
-        val t = System.currentTimeMillis()
-        // You just left an edge (your tap, or her time ran out): she marks the moment.
-        val prev = take?.let { p ->
-            if (p.markAt == 0L && p.id == index - 1 && steps.getOrNull(index - 1)?.kind == StepKind.EDGE) {
-                val edge = p.kind == ClipKind.EDGE
-                p.copy(
-                    markAt = t,
-                    stopAt = if (edge) t + Clips.EDGE_AFTER_MS else p.stopAt,
-                    caption = if (edge) Clips.caption(ClipKind.EDGE, p.number, ((t - p.startedAt) / 1_000).toInt()) else p.caption,
-                )
-            } else {
-                p
-            }
-        }
-        val wanted = Clips.take(steps, index, filmSettings)
-        take = when {
-            // The same take going on: at the ruin, it stops just before the ruin's time is up.
-            wanted != null && prev != null && prev.id == wanted.id ->
-                if (step.kind == StepKind.RUIN) prev.copy(stopAt = t + (Session.RUIN_CLIP_SECONDS - 1) * 1_000L) else prev
-            wanted != null -> {
-                val number = when (wanted.kind) {
-                    ClipKind.RUIN -> SessionClips.infos(context).count { it.kind == ClipKind.RUIN } + 1
-                    ClipKind.EDGE -> edgeNumber
-                    else -> 0
-                }
-                ClipRequest(
-                    id = wanted.id,
-                    kind = wanted.kind,
-                    startedAt = t,
-                    stopAt = if (step.kind == StepKind.RUIN) t + (Session.RUIN_CLIP_SECONDS - 1) * 1_000L else 0,
-                    number = number,
-                    caption = when (wanted.kind) {
-                        ClipKind.RUIN -> Clips.caption(ClipKind.RUIN, number, edges = edgeNumber)
-                        ClipKind.CBT -> Clips.caption(ClipKind.CBT, 0, reps = step.reps)
-                        else -> Clips.caption(wanted.kind, number)
-                    },
-                )
-            }
-            // An edge's 10 seconds after your tap.
-            prev != null && prev.markAt > 0 && prev.stopAt > t -> prev
-            else -> null
-        }
+        val ruins = SessionClips.infos(context).count { it.kind == ClipKind.RUIN }
+        take = Clips.nextTake(take, steps, index, filmSettings, System.currentTimeMillis(), ruinNumber = ruins + 1)
     }
     LaunchedEffect(take?.id, take?.stopAt) {
         val stopAt = take?.stopAt ?: 0L
@@ -709,6 +678,12 @@ private fun Running(
         }
     }
 
+    LaunchedEffect(clipNote) {
+        if (clipNote == null) return@LaunchedEffect
+        delay(5_000)
+        onClipNoteShown()
+    }
+
     // The chapter, time left and her words.
     val header: @Composable ColumnScope.() -> Unit = {
         if (chapter.isNotBlank()) {
@@ -721,6 +696,7 @@ private fun Running(
                 "locked".takeIf { caged },
             ).joinToString(" · "),
         )
+        clipNote?.let { Text(it, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         if (!dark) {
             val words = listOfNotNull(line.ifBlank { null }, comment).joinToString("\n")
             if (bigText) {

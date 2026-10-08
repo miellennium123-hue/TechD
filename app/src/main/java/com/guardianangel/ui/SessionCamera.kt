@@ -28,27 +28,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.guardianangel.core.ClipKind
+import com.guardianangel.core.ClipRequest
 import com.guardianangel.core.ClipTrim
 import com.guardianangel.core.Clips
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.SessionClips
 import java.io.File
-
-/**
- * One take (round 95: it can run across several commands while [id] stays the same). [startedAt]: when
- * it began. [markAt]: your edge tap; the saved clip starts 10 seconds before it (0 keeps it all).
- * [stopAt]: when it stops on its own (0: when the session moves on). [number] and [caption]: her caption.
- */
-data class ClipRequest(
-    val id: Int,
-    val kind: ClipKind,
-    val startedAt: Long = 0,
-    val markAt: Long = 0,
-    val stopAt: Long = 0,
-    val number: Int = 0,
-    val caption: String = "",
-)
 
 /** A recording in progress: its latest request (for the mark and caption) and when it was stopped. */
 private class Take(request: ClipRequest) {
@@ -61,7 +46,7 @@ private class Take(request: ClipRequest) {
  * default, [back] for the back one. It stays on the whole session; while [record] is set it films into
  * Her videos, with sound if the microphone is allowed, and reports the file (null if it failed). A new
  * [ClipRequest.id] starts a new clip; null stops. Round 95: no more edge face photos, and a clip with a
- * mark is cut to start 10 seconds before it. Nothing else is ever saved. No checks of what it sees.
+ * mark is cut to start 10 seconds before it (Clips.nextTake decides the takes). Nothing else is ever saved. No checks of what it sees.
  */
 @Composable
 fun SessionCamera(

@@ -24,6 +24,22 @@ data class ClipInfo(val name: String, val at: Long, val kind: ClipKind)
 data class ClipTake(val id: Int, val kind: ClipKind)
 
 /**
+ * One take as the camera films it (round 95, moved here in round 98 so it's tested). It runs across
+ * commands while [id] stays the same. [startedAt]: when it began. [markAt]: the moment that matters
+ * (your edge tap, or hands off in a ruin); the saved clip starts [Clips.BEFORE_MS] before it, 0 keeps it
+ * all. [stopAt]: when it stops on its own (0: when the session moves on). [number] and [caption]: hers.
+ */
+data class ClipRequest(
+    val id: Int,
+    val kind: ClipKind,
+    val startedAt: Long = 0,
+    val markAt: Long = 0,
+    val stopAt: Long = 0,
+    val number: Int = 0,
+    val caption: String = "",
+)
+
+/**
  * Her videos (round 77): what she films during sessions (ruins always, edges and CBT if you let her),
  * where they're kept (private storage, apart from proof photos), and when she makes you watch one.
  * Pure Kotlin, tested in ClipsTest. The files themselves are in core/Files (SessionClips).
@@ -49,9 +65,14 @@ object Clips {
     /** Round 92: a full-screen clip stops holding the phone after this long, in case it never ends. */
     const val FORCED_MAX_MS = 10 * MINUTE
 
-    /** Round 95: an edge clip keeps this long before your "I'm at the edge" tap, and this long after. */
-    const val EDGE_BEFORE_MS = 10_000L
-    const val EDGE_AFTER_MS = 10_000L
+    /**
+     * Round 98: every edge and ruin clip keeps this long before the moment that matters. An edge clip
+     * runs [EDGE_AFTER_MS] past your tap; a ruin clip runs [RUIN_AFTER_MS] past hands off (the whole ruin).
+     * CBT is filmed whole.
+     */
+    const val BEFORE_MS = 10_000L
+    const val EDGE_AFTER_MS = 8_000L
+    const val RUIN_AFTER_MS = (Session.RUIN_CLIP_SECONDS - 1) * 1_000L
     /** Round 95: she only cuts a clip when there's at least this much to cut. */
     const val MIN_TRIM_MS = 1_000L
 
@@ -137,12 +158,63 @@ object Clips {
     }
 
     /**
-     * Round 95: where to cut the start of a clip so it begins [EDGE_BEFORE_MS] before your edge tap
-     * ([markAt]). [durationMs] is the whole recording, which ended at [stoppedAt]. 0 keeps it all.
+     * Round 98: what she's filming once the session reaches command [index] at [now], given the take
+     * so far ([prev]). Leaving an edge marks your tap and keeps filming [EDGE_AFTER_MS]. A ruin's take
+     * starts at its edge (so there's enough before) and marks hands off when the ruin starts, filming the
+     * whole ruin. A new take replaces one still running. [ruinNumber]: which ruin this will be.
+     */
+    fun nextTake(prev: ClipRequest?, steps: List<Step>, index: Int, settings: SessionSettings, now: Long, ruinNumber: Int): ClipRequest? {
+        val step = steps.getOrNull(index) ?: return null
+        val marked = prev?.let { p ->
+            if (p.kind == ClipKind.EDGE && p.markAt == 0L && p.id == index - 1 && steps.getOrNull(index - 1)?.kind == StepKind.EDGE) {
+                p.copy(
+                    markAt = now,
+                    stopAt = now + EDGE_AFTER_MS,
+                    caption = caption(ClipKind.EDGE, p.number, ((now - p.startedAt) / 1_000).toInt()),
+                )
+            } else {
+                p
+            }
+        }
+        val wanted = take(steps, index, settings)
+        val handsOff = step.kind == StepKind.RUIN
+        return when {
+            wanted != null && marked != null && marked.id == wanted.id ->
+                if (handsOff) marked.copy(markAt = now, stopAt = now + RUIN_AFTER_MS) else marked
+            wanted != null -> {
+                val edgesSoFar = steps.take(index + 1).count { it.kind == StepKind.EDGE }
+                val number = when (wanted.kind) {
+                    ClipKind.RUIN -> ruinNumber
+                    ClipKind.EDGE -> edgesSoFar
+                    else -> 0
+                }
+                ClipRequest(
+                    id = wanted.id,
+                    kind = wanted.kind,
+                    startedAt = now,
+                    markAt = if (handsOff) now else 0,
+                    stopAt = if (handsOff) now + RUIN_AFTER_MS else 0,
+                    number = number,
+                    caption = when (wanted.kind) {
+                        ClipKind.RUIN -> caption(ClipKind.RUIN, number, edges = edgesSoFar)
+                        ClipKind.CBT -> caption(ClipKind.CBT, 0, reps = step.reps)
+                        else -> caption(wanted.kind, number)
+                    },
+                )
+            }
+            // An edge's last seconds after your tap.
+            marked != null && marked.markAt > 0 && marked.stopAt > now -> marked
+            else -> null
+        }
+    }
+
+    /**
+     * Round 95: where to cut the start of a clip so it begins [BEFORE_MS] before its mark ([markAt]).
+     * [durationMs] is the whole recording, which ended at [stoppedAt]. 0 keeps it all.
      */
     fun trimStartMs(durationMs: Long, stoppedAt: Long, markAt: Long): Long {
         if (markAt <= 0 || durationMs <= 0) return 0
-        val keep = (stoppedAt - markAt).coerceAtLeast(0) + EDGE_BEFORE_MS
+        val keep = (stoppedAt - markAt).coerceAtLeast(0) + BEFORE_MS
         return (durationMs - keep).coerceAtLeast(0).takeIf { it >= MIN_TRIM_MS } ?: 0
     }
 
