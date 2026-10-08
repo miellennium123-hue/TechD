@@ -26,6 +26,8 @@ import kotlin.concurrent.thread
 object WallpaperController {
     @Volatile private var applying = false
     private var lastCheck = 0L
+    /** Round 104: the release countdown last drawn on her wallpaper (null: none). */
+    @Volatile private var drawnDays: Long? = null
 
     fun applyIfWanted(context: Context) {
         val c = Guardian.config.value
@@ -62,6 +64,11 @@ object WallpaperController {
             applyAsync(context, advance = true)
             return
         }
+        // Round 104: a new day (or the calendar switched on or off) redraws her release countdown.
+        if (Release.wallpaperDays(c, Guardian.state.value.release, Guardian.today()) != drawnDays) {
+            applyAsync(context)
+            return
+        }
         if (c.wallpaper.mode != WallpaperMode.SET_AND_LOCK) return
         val id = runCatching {
             WallpaperManager.getInstance(context).getWallpaperId(WallpaperManager.FLAG_SYSTEM)
@@ -89,8 +96,11 @@ object WallpaperController {
             val pool = pool(context)
             val last = Guardian.state.value.wallpaperIndex
             val index = if (advance || last < 0) Backgrounds.next(last, pool.size) else Backgrounds.current(last, pool.size)
-            val bitmap = render(context, pool[index], w, h) ?: draw(Backgrounds.BUILT_IN.first(), w, h)
+            val days = Release.wallpaperDays(Guardian.config.value, Guardian.state.value.release, Guardian.today())
+            val base = render(context, pool[index], w, h) ?: draw(Backgrounds.BUILT_IN.first(), w, h)
+            val bitmap = days?.let { countdown(base, it) } ?: base
             wm.setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
+            drawnDays = days
             val id = wm.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
             Guardian.state.update { it.copy(wallpaperId = id, wallpaperIndex = index, wallpaperChangedAt = Guardian.now()) }
         }
@@ -100,6 +110,36 @@ object WallpaperController {
         is BackgroundRef.BuiltIn -> draw(Backgrounds.builtIn(ref.id), w, h)
         is BackgroundRef.Asset -> AssetImages.wallpaper(context, ref.name)
         is BackgroundRef.Custom -> ProofFiles.load(CustomBackgrounds.file(context, ref.fileName), maxOf(w, h))
+    }
+
+    /**
+     * Round 104: her release countdown on the wallpaper, low on the screen over a soft dark band so it
+     * reads on any background: "N days" and "until she lets you".
+     */
+    private fun countdown(base: Bitmap, days: Long): Bitmap {
+        val bmp = if (base.isMutable) base else base.copy(Bitmap.Config.ARGB_8888, true)
+        val w = bmp.width.toFloat()
+        val h = bmp.height.toFloat()
+        val canvas = Canvas(bmp)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val top = h * 0.74f
+        paint.shader = LinearGradient(0f, top, 0f, h * 0.9f, 0x00000000, 0x99000000.toInt(), Shader.TileMode.CLAMP)
+        canvas.drawRect(0f, top, w, h * 0.9f, paint)
+        paint.shader = null
+        paint.textAlign = Paint.Align.CENTER
+        paint.color = 0xF2FFFFFF.toInt()
+        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+        paint.textSize = w * 0.11f
+        val big = when (days) {
+            0L -> "Today"
+            1L -> "1 day"
+            else -> "$days days"
+        }
+        canvas.drawText(big, w / 2f, h * 0.84f, paint)
+        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.ITALIC)
+        paint.textSize = w * 0.04f
+        canvas.drawText(if (days == 0L) "is release day" else "until she lets you", w / 2f, h * 0.875f, paint)
+        return bmp
     }
 
     /** One of her built-in designs: a gradient, a soft glow, her emblem, and her words. Also used for previews. */

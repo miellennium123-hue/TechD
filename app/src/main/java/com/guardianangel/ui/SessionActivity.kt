@@ -82,6 +82,7 @@ import com.guardianangel.data.SessionEnding
 import com.guardianangel.data.SessionOutcome
 import com.guardianangel.data.SessionRecord
 import com.guardianangel.data.SessionTheme
+import com.guardianangel.data.WheelResult
 import com.guardianangel.ui.theme.GuardianTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -98,22 +99,27 @@ class SessionActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
         )
         val quick = intent.getBooleanExtra(EXTRA_QUICK, false)
-        setContent { GuardianTheme { SessionScreen(quick) { finish() } } }
+        val release = intent.getStringExtra(EXTRA_RELEASE)?.let { runCatching { WheelResult.valueOf(it) }.getOrNull() }
+        setContent { GuardianTheme { SessionScreen(quick, release) { finish() } } }
     }
 
     companion object {
         private const val EXTRA_QUICK = "quick"
+        private const val EXTRA_RELEASE = "release"
 
-        /** [quick]: a quickshot (round 49), always ruined and always filmed. */
-        fun intent(context: Context, quick: Boolean = false): Intent =
-            Intent(context, SessionActivity::class.java).putExtra(EXTRA_QUICK, quick)
+        /**
+         * [quick]: a quickshot (round 49), always ruined and always filmed. [release] (round 104): her
+         * release session, as her wheel said (permission or a ruin).
+         */
+        fun intent(context: Context, quick: Boolean = false, release: WheelResult? = null): Intent =
+            Intent(context, SessionActivity::class.java).putExtra(EXTRA_QUICK, quick).putExtra(EXTRA_RELEASE, release?.name)
     }
 }
 
 private enum class SessionPhase { SETUP, RUNNING, HONOR, DONE }
 
 @Composable
-private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
+private fun SessionScreen(quick: Boolean, release: WheelResult?, onDone: () -> Unit) {
     val context = LocalContext.current
     val config by Guardian.config.flow.collectAsState()
     val settings = config.session
@@ -175,7 +181,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                 filmed = filmed,
                 fastestEdge = fastestEdge,
                 deal = deal,
-                theme = running?.takeIf { !s.quick || it.reason == SessionReason.RUIN_OWED }?.theme ?: SessionTheme.YOURS,
+                theme = running?.takeIf { release == null && (!s.quick || it.reason == SessionReason.RUIN_OWED) }?.theme ?: SessionTheme.YOURS,
+                release = release != null,
             ),
         )
         finalLine = line
@@ -206,12 +213,14 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             when {
-                !config.session.on || !config.enabled -> {
+                // Round 104: her release session runs even with Guided sessions off.
+                (!config.session.on && release == null) || !config.enabled -> {
                     Text("Guided sessions are off. Turn them on in Guided sessions on the home screen, with her switched on.", Modifier.weight(1f))
                     Button(onClick = onDone) { Text("Close") }
                 }
                 phase == SessionPhase.SETUP -> Setup(
                     quick = quick,
+                    release = release,
                     plan = plan,
                     chosen = chosen,
                     onTheme = { chosen = it },
@@ -223,7 +232,10 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     onAllowCamera = { permission.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)) },
                     modifier = Modifier.weight(1f),
                     onStart = {
-                        val built = if (plan.reason == SessionReason.RUIN_OWED) {
+                        val built = if (release != null) {
+                            // Round 104: her release session, as her wheel said.
+                            Session.release(caged, ruined = release == WheelResult.RUIN, random = Random.Default)
+                        } else if (plan.reason == SessionReason.RUIN_OWED) {
                             // Round 85: what you owe her after a catch is always her CBT quickshot.
                             Session.owedRuin(caged, Random.Default)
                         } else if (quick) {
@@ -232,15 +244,16 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                             Session.build(plan.settings, caged, Random.Default, soundingReady, sizeKnown = sizeNote != null)
                         }
                         running = plan
-                        if (!quick && plan.reason == SessionReason.CHOSEN && chosen != settings.theme) {
+                        if (!quick && release == null && plan.reason == SessionReason.CHOSEN && chosen != settings.theme) {
                             Guardian.updateConfig { c -> c.copy(session = c.session.copy(theme = chosen)) }
                         }
                         Guardian.sessionStarted()
                         // Her opening remarks: a punishment, her training week, or tonight's theme.
+                        val normal = !quick && release == null
                         remark = listOfNotNull(
-                            Guardian.say(Line.SESSION_PUNISH_START).takeIf { !quick && plan.reason == SessionReason.PUNISHMENT },
-                            "Tonight: ${plan.theme.label}.".takeIf { !quick && plan.theme != SessionTheme.YOURS && plan.reason == SessionReason.CHOSEN },
-                            (Guardian.line(Line.SESSION_TRAINING) + " Week ${plan.week}.").takeIf { !quick && plan.week > 0 },
+                            Guardian.say(Line.SESSION_PUNISH_START).takeIf { normal && plan.reason == SessionReason.PUNISHMENT },
+                            "Tonight: ${plan.theme.label}.".takeIf { normal && plan.theme != SessionTheme.YOURS && plan.reason == SessionReason.CHOSEN },
+                            (Guardian.line(Line.SESSION_TRAINING) + " Week ${plan.week}.").takeIf { normal && plan.week > 0 },
                         ).joinToString(" ").ifBlank { null }
                         script = built
                         steps = built.steps
@@ -259,7 +272,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     voice = voice,
                     clipNote = clipNote,
                     onClipNoteShown = { clipNote = null },
-                    secretLength = !quick && running?.secretLength == true,
+                    secretLength = !quick && release == null && running?.secretLength == true,
                     sizeNote = sizeNote,
                     remark = remark,
                     onRemarkShown = { remark = null },
@@ -364,6 +377,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
 @Composable
 private fun Setup(
     quick: Boolean,
+    release: WheelResult?,
     plan: SessionPlanned,
     chosen: SessionTheme,
     onTheme: (SessionTheme) -> Unit,
@@ -381,7 +395,22 @@ private fun Setup(
     val kinks = Session.kinks(s, caged)
     val (p, r, d) = Session.endingShares(s, caged)
     Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (plan.reason == SessionReason.RUIN_OWED) {
+        if (release != null) {
+            // Round 104: release day.
+            Text(
+                if (release == WheelResult.RUIN) "Release day: a ruin" else "Your release",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                if (release == WheelResult.RUIN) {
+                    "Her wheel said ruin. Her warm-up, strokes and an edge, then the edge, her countdown, and hands off. She films it."
+                } else {
+                    "Her wheel said yes. Her warm-up, strokes and an edge, then her countdown, and you cum on her exact command. She films it."
+                },
+            )
+            if (caged) Muted("You're locked: she has you take the cage off first, and put it back on after.")
+        } else if (plan.reason == SessionReason.RUIN_OWED) {
             // Round 85: the ruin you owe her after a Porn block catch, whichever button you came from.
             Text("The ruin you owe her", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.error)
             Text(

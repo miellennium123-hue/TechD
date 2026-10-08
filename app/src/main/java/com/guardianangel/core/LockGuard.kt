@@ -1,6 +1,7 @@
 package com.guardianangel.core
 
 import com.guardianangel.data.GuardianConfig
+import com.guardianangel.data.ReleaseSettings
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.LockoutScope
 import com.guardianangel.data.PornBlockSettings
@@ -70,6 +71,18 @@ object LockGuard {
      * Round 98: her wallpaper settings are never guarded (the user's choice); they always change instantly.
      * Anything that makes her stricter, and every other detail, changes instantly.
      */
+    /**
+     * Round 104: her release calendar loosens when it's switched off, a hidden date is shown, the range
+     * gets shorter, her wheel gives permission more often, or her reel is switched off.
+     */
+    fun releaseLoosens(before: ReleaseSettings, after: ReleaseSettings): Boolean =
+        (before.on && !after.on) ||
+            (!before.showDate && after.showDate) ||
+            after.minDays < before.minDays ||
+            after.maxDays < before.maxDays ||
+            Release.permissionChance(after) > Release.permissionChance(before) ||
+            (before.reel && !after.reel)
+
     fun loosens(before: GuardianConfig, after: GuardianConfig): Boolean {
         fun off(b: Boolean, a: Boolean) = b && !a
         val b = before.lockouts
@@ -94,6 +107,7 @@ object LockGuard {
             off(before.session.ruinAfterCatch, after.session.ruinAfterCatch) ||
             off(before.session.booked, after.session.booked) ||
             off(before.session.training, after.session.training) ||
+            releaseLoosens(before.release, after.release) ||
             off(before.report.on, after.report.on) ||
             off(before.pornBlock.on, after.pornBlock.on) ||
             off(before.pornBlock.lockScreen, after.pornBlock.lockScreen) ||

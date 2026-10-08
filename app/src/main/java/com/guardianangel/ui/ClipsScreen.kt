@@ -153,9 +153,9 @@ fun ClipsScreen() {
     }
 }
 
-/** Round 79: every ruin clip back to back, with her caption on each, until the last one ends. */
+/** Round 79: every ruin clip back to back, with her caption on each, until the last one ends. Also her release day reel (round 104). */
 @Composable
-private fun RuinReel(clips: List<ClipInfo>, captions: Map<String, String>, onDone: () -> Unit) {
+fun RuinReel(clips: List<ClipInfo>, captions: Map<String, String>, onDone: () -> Unit) {
     val context = LocalContext.current
     var at by remember { mutableIntStateOf(0) }
     Dialog(onDismissRequest = onDone) {

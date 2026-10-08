@@ -12,6 +12,8 @@ enum class ClipKind(val label: String, val tag: String, val ext: String = "mp4")
     CBT("CBT", "cbt"),
     /** Round 79: her snapshot of your face at your edge tap. Round 95: she stopped taking them; old ones still show. */
     FACE("Edge face", "face", "jpg"),
+    /** Round 104: your release on her command, from her countdown to the end. */
+    RELEASE("Release", "release"),
     ;
 
     val video: Boolean get() = ext == "mp4"
@@ -73,6 +75,8 @@ object Clips {
     const val BEFORE_MS = 10_000L
     const val EDGE_AFTER_MS = 8_000L
     const val RUIN_AFTER_MS = (Session.RUIN_CLIP_SECONDS - 1) * 1_000L
+    /** Round 104: a release clip runs this long past her command. */
+    const val RELEASE_AFTER_MS = 25_000L
     /** Round 95: she only cuts a clip when there's at least this much to cut. */
     const val MIN_TRIM_MS = 1_000L
 
@@ -139,6 +143,7 @@ object Clips {
      */
     fun take(steps: List<Step>, index: Int, settings: SessionSettings): ClipTake? {
         ruinStart(steps, index)?.let { return ClipTake(it, ClipKind.RUIN) }
+        releaseStart(steps, index)?.let { return ClipTake(it, ClipKind.RELEASE) }
         val kind = steps.getOrNull(index)?.let { films(it.kind, settings) } ?: return null
         return ClipTake(index, kind)
     }
@@ -160,13 +165,32 @@ object Clips {
         }
     }
 
+    /** Round 104: if [index] is her countdown to cum or the finish after it, the countdown's index. Always filmed. */
+    fun releaseStart(steps: List<Step>, index: Int): Int? {
+        fun kind(i: Int) = steps.getOrNull(i)?.kind
+        fun release(i: Int) = kind(i) == StepKind.COUNTDOWN && kind(i + 1) == StepKind.FINISH
+        return when (kind(index)) {
+            StepKind.COUNTDOWN -> index.takeIf { release(it) }
+            StepKind.FINISH -> (index - 1).takeIf { release(it) }
+            else -> null
+        }
+    }
+
     /**
      * Round 98: what she's filming once the session reaches command [index] at [now], given the take
      * so far ([prev]). Leaving an edge marks your tap and keeps filming [EDGE_AFTER_MS]. A ruin's take
      * starts at its edge (so there's enough before) and marks hands off when the ruin starts, filming the
      * whole ruin. A new take replaces one still running. [ruinNumber]: which ruin this will be.
      */
-    fun nextTake(prev: ClipRequest?, steps: List<Step>, index: Int, settings: SessionSettings, now: Long, ruinNumber: Int): ClipRequest? {
+    fun nextTake(
+        prev: ClipRequest?,
+        steps: List<Step>,
+        index: Int,
+        settings: SessionSettings,
+        now: Long,
+        ruinNumber: Int,
+        releaseNumber: Int = 1,
+    ): ClipRequest? {
         val step = steps.getOrNull(index) ?: return null
         val marked = prev?.let { p ->
             if (p.kind == ClipKind.EDGE && p.markAt == 0L && p.id == index - 1 && steps.getOrNull(index - 1)?.kind == StepKind.EDGE) {
@@ -180,14 +204,17 @@ object Clips {
             }
         }
         val wanted = take(steps, index, settings)
-        val handsOff = step.kind == StepKind.RUIN
+        // The moment that matters: hands off in a ruin, her command in a release (round 104).
+        val handsOff = step.kind == StepKind.RUIN || step.kind == StepKind.FINISH
+        val after = if (step.kind == StepKind.FINISH) RELEASE_AFTER_MS else RUIN_AFTER_MS
         return when {
             wanted != null && marked != null && marked.id == wanted.id ->
-                if (handsOff) marked.copy(markAt = now, stopAt = now + RUIN_AFTER_MS) else marked
+                if (handsOff) marked.copy(markAt = now, stopAt = now + after) else marked
             wanted != null -> {
                 val edgesSoFar = steps.take(index + 1).count { it.kind == StepKind.EDGE }
                 val number = when (wanted.kind) {
                     ClipKind.RUIN -> ruinNumber
+                    ClipKind.RELEASE -> releaseNumber
                     ClipKind.EDGE -> edgesSoFar
                     else -> 0
                 }
@@ -196,7 +223,7 @@ object Clips {
                     kind = wanted.kind,
                     startedAt = now,
                     markAt = if (handsOff) now else 0,
-                    stopAt = if (handsOff) now + RUIN_AFTER_MS else 0,
+                    stopAt = if (handsOff) now + after else 0,
                     number = number,
                     caption = when (wanted.kind) {
                         ClipKind.RUIN -> caption(ClipKind.RUIN, number, edges = edgesSoFar)
@@ -241,6 +268,7 @@ object Clips {
         }
         ClipKind.CBT -> "CBT · $reps ${if (reps == 1) "slap" else "slaps"}"
         ClipKind.FACE -> "Your face at edge $number"
+        ClipKind.RELEASE -> "Release #$number"
     }
 
     /** Captions of clips that still exist. */
