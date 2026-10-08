@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.28.3 (sessions no longer reset by her wallpaper; quickshot and owed ruin are straight strokes to the ruin). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 99)
+> **Last updated:** 2026-10-08 (round 100)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -1089,3 +1089,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 97):** No code changes. User prefers test steps in the chat, not the test doc. From now on every update's reply says exactly how to test it; `docs/TESTING.md` stays as the record. Gave steps for v0.28.1 (Quit for now), v0.27.3 (full-screen clips) and v0.28.0 (sessions)
 - **2026-10-08 (round 98, v0.28.2):** Edge clips are now 10 seconds before your tap and 8 after; ruin clips 10 seconds before hands off and the whole ruin; CBT whole. The session screen shows when a clip is saved or couldn't be. Lock guard never guards her wallpaper settings. Test results: full-screen clips and the Quit for now fix work
 - **2026-10-08 (round 99, v0.28.3):** Fix: guided sessions no longer restart partway through. Her wallpaper cycle reloaded the screen; she now never changes the wallpaper while her own screens are open. Quickshots and the owed ruin are straight strokes to the ruin: tap when you're about to cum, then hands off. No edge, no countdown
+- **2026-10-08 (round 100):** No code changes. User tested v0.28.3: all tests pass (sessions run to the end with the wallpaper cycle on, edge clips save, quickshot and owed ruin are straight strokes to the ruin). Logged in docs/TESTING.md
