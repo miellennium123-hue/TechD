@@ -75,7 +75,7 @@ class GuardianAccessibilityService : AccessibilityService() {
             refreshPackages()
             currentPackage?.let { evaluate(it) }
             startVisitTick() // in case a check-in started a visit since the last event
-            WallpaperController.enforce(this@GuardianAccessibilityService)
+            WallpaperController.enforce(this@GuardianAccessibilityService, currentPackage == packageName)
             updateGuardEvents()
             updateMark()
             peekIfDue()
@@ -313,7 +313,7 @@ class GuardianAccessibilityService : AccessibilityService() {
             evaluate(pkg)
         }
         updateMark()
-        WallpaperController.enforce(this)
+        WallpaperController.enforce(this, currentPackage == packageName)
     }
 
     /**

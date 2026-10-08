@@ -45,16 +45,19 @@ object WallpaperController {
         }
     }
 
-    /** Called often from the accessibility service; checks at most every 20 seconds. */
-    fun enforce(context: Context) {
+    /**
+     * Called often from the accessibility service; checks at most every 20 seconds. [ownApp]: one of
+     * her own screens is in front, so she waits (round 99, Backgrounds.waits).
+     */
+    fun enforce(context: Context, ownApp: Boolean) {
         val t = Guardian.now()
         if (t - lastCheck < 20_000) return
         lastCheck = t
         val c = Guardian.config.value
         if (!c.enabled || !c.wallpaper.on) return
-        // Round 96: a new wallpaper makes Android 12+ reload every open screen, which wiped her slow exit
-        // screen (Quit for now). She waits until you're done.
-        if (Guardian.quitting()) return
+        // Round 96/99: a new wallpaper makes Android 12+ reload every open screen, which wiped Quit for now
+        // and threw you out of sessions. She waits while her own screens are in front.
+        if (Backgrounds.waits(ownApp, Guardian.quitting())) return
         if (c.wallpaper.cycle && Backgrounds.due(t, Guardian.state.value.wallpaperChangedAt, c.wallpaper.cycleMinutes)) {
             applyAsync(context, advance = true)
             return

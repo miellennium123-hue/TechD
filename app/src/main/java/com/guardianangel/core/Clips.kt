@@ -143,17 +143,20 @@ object Clips {
         return ClipTake(index, kind)
     }
 
-    /** Round 95: if [index] is part of a ruin (its edge, countdown or the ruin itself), the edge's index. */
+    /**
+     * Round 95: if [index] is part of a ruin, where its take starts: the edge of edge, countdown, ruin
+     * (a guided session), or round 99 the straight strokes of rush, ruin (quickshot and the owed ruin).
+     */
     fun ruinStart(steps: List<Step>, index: Int): Int? {
         fun kind(i: Int) = steps.getOrNull(i)?.kind
-        val start = when (kind(index)) {
-            StepKind.EDGE -> index
-            StepKind.COUNTDOWN -> index - 1
-            StepKind.RUIN -> index - 2
-            else -> return null
-        }
-        return start.takeIf {
-            kind(it) == StepKind.EDGE && kind(it + 1) == StepKind.COUNTDOWN && kind(it + 2) == StepKind.RUIN
+        fun edgeRuin(i: Int) = kind(i) == StepKind.EDGE && kind(i + 1) == StepKind.COUNTDOWN && kind(i + 2) == StepKind.RUIN
+        fun rushRuin(i: Int) = kind(i) == StepKind.RUSH && kind(i + 1) == StepKind.RUIN
+        return when (kind(index)) {
+            StepKind.EDGE -> index.takeIf { edgeRuin(it) }
+            StepKind.COUNTDOWN -> (index - 1).takeIf { edgeRuin(it) }
+            StepKind.RUSH -> index.takeIf { rushRuin(it) }
+            StepKind.RUIN -> (index - 2).takeIf { edgeRuin(it) } ?: (index - 1).takeIf { rushRuin(it) }
+            else -> null
         }
     }
 

@@ -99,7 +99,7 @@ class SessionTest {
             val script = Session.quickshot(caged = false, Random(seed))
             assertTrue(script.quick)
             assertEquals(SessionEnding.RUINED, script.ending)
-            assertEquals(listOf(StepKind.EDGE, StepKind.COUNTDOWN, StepKind.RUIN), script.steps.takeLast(3).map { it.kind })
+            assertEquals(listOf(StepKind.FASTER, StepKind.RUSH, StepKind.RUIN), script.steps.takeLast(3).map { it.kind })
             assertEquals(Line.SESSION_QUICKSHOT, script.steps.first().line)
             assertTrue(script.estimate in 60..150)
         }
@@ -213,13 +213,7 @@ class SessionTest {
     fun everyRuinIsEdgeThenCountdownThenHandsOff() {
         val ruinOnly = all.copy(permissionWeight = 0, ruinWeight = 100, denialWeight = 0)
         val scripts = listOf(false, true).flatMap { caged ->
-            seeds.take(20).flatMap { seed ->
-                listOf(
-                    Session.build(ruinOnly, caged, Random(seed)),
-                    Session.quickshot(caged, Random(seed)),
-                    Session.owedRuin(caged, Random(seed)),
-                )
-            }
+            seeds.take(20).map { seed -> Session.build(ruinOnly, caged, Random(seed)) }
         }
         scripts.forEach { script ->
             val steps = script.steps
@@ -237,8 +231,32 @@ class SessionTest {
             assertEquals(0, countdown.tauntAt)
         }
         // The regular ending goes straight to the edge, no strokes before it.
+        // (Quickshots and the owed ruin have no edge at all: see straightStrokesToTheRuin.)
         val free = Session.endingSteps(SessionEnding.RUINED, caged = false, all.kinks, Random(1)).map { it.kind }
         assertEquals(StepKind.EDGE, free.first())
+    }
+
+    @Test
+    fun straightStrokesToTheRuin() {
+        // Round 99: quickshots and the owed ruin have no edge and no countdown. Faster and faster strokes,
+        // one tap when you're about to cum, then hands off.
+        listOf(false, true).forEach { caged ->
+            seeds.take(20).forEach { seed ->
+                listOf(Session.quickshot(caged, Random(seed)), Session.owedRuin(caged, Random(seed))).forEach { script ->
+                    val kinds = script.steps.map { it.kind }
+                    assertFalse(StepKind.EDGE in kinds)
+                    assertFalse(StepKind.COUNTDOWN in kinds)
+                    val at = kinds.indexOf(StepKind.RUIN)
+                    val rush = script.steps[at - 1]
+                    assertEquals(StepKind.RUSH, rush.kind)
+                    assertEquals(Line.SESSION_RUSH, rush.line)
+                    assertEquals("I'm about to cum", rush.kind.tap)
+                    assertTrue(rush.kind.stroking)
+                    assertTrue(rush.bpmTo > rush.bpm)
+                    assertEquals(0, script.edgeGoal)
+                }
+            }
+        }
     }
 
     @Test
@@ -455,9 +473,9 @@ class SessionTest {
             assertEquals(Session.OWED_CBT_SECONDS * Session.OWED_CBT_BPM / 60, cbt.reps)
             assertTrue(cbt.seconds >= Session.OWED_CBT_SECONDS)
             assertTrue(cbt.kind.skippable)
-            // Then fast strokes and her ruin: edge, countdown, hands off. No clips on screen (round 95).
+            // Then straight strokes to the ruin: no edge, no countdown (round 99). No clips on screen (round 95).
             assertEquals(
-                listOf(StepKind.STROKE, StepKind.FASTER, StepKind.EDGE, StepKind.COUNTDOWN, StepKind.RUIN),
+                listOf(StepKind.STROKE, StepKind.FASTER, StepKind.RUSH, StepKind.RUIN),
                 kinds.drop(2),
             )
         }

@@ -36,6 +36,11 @@ enum class StepKind(
     COUNT(Line.SESSION_COUNT, stroking = true),
     TEASE(Line.SESSION_TEASE, stroking = true),
     EDGE(Line.SESSION_EDGE, tap = "I'm at the edge", stroking = true, expected = 45),
+    /**
+     * Round 99: straight strokes to a ruin (quickshot and the owed ruin). No edge, no countdown: stroke
+     * faster and faster, tap the moment you're about to cum, and it's hands off right then.
+     */
+    RUSH(Line.SESSION_RUSH, tap = "I'm about to cum", stroking = true, expected = 45),
     /** Round 79: stay right at the edge with her slowest strokes. */
     BALANCE(Line.SESSION_BALANCE, stroking = true),
     EDGE_HOLD(Line.SESSION_EDGE_HOLD, still = true),
@@ -347,7 +352,7 @@ object Session {
 
     /**
      * The ruin you owe her after a Porn block catch (round 85): a quickshot that opens with a full minute
-     * of hard CBT she films, then fast strokes and her ruin: the edge, her countdown, hands off.
+     * of hard CBT she films, then straight strokes to a ruin (round 99: no edge, no countdown, [rush]).
      * "Too much" still skips the CBT with no penalty. During a lock: the CBT with the cage on, then unlock,
      * and back on after. Round 95: no more CBT loop or replay on screen.
      */
@@ -361,7 +366,7 @@ object Session {
             if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
             add(Step(StepKind.STROKE, 20, bpm = random.nextInt(130, 151)))
             add(Step(StepKind.FASTER, 15, bpm = random.nextInt(170, 191)))
-            addAll(ruin(QUICKSHOT_EDGE_SECONDS, 150))
+            addAll(rush(random))
             if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
         }.map { it.copy(ending = true) },
         quick = true,
@@ -370,7 +375,7 @@ object Session {
     /**
      * A quickshot (round 49): about two minutes, fast to her beat, always a ruin she films.
      * Ignores the kink menu, the length and the ending sliders. During a lock: unlock first, cage back on after.
-     * Round 95: her ruin is the edge, her countdown, hands off. No clips play.
+     * Round 99: straight strokes to the ruin, no edge and no countdown ([rush]). No clips play.
      */
     fun quickshot(caged: Boolean, random: Random): SessionScript = SessionScript(
         SessionEnding.RUINED,
@@ -380,14 +385,26 @@ object Session {
             if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
             add(Step(StepKind.STROKE, 15, bpm = random.nextInt(130, 151)))
             add(Step(StepKind.FASTER, 10, bpm = random.nextInt(170, 191)))
-            addAll(ruin(QUICKSHOT_EDGE_SECONDS, 150))
+            addAll(rush(random))
             if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
         }.map { it.copy(ending = true) },
         quick = true,
     )
 
     /**
-     * Round 95: every ruin goes the same way. First she has you get to the edge (tap when you're there),
+     * Round 99: straight strokes to a ruin: faster and faster until you tap that you're about to cum,
+     * then hands off at once. She films it from 10 seconds before your tap to the end of the ruin.
+     */
+    fun rush(random: Random): List<Step> {
+        val bpm = random.nextInt(160, 181)
+        return listOf(
+            Step(StepKind.RUSH, QUICKSHOT_EDGE_SECONDS, bpm = bpm, bpmTo = bpm + 30),
+            Step(StepKind.RUIN, RUIN_CLIP_SECONDS),
+        )
+    }
+
+    /**
+     * Round 95: a ruin in a guided session goes the same way every time. First she has you get to the edge (tap when you're there),
      * then she counts you down while you keep stroking, and at zero: hands off. She films all of it.
      */
     fun ruin(edgeSeconds: Int, bpm: Int): List<Step> = listOf(

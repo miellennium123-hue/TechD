@@ -1,9 +1,16 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.28.2 (clip timing, save note, wallpaper never guarded). Sections 0 to 0z7 cover what 0.6.0 to 0.28.2 changed
+> **Version under test:** 0.28.3 (sessions fix, straight ruin). Sections 0 to 0z8 cover what 0.6.0 to 0.28.3 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z8. New in 0.28.3: sessions fix, straight ruin
+- [ ] Settings > About shows **Version 0.28.3**
+- [ ] With the background cycle at 1 minute, a guided session runs to the end without going back to its start screen
+- [ ] Quickshot: strokes, faster, then "I'm about to cum"; tapping it is hands off at once. No edge, no countdown
+- [ ] Owed ruin: CBT, strokes, the same straight ruin
+- [ ] Edge clips show "Saved: Edge N"
 
 ## 0z7. New in 0.28.2: clip timing
 - [ ] Settings > About shows **Version 0.28.2**
@@ -532,6 +539,8 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.28.2 | Guided sessions | User: after the warm-up she quit the session back to its start screen. Her 1 minute wallpaper cycle reloading the screen. Fixed in 0.28.3 |
+| 2026-10-08 | 0.28.2 | Wallpaper with Lock guard | User: passes |
 | 2026-10-08 | 0.28.1 | Quit for now | User: "Seems to work now" |
 | 2026-10-08 | 0.28.1 | Full-screen clips (bedtime screen) | User: "Works" |
 | 2026-10-08 | 0.28.1 | Sessions: no replay | User: no video played afterwards, "which is good" |
