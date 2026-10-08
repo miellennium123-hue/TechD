@@ -356,11 +356,14 @@ object Rules {
         rolls: CheckInRolls,
         canOpenSites: Boolean = false,
         clips: Int = 0,
+        now: Long = state.lastClipAt + Clips.COOLDOWN_MS,
     ): CheckInAction {
         if (isQuiet(config, minuteOfDay)) return CheckInAction.QUIET
         // Round 78: a clip to watch comes first, about every other check-in. Within a minute, so it
         // needs a notification, like every deadline, and never runs into quiet time.
-        val canWatch = canNotify && Clips.atCheckIns(config, clips) && state.watch == null && !reachesQuiet(config, minuteOfDay, 1)
+        // Round 92: never within 5 minutes of her last full-screen clip.
+        val canWatch = canNotify && Clips.atCheckIns(config, clips) && state.watch == null && !reachesQuiet(config, minuteOfDay, 1) &&
+            state.forcedClip == null && Clips.cooldownOver(state.lastClipAt, now)
         if (canWatch && rolls.watch < Clips.CHECK_IN_CHANCE) return CheckInAction.WATCH
         val canSite = canOpenSites && config.sitesOn && config.siteList.isNotEmpty() && state.visit == null &&
             state.summons == null && !reachesQuiet(config, minuteOfDay, siteMinutes(config))

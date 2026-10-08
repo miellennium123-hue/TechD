@@ -56,6 +56,10 @@ data class GuardianState(
     val booked: BookedSession? = null,
     /** Round 79: her caption on each clip, by file name. Quit for now keeps them. */
     val clipCaptions: Map<String, String> = emptyMap(),
+    /** Round 92: a clip she's playing full screen. The phone is hers until it ends. Quit for now clears it. */
+    val forcedClip: ForcedClip? = null,
+    /** Round 92: when her last full-screen clip ended, for her 5 minute cooldown. */
+    val lastClipAt: Long = 0,
     /** Round 77: a check-in wants you to watch one of your clips. Quit for now clears it. */
     val watch: WatchRequest? = null,
     /** Lock guard: the app version when her watch last started, to tell a restart from an update. */
@@ -71,6 +75,17 @@ data class PeekRecord(
     val file: String,
     val app: String,
     val line: String,
+)
+
+/** Where a full-screen clip came from (round 92). */
+enum class ClipSource { CHECK_IN, LOCK_SCREEN }
+
+/** Round 92: she's playing [clip] full screen since [since] (reset when it starts over after the screen was off). */
+@Serializable
+data class ForcedClip(
+    val clip: String,
+    val source: ClipSource,
+    val since: Long,
 )
 
 /** Her booked session (round 84): start any session within 15 minutes of [at], or it's a failure. */

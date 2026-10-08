@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityWindowInfo
 import androidx.core.content.ContextCompat
 import com.guardianangel.core.CatchKind
 import com.guardianangel.core.Decision
@@ -33,6 +34,7 @@ import com.guardianangel.ui.BedtimeActivity
 import com.guardianangel.ui.BlockActivity
 import com.guardianangel.ui.CaughtActivity
 import com.guardianangel.ui.MainActivity
+import com.guardianangel.ui.WatchActivity
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
@@ -54,6 +56,7 @@ class GuardianAccessibilityService : AccessibilityService() {
     private var lastWarningAt = 0L
     private var lastGuardAt = 0L
     private var lastGuardCheckAt = 0L
+    private var lastClipPullAt = 0L
     private var guardEvents = false
     private val myName: String by lazy { applicationInfo.loadLabel(packageManager).toString() }
     private val scope = MainScope()
@@ -300,12 +303,14 @@ class GuardianAccessibilityService : AccessibilityService() {
         updateGuardEvents()
         if (guard(event, pkg)) return
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        // Round 92: only the app you're really in. Widgets and overlays on the home screen (like the Google
+        // app's search bar and feed) send window events too; blocking them sent her block screen over home.
         if (isForegroundApp(pkg, event.className)) {
             currentPackage = pkg
             meter(screenUnlocked())
             onVisitApp(pkg)
+            evaluate(pkg)
         }
-        evaluate(pkg)
         updateMark()
         WallpaperController.enforce(this)
     }
@@ -319,9 +324,18 @@ class GuardianAccessibilityService : AccessibilityService() {
         if (pkg in launchers) return true
         // Her own mark's overlay windows aren't one of her screens.
         if (pkg == packageName) return isActivity(pkg, className)
-        val system = pkg in protectedPackages || pkg in AppLists.NEVER_BLOCK
-        return !system || isActivity(pkg, className)
+        if (isActivity(pkg, className)) return true
+        if (pkg in protectedPackages || pkg in AppLists.NEVER_BLOCK) return false
+        // Round 92: anything that isn't one of the app's screens only counts if its window is the one in
+        // front (an app's dialog does; the Google app's widgets on your home screen don't).
+        return activeWindowPackage() == pkg
     }
+
+    /** The package of the window you're using right now, if her watch can tell. */
+    private fun activeWindowPackage(): String? = runCatching {
+        windows.firstOrNull { it.isActive && it.type == AccessibilityWindowInfo.TYPE_APPLICATION }?.root?.packageName?.toString()
+            ?: rootInActiveWindow?.packageName?.toString()
+    }.getOrNull()
 
     private fun isActivity(pkg: String, className: CharSequence?): Boolean {
         val cls = className?.toString() ?: return false
@@ -332,6 +346,16 @@ class GuardianAccessibilityService : AccessibilityService() {
     }
 
     private fun evaluate(pkg: String) {
+        // Round 92: while her clip plays, back to it from anywhere except calls, Settings and her own screens.
+        val exempt = pkg in protectedPackages || pkg in AppLists.NEVER_BLOCK
+        if (Guardian.clipPullsBack(ownApp = pkg == packageName, launcher = pkg in launchers, exempt = exempt)) {
+            val t = Guardian.now()
+            if (t - lastClipPullAt >= 1_500) {
+                lastClipPullAt = t
+                startActivity(WatchActivity.intent(this))
+            }
+            return
+        }
         if (pkg == packageName) return
         if (catchAdultApp(pkg)) return
         val decision = Guardian.decide(pkg, protectedPackages)

@@ -43,6 +43,7 @@ import com.guardianangel.core.SessionClips
 import com.guardianangel.core.InstalledApps
 import com.guardianangel.core.Line
 import com.guardianangel.core.Rules
+import com.guardianangel.data.ClipSource
 import com.guardianangel.ui.theme.GuardianTheme
 import java.io.File
 import kotlin.random.Random
@@ -102,14 +103,15 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
 
 /**
  * Round 77: sometimes her lock screen opens by playing one of your clips (see Clips.onLockScreen).
- * Picked once each time the screen opens; null most of the time.
+ * Picked once each time the screen opens; null most of the time. Round 92: never within 5 minutes of
+ * her last full-screen clip.
  */
 @Composable
 fun rememberLockScreenClip(): File? {
     val context = LocalContext.current
     return remember {
         val clips = SessionClips.videos(context)
-        if (Clips.onLockScreen(Guardian.config.value, clips.size, Random.nextDouble())) {
+        if (Guardian.clipCooldownOver() && Clips.onLockScreen(Guardian.config.value, clips.size, Random.nextDouble())) {
             Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }
         } else {
             null
@@ -133,8 +135,13 @@ fun LockedOutScreen(
 ) {
     val context = LocalContext.current
     val config by Guardian.config.flow.collectAsState()
-    var watching by remember(clip) { mutableStateOf(clip != null) }
-    val watchLine = remember(clip) { if (clip != null) Guardian.line(Line.WATCH_LOCKED) else "" }
+    // Round 92: her clip takes the whole screen and your phone until it ends (WatchActivity).
+    LaunchedEffect(clip) {
+        if (clip != null && Guardian.clipCooldownOver()) {
+            Guardian.forceClip(clip.name, ClipSource.LOCK_SCREEN)
+            context.startActivity(WatchActivity.intent(context))
+        }
+    }
     val apps = remember(config.alwaysAllowed, hidden) {
         InstalledApps.launchable(context).filter { it.packageName in config.alwaysAllowed && it.packageName !in hidden }
     }
@@ -145,13 +152,7 @@ fun LockedOutScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Her clip first, with sound. Phone, your apps and Quit for now stay below it the whole time.
-            if (clip != null && watching) {
-                SpeechBubble(watchLine)
-                ClipPlayer(clip, Modifier.fillMaxWidth().height(320.dp), onEnd = { watching = false })
-            } else {
-                AngelImage(Modifier.size(180.dp))
-            }
+            AngelImage(Modifier.size(180.dp))
             if (line.isNotBlank()) SpeechBubble(line)
             Text(
                 title,

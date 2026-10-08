@@ -30,6 +30,8 @@ import com.guardianangel.data.Summons
 import com.guardianangel.data.TaskKind
 import com.guardianangel.data.UsageDay
 import com.guardianangel.data.WatchRequest
+import com.guardianangel.data.ClipSource
+import com.guardianangel.data.ForcedClip
 import com.guardianangel.data.BookedSession
 import com.guardianangel.data.SessionTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -157,7 +159,7 @@ object Guardian {
             state.update {
                 it.copy(
                     proofs = emptyList(), grants = emptyList(), checkInPending = false, task = null, summons = null, visit = null, watch = null,
-                    booked = null, ruinOwedBy = 0, owedPunishment = false,
+                    booked = null, ruinOwedBy = 0, owedPunishment = false, forcedClip = null,
                 )
             }
             Scheduler.cancelAll(appContext, proofs)
@@ -188,6 +190,7 @@ object Guardian {
                 booked = null,
                 ruinOwedBy = 0,
                 owedPunishment = false,
+                forcedClip = null,
             )
         }
         Scheduler.cancelAll(appContext, proofs)
@@ -554,7 +557,7 @@ object Guardian {
         val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble())
         val canOpenSites = Permissions.accessibility(appContext) && SiteOpener.browserPackage(appContext) != null
         val clips = SessionClips.videos(appContext).size
-        val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls, canOpenSites, clips)
+        val action = Rules.checkInAction(c, st, minuteOfDay(), Notifier.canNotify(appContext), rolls, canOpenSites, clips, now())
         val handled = when (action) {
             CheckInAction.QUIET -> true // bedtime: let her pet sleep
             CheckInAction.SITE -> startVisit(asked = false)
@@ -881,13 +884,44 @@ object Guardian {
         return true
     }
 
-    /** You opened it in time: the deadline is met. Watching to the end clears it. */
+    /**
+     * You opened it in time: the deadline is met. Watching to the end clears it. Round 92: from now
+     * until it ends, the clip holds your phone.
+     */
     fun watchStarted() {
         val w = state.value.watch ?: return
+        if (state.value.forcedClip == null) forceClip(w.clip, ClipSource.CHECK_IN)
         if (w.started) return
         state.update { it.copy(watch = w.copy(started = true)) }
         Scheduler.cancelWatch(appContext)
         Notifier.cancel(appContext, Notifier.ID_WATCH)
+    }
+
+    /** Round 92: she plays [clip] full screen, and the phone is hers until it ends. */
+    fun forceClip(clip: String, source: ClipSource) {
+        state.update { it.copy(forcedClip = ForcedClip(clip, source, now())) }
+    }
+
+    /** Round 92: the screen went off, so the clip starts over from the beginning. */
+    fun clipRestarted() {
+        state.update { st -> st.copy(forcedClip = st.forcedClip?.copy(since = now())) }
+    }
+
+    /** Round 92: her 5 minute cooldown since the last full-screen clip is over. */
+    fun clipCooldownOver(): Boolean = state.value.forcedClip == null && Clips.cooldownOver(state.value.lastClipAt, now())
+
+    /** Round 92: her watch sends you back to her clip from [pkg]. */
+    fun clipPullsBack(ownApp: Boolean, launcher: Boolean, exempt: Boolean): Boolean =
+        Clips.pullsBack(state.value.forcedClip, now(), ownApp, launcher, exempt)
+
+    /**
+     * Round 92: her full-screen clip played to the end. Her cooldown starts; a check-in clip earns its
+     * merit. Returns her line for a check-in clip, null otherwise.
+     */
+    fun clipEnded(): String? {
+        val forced = state.value.forcedClip
+        state.update { it.copy(forcedClip = null, lastClipAt = now()) }
+        return if (forced?.source == ClipSource.CHECK_IN) watchFinished() else null
     }
 
     /** You watched it to the end. Returns her line. */

@@ -1,9 +1,19 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.27.2 (edge face camera). Sections 0 to 0z2 cover what 0.6.0 to 0.27.2 changed
+> **Version under test:** 0.27.3 (home screen block fix, locked clips). Sections 0 to 0z3 cover what 0.6.0 to 0.27.3 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z3. New in 0.27.3: home screen block fix, locked clips
+- [ ] Settings > About shows **Version 0.27.3**
+- [ ] During a punishment lockout (Everything scope), staying on the home screen never brings up "Google is locked"
+- [ ] Opening the Google app itself during the lockout is still blocked
+- [ ] **Check-in clip:** open it; Home or another app sends you straight back to it until it ends
+- [ ] **Lock screen clip:** her bedtime or Caught screen opens a full-screen clip; you're held on it until it ends, then back to her lock screen
+- [ ] **Screen off** mid-clip: when you unlock, it starts over from the beginning
+- [ ] **Emergency call** opens the dialer and isn't pulled back; Quit for now works
+- [ ] **Cooldown:** within 5 minutes of a clip ending, no new check-in or lock screen clip
 
 ## 0z2. Fixed in 0.27.2: edge face camera
 - [ ] Settings > About shows **Version 0.27.2**
@@ -487,6 +497,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.27.2 | Lockout on the home screen | User: "Google is locked as punishment" over the home screen, had to close it three times. Widget events from the Google app counted as the app in front. Fixed in 0.27.3 |
 | 2026-10-07 | 0.27.1 | Edge face photo | User: the photo came from the camera aimed at their crotch, not their face. Fixed in 0.27.2 (front camera) |
 | 2026-10-06 | 0.21.0 | She peeks comments | User: screenshots save but no comments shown. Gallery pushed them off screen, Discreet hid them in notifications. Fixed in 0.21.1 |
 | 2026-10-06 | 0.21.0 | Her mark and She peeks | User: "Seems to work" |

@@ -1,5 +1,6 @@
 package com.guardianangel.core
 
+import com.guardianangel.data.ForcedClip
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.SessionSettings
 import kotlin.random.Random
@@ -40,6 +41,25 @@ object Clips {
     const val SESSION_CHANCE = 1.0
     const val CHECK_IN_CHANCE = 0.5
     const val LOCK_SCREEN_CHANCE = 0.5
+
+    /** Round 92: after a full-screen clip ends, this long before she can play another. */
+    const val COOLDOWN_MS = 5 * MINUTE
+    /** Round 92: a full-screen clip stops holding the phone after this long, in case it never ends. */
+    const val FORCED_MAX_MS = 10 * MINUTE
+
+    /** Her 5 minute cooldown since the last full-screen clip is over. */
+    fun cooldownOver(lastClipAt: Long, now: Long): Boolean = now - lastClipAt >= COOLDOWN_MS
+
+    /** A full-screen clip is holding the phone right now. */
+    fun forcing(forced: ForcedClip?, now: Long): Boolean = forced != null && now - forced.since < FORCED_MAX_MS
+
+    /**
+     * Round 92: while her clip plays, she sends you straight back to it from anywhere: the home screen
+     * and every app, Always-allowed ones too. Never from her own screens, the phone, Settings or system
+     * screens ([exempt]), so calls and Quit for now always work.
+     */
+    fun pullsBack(forced: ForcedClip?, now: Long, ownApp: Boolean, launcher: Boolean, exempt: Boolean): Boolean =
+        forcing(forced, now) && !ownApp && (launcher || !exempt)
 
     fun name(kind: ClipKind, at: Long): String = "clip_${at}_${kind.tag}.${kind.ext}"
 
