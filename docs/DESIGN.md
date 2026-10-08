@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.28.3 (sessions no longer reset by her wallpaper; quickshot and owed ruin are straight strokes to the ruin). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 101)
+> **Last updated:** 2026-10-08 (round 102)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -1091,3 +1091,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 99, v0.28.3):** Fix: guided sessions no longer restart partway through. Her wallpaper cycle reloaded the screen; she now never changes the wallpaper while her own screens are open. Quickshots and the owed ruin are straight strokes to the ruin: tap when you're about to cum, then hands off. No edge, no countdown
 - **2026-10-08 (round 100):** No code changes. User tested v0.28.3: all tests pass (sessions run to the end with the wallpaper cycle on, edge clips save, quickshot and owed ruin are straight strokes to the ruin). Logged in docs/TESTING.md
 - **2026-10-08 (round 101):** No code changes. User asked what counts as a failure and how to see one. Answer: the 14 failures in `Failure` (some only with their setting on), what each costs, and Her record on Home (round 94) plus her notification
+- **2026-10-08 (round 102):** No code changes. User asked for all the merit ranks. Answer: the 8 levels in `Rules.LEVELS` (Stray 0 to Her favorite 1200), how merit is earned and lost, and that buying 10 minutes in a block costs 15
