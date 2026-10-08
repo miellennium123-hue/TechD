@@ -26,8 +26,8 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 
 ## Building
 
-- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/Peek.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/SessionPlan.kt`, `core/Clips.kt`, `core/Usage.kt` and `core/PornBlock.kt` has JVM unit tests in `app/src/test/`, which CI runs.
-- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/SessionPlan.kt`, `core/Clips.kt`, `core/LockGuard.kt`, `core/Peek.kt`, `core/Usage.kt`, `core/PornBlock.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
+- The cloud dev environment has no Android SDK (`dl.google.com` is blocked), so builds run on GitHub Actions. Pure Kotlin logic in `core/Rules.kt`, `core/Peek.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/SessionPlan.kt`, `core/Clips.kt`, `core/Usage.kt`, `core/PornBlock.kt` and `core/Release.kt` has JVM unit tests in `app/src/test/`, which CI runs.
+- **Quick local check without the SDK:** a plain Kotlin JVM Gradle project that copies in `data/` (except `Store.kt`), `core/Rules.kt`, `core/Voice.kt`, `core/PhotoCheck.kt`, `core/TaskChecks.kt`, `core/Rating.kt`, `core/Session.kt`, `core/SessionPlan.kt`, `core/Clips.kt`, `core/LockGuard.kt`, `core/Peek.kt`, `core/Usage.kt`, `core/PornBlock.kt`, `core/Release.kt` and the tests can run them (Kotlin 2.1.0, kotlinx-serialization 1.7.3, JUnit 4). Use it before pushing; CI is still the real build.
 - Maven Central sometimes rate-limits this environment (HTTP 429), so local JVM test runs may fail to resolve dependencies. Rely on CI.
 - Locally with an SDK: `./gradlew testDebugUnitTest assembleDebug`.
 - Every build is signed with `app/signing/guardian.keystore` so updates install over the old app. Never replace or regenerate it, or the user has to uninstall and loses their data.
@@ -69,6 +69,7 @@ Android app (Kotlin, Jetpack Compose) built from `docs/DESIGN.md`. Read the desi
 | `core/PornBlock.kt`, `core/PornScanner.kt`, `ui/CaughtActivity.kt` | Porn block: what she watches (your app list), how often, your hours, adult apps, the screenshot tiles, private tabs, her lock (tested in `PornBlockTest.kt`), the screenshot and detector run, her full-screen Caught screen (shares `LockedOutScreen` with bedtime) |
 | `ui/AllowedAppsScreen.kt` | The shared app picker (`AppPicker`): Always-allowed, Apps she checks, Adult apps |
 | `FailureRecord` in `data/State.kt`, `ui/RecordScreen.kt` | Her record (round 94): every failure, when, why and what it cost. The punishment cap is `Rules.punishmentUntil` |
+| `data/ReleaseCalendar.kt`, `core/Release.kt`, `ui/ReleaseScreen.kt` | Her release calendar (round 104): her day in your range, carry-over and missed days, her wheel, streaks, confessing, day marks, the wallpaper countdown (tested in `ReleaseTest.kt`), the calendar screen with her reel and wheel. The release session is `Session.release` |
 | `core/Usage.kt`, `ui/ReportsScreen.kt` | Daily report: her day (ends at your report time), what counts, grades A to F, keeping 30 reports (tested in `UsageTest.kt`). Her watch counts unlocks and app time |
 | `service/GuardianAccessibilityService.kt` | Foreground app detection, opens the block screen, Lock guard's screen check |
 | `ui/` | Compose screens and the Block and Proof activities |

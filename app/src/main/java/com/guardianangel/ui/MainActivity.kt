@@ -55,6 +55,7 @@ enum class Screen(val title: String) {
     KINKS("Kink menu"),
     REPORTS("Daily reports"),
     RECORD("Her record"),
+    RELEASE("Release calendar"),
     SETUP("Permissions"),
 }
 
@@ -165,6 +166,7 @@ private fun MainContent(requested: MutableState<Screen?>) {
                 Screen.BACKGROUNDS -> BackgroundsScreen(config)
                 Screen.REPORTS -> ReportsScreen(config, state)
                 Screen.RECORD -> RecordScreen(state)
+                Screen.RELEASE -> ReleaseScreen(config, state)
             }
         }
     }

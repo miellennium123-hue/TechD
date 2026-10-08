@@ -392,6 +392,35 @@ object Session {
     )
 
     /**
+     * Round 104: her release session on release day. Her warm-up, strokes, one edge to build you up,
+     * then her ending: with permission, a countdown and you cum on her exact command (she films it);
+     * when her wheel said ruin, the edge, her countdown and hands off. During a lock: unlock first, and
+     * the cage back on after. Mood never changes any of it.
+     */
+    fun release(caged: Boolean, ruined: Boolean, random: Random): SessionScript {
+        val body = buildList {
+            add(Step(StepKind.INTRO, 6, line = Line.RELEASE_SESSION))
+            if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
+            addAll(warmup(caged = false, random = random))
+            add(Step(StepKind.STROKE, random.nextInt(40, 61), bpm = random.nextInt(90, 111)))
+            add(edge(random.nextInt(110, 141)))
+            add(Step(StepKind.EDGE_HOLD, 15))
+        }
+        val ending = buildList {
+            if (ruined) {
+                addAll(ruin(EDGE_MAX_SECONDS, 130))
+            } else {
+                add(Step(StepKind.STROKE, 30, bpm = 120))
+                add(Step(StepKind.COUNTDOWN, 10))
+                add(Step(StepKind.FINISH, TAP_MAX_SECONDS))
+            }
+            if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
+            add(Step(StepKind.COOL, COOL_SECONDS))
+        }.map { it.copy(ending = true) }
+        return SessionScript(if (ruined) SessionEnding.RUINED else SessionEnding.PERMISSION, caged, body + ending)
+    }
+
+    /**
      * Round 99: straight strokes to a ruin: faster and faster until you tap that you're about to cum,
      * then hands off at once. She films it from 10 seconds before your tap to the end of the ruin.
      */

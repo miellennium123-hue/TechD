@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.Release
 import com.guardianangel.core.Line
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.PornBlock
@@ -242,6 +243,31 @@ fun HomeScreen(config: GuardianConfig, state: GuardianState, navigate: (Screen) 
 
         OutlinedButton(onClick = { navigate(Screen.SESSIONS) }, modifier = Modifier.fillMaxWidth()) {
             Text("Guided sessions")
+        }
+
+        // Round 104: her release calendar.
+        val release = state.release.takeIf { config.enabled && config.release.on }
+        if (release != null) {
+            val today = Guardian.today()
+            val releaseDay = Release.isReleaseDay(release, today)
+            SectionCard(if (releaseDay) "Release day" else "Release calendar") {
+                val shown = Release.shownDay(release, config.release, today)
+                Text(
+                    when {
+                        releaseDay -> "Today is release day. Go to her."
+                        shown != null -> "Next release in ${Release.daysLeft(release, today)} ${if (Release.daysLeft(release, today) == 1L) "day" else "days"}."
+                        else -> "Next release: ?"
+                    },
+                    fontWeight = FontWeight.Bold,
+                    color = if (releaseDay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+                Muted("Denied for ${Release.deniedDays(release, today)} days.")
+                Button(onClick = { navigate(Screen.RELEASE) }) { Text(if (releaseDay) "Open her calendar" else "Her calendar") }
+            }
+        } else {
+            OutlinedButton(onClick = { navigate(Screen.RELEASE) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Release calendar")
+            }
         }
 
         if (config.enabled && config.rating.on) {

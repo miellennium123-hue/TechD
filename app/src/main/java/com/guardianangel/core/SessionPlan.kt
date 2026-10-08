@@ -114,6 +114,8 @@ object SessionPlan {
         }
         // Owed sessions always end ruined, whatever the theme or training would have said.
         if (reason != SessionReason.CHOSEN) planned = planned.copy(permissionWeight = 0, ruinWeight = 100, denialWeight = 0)
+        // Round 104: with her release calendar on, only her release session gives permission.
+        if (!Release.permissionAllowed(config)) planned = planned.copy(permissionWeight = 0)
         return SessionPlanned(planned, theme, reason, week, s.herLength)
     }
 

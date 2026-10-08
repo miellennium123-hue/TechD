@@ -58,6 +58,8 @@ data class GuardianConfig(
     val rating: RatingSettings = RatingSettings(),
     /** Guided sessions and the kink menu (round 33). See data/Sessions and core/Session. */
     val session: SessionSettings = SessionSettings(),
+    /** Her release calendar (round 104). See data/Release and core/Release. */
+    val release: ReleaseSettings = ReleaseSettings(),
     /**
      * Lock guard (round 41): during a lock, switching her off is slow and a failure, her settings and
      * uninstall screens are blocked, and restarting or switching off her watch is noticed. Can't be

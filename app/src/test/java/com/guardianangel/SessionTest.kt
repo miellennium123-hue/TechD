@@ -260,6 +260,28 @@ class SessionTest {
     }
 
     @Test
+    fun herReleaseSession() {
+        // Round 104: permission ends on her exact command, after a countdown; a ruin is edge, countdown, hands off.
+        seeds.take(20).forEach { seed ->
+            val free = Session.release(caged = false, ruined = false, random = Random(seed))
+            assertEquals(SessionEnding.PERMISSION, free.ending)
+            assertEquals(Line.RELEASE_SESSION, free.steps.first().line)
+            val kinds = free.steps.map { it.kind }
+            assertEquals(listOf(StepKind.COUNTDOWN, StepKind.FINISH, StepKind.COOL), kinds.takeLast(3))
+            assertEquals(1, kinds.count { it == StepKind.EDGE })
+            assertFalse(StepKind.UNLOCK in kinds)
+            val ruined = Session.release(caged = false, ruined = true, random = Random(seed))
+            assertEquals(SessionEnding.RUINED, ruined.ending)
+            assertEquals(listOf(StepKind.EDGE, StepKind.COUNTDOWN, StepKind.RUIN, StepKind.COOL), ruined.steps.map { it.kind }.takeLast(4))
+            assertFalse(StepKind.FINISH in ruined.steps.map { it.kind })
+        }
+        // Locked: the cage comes off first and goes back on before the cool-down.
+        val locked = Session.release(caged = true, ruined = false, random = Random(1)).steps.map { it.kind }
+        assertEquals(StepKind.UNLOCK, locked[1])
+        assertEquals(listOf(StepKind.FINISH, StepKind.RELOCK, StepKind.COOL), locked.takeLast(3))
+    }
+
+    @Test
     fun sameSeedSameSession() {
         assertEquals(Session.build(all, false, Random(42)), Session.build(all, false, Random(42)))
     }

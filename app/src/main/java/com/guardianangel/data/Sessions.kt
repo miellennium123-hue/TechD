@@ -119,6 +119,8 @@ data class SessionRecord(
     val deal: String = "",
     /** Round 84: the theme it ran with, and whether it paid off a punishment. */
     val theme: SessionTheme = SessionTheme.YOURS,
+    /** Round 104: her release session on release day. */
+    val release: Boolean = false,
 )
 
 enum class SessionOutcome {

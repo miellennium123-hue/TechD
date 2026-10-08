@@ -5,6 +5,10 @@ import android.widget.Toast
 import com.guardianangel.data.ActiveTask
 import com.guardianangel.data.CatchRecord
 import com.guardianangel.data.FailureRecord
+import com.guardianangel.data.WheelResult
+import com.guardianangel.data.ReleaseState
+import com.guardianangel.data.ReleaseLog
+import com.guardianangel.data.ReleaseEntry
 import com.guardianangel.data.ChastityLock
 import com.guardianangel.data.DegradationLevel
 import com.guardianangel.data.Grade
@@ -59,6 +63,8 @@ enum class Failure(val merit: Int, val label: String) {
     MISSED_COMMAND(5, "Missed her command to cum"),
     MISSED_RUIN(8, "Missed the ruin you owed her"),
     MISSED_SESSION(5, "Missed a booked session"),
+    /** Round 104: you came without her permission and told her (release calendar). */
+    CONFESSED_RELEASE(10, "Came without her permission (confessed)"),
 }
 
 sealed interface AskResult {
@@ -99,6 +105,7 @@ object Guardian {
         Notifier.createChannel(appContext)
         migrate()
         runCatching { SessionClips.migrate(appContext) }
+        releaseTick()
     }
 
     /** Small fix-ups for data saved by older versions. */
@@ -128,6 +135,12 @@ object Guardian {
     }
 
     fun now(): Long = System.currentTimeMillis()
+
+    /** Round 104: the local day (days since 1970), for her release calendar. */
+    fun today(): Long = dayOf(now())
+
+    fun dayOf(at: Long): Long =
+        java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
 
     fun minuteOfDay(): Int {
         val c = Calendar.getInstance()
@@ -336,6 +349,11 @@ object Guardian {
         if (after.punishment.capMinutes < before.punishment.capMinutes) capPunishment()
         // Round 84: training starts the day you switch it on; booked sessions and owed ruins follow their switches.
         if (!before.session.training && after.session.training) state.update { it.copy(trainingStart = now()) }
+        // Round 104: her release calendar picks your first day when it's switched on, and stops when off.
+        if (!before.release.on && after.release.on) {
+            state.update { it.copy(release = Release.start(today(), after.release, random.nextDouble())) }
+        }
+        if (before.release.on && !after.release.on) state.update { it.copy(release = null) }
         if (before.session.training && !after.session.training) state.update { it.copy(trainingStart = 0) }
         if (before.session.booked && !after.session.booked) cancelBooking()
         if (before.session.ruinAfterCatch && !after.session.ruinAfterCatch) clearRuinOwed()
@@ -605,6 +623,7 @@ object Guardian {
         checkWatch()
         addMerit(2) // for keeping her enabled
         checkVisit()
+        releaseTick()
         val st = state.value
         val lock = st.chastity
         val rolls = CheckInRolls(random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble())
@@ -1135,12 +1154,97 @@ object Guardian {
             addMerit(5)
             say(if (record.outcome == SessionOutcome.RUINED) Line.SESSION_RUIN_DONE else Line.SESSION_END)
         }
-        val relock = if (record.caged && record.ending == SessionEnding.RUINED && state.value.chastity != null) {
+        // Round 104: her release session settles release day.
+        if (record.release) releaseFinished(record.outcome)
+        // A ruin, or a release (round 104), during a lock: she wants the cage back on.
+        val relock = if (record.caged && record.ending != SessionEnding.DENIED && state.value.chastity != null) {
             requestProof(ProofReason.CHASTITY_CHECK, 15).id
         } else {
             null
         }
         return line to relock
+    }
+
+    // ---- Release calendar (round 104) --------------------------------------------------------
+
+    /** The calendar while it's on and she's on, or null. */
+    fun release(): ReleaseState? = state.value.release.takeIf { config.value.enabled && config.value.release.on }
+
+    private fun logRelease(entry: ReleaseLog) {
+        state.update { it.copy(releaseLog = (it.releaseLog + entry).takeLast(Release.LOG_KEEP)) }
+    }
+
+    /**
+     * Keeps her calendar up to date: a missed day (release day and the day after unused) is logged and
+     * she picks a new one; her morning notice on release day. At check-ins, app start and the calendar.
+     */
+    fun releaseTick() {
+        if (!::appContext.isInitialized) return
+        val c = config.value
+        if (!c.enabled || !c.release.on) return
+        val today = today()
+        val r = state.value.release ?: Release.start(today, c.release, random.nextDouble()).also { started ->
+            state.update { it.copy(release = started) }
+        }
+        Release.rollOver(r, today, c.release, random.nextDouble(), now())?.let { (next, log) ->
+            state.update { it.copy(release = next) }
+            logRelease(log)
+            Notifier.message(appContext, say(Line.RELEASE_MISSED))
+        }
+        val current = state.value.release ?: return
+        if (Release.notifyDue(current, today, Rules.isQuiet(c, minuteOfDay()))) {
+            state.update { st -> st.copy(release = st.release?.copy(notifiedDay = today)) }
+            Notifier.message(appContext, say(Line.RELEASE_DAY))
+        }
+    }
+
+    /** You watched her reel (or there was nothing to watch). */
+    fun releaseReelWatched() {
+        state.update { st -> st.copy(release = st.release?.copy(reelWatched = true)) }
+    }
+
+    /**
+     * Her wheel, once per release day. Another week settles it at once (7 days from today, logged).
+     * Returns what it landed on and her line, or null when it isn't release day.
+     */
+    fun spinWheel(): Pair<WheelResult, String>? {
+        val c = config.value
+        val r = release() ?: return null
+        val today = today()
+        if (!Release.isReleaseDay(r, today)) return null
+        val result = r.spin ?: Release.spin(c.release, random.nextDouble())
+        if (result == WheelResult.WEEK) {
+            state.update { it.copy(release = Release.used(r, today, ReleaseEntry.WEEK, c.release, random.nextDouble())) }
+            logRelease(ReleaseLog(today, now(), ReleaseEntry.WEEK))
+        } else {
+            state.update { st -> st.copy(release = st.release?.copy(spin = result)) }
+        }
+        val line = when (result) {
+            WheelResult.PERMISSION -> Line.RELEASE_PERMISSION
+            WheelResult.RUIN -> Line.RELEASE_RUIN
+            WheelResult.WEEK -> Line.RELEASE_WEEK
+        }
+        return result to say(line)
+    }
+
+    /** Her release session finished: release day is used, logged, and she picks your next day. */
+    private fun releaseFinished(outcome: SessionOutcome) {
+        val c = config.value
+        val r = state.value.release ?: return
+        val today = today()
+        val entry = Release.entryFor(outcome)
+        state.update { it.copy(release = Release.used(r, today, entry, c.release, random.nextDouble())) }
+        logRelease(ReleaseLog(today, now(), entry))
+    }
+
+    /** You came without her permission and told her: a failure, and your streak starts over. Her day stays. */
+    fun confessRelease(): String {
+        val r = release()
+        val today = today()
+        if (r != null) state.update { it.copy(release = Release.confess(r, today)) }
+        logRelease(ReleaseLog(today, now(), ReleaseEntry.CONFESSED))
+        fail(Failure.CONFESSED_RELEASE)
+        return say(Line.RELEASE_CONFESSED)
     }
 
     // ---- Session plans (round 84) -----------------------------------------------------------

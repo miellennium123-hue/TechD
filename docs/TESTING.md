@@ -1,9 +1,21 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.28.4 (owed ruin fix). Sections 0 to 0z9 cover what 0.6.0 to 0.28.4 changed
+> **Version under test:** 0.29.0 (release calendar). Sections 0 to 0z10 cover what 0.6.0 to 0.29.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z10. New in 0.29.0: her release calendar
+- [ ] Settings > About shows **Version 0.29.0**
+- [ ] Home > Release calendar; switch it on in its settings. Home shows the next day and "Denied for 0 days"
+- [ ] Set the shortest and longest wait to 1 day: the next day is tomorrow
+- [ ] Show the date off: "?" on the calendar and Home
+- [ ] The month grid marks past sessions (gold, red, grey) and failures (✕); tapping a day lists them
+- [ ] Guided sessions: the start screen shows permission 0%
+- [ ] Release day (wait a day with 1 day waits): her notice, her reel (if you have ruins this week), her wheel spins and lands, the session ends on her command, a Release clip in Her videos, the next day is picked
+- [ ] Confess a release: a failure in Her record, "Denied for 0 days"
+- [ ] With Wallpaper control on: the countdown shows on the home and lock screen
+- [ ] With Lock guard on: switching the calendar off takes 30 minutes
 
 ## 0z9. Fixed in 0.28.4: owed ruin pays it all
 - [ ] Settings > About shows **Version 0.28.4**

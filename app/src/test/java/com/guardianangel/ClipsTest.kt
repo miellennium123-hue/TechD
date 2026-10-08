@@ -194,6 +194,31 @@ class ClipsTest {
     }
 
     @Test
+    fun herReleaseIsFilmedFromTheCountdown() {
+        // Round 104: countdown then finish is one release take, always filmed, marked at her command.
+        val steps = listOf(
+            Step(StepKind.STROKE, 30, bpm = 120),
+            Step(StepKind.COUNTDOWN, 10),
+            Step(StepKind.FINISH, 300),
+            Step(StepKind.COOL, 45),
+        )
+        val s = SessionSettings(filmTasks = false)
+        assertEquals(ClipTake(1, ClipKind.RELEASE), Clips.take(steps, 1, s))
+        assertEquals(ClipTake(1, ClipKind.RELEASE), Clips.take(steps, 2, s))
+        val counting = Clips.nextTake(null, steps, 1, s, 10_000, 1, releaseNumber = 4)!!
+        assertEquals(ClipKind.RELEASE, counting.kind)
+        assertEquals("Release #4", counting.caption)
+        assertEquals(0L, counting.markAt)
+        val command = Clips.nextTake(counting, steps, 2, s, 20_000, 1, releaseNumber = 4)!!
+        assertEquals(20_000L, command.markAt)
+        assertEquals(20_000L + Clips.RELEASE_AFTER_MS, command.stopAt)
+        // A countdown before anything else isn't a release.
+        assertNull(Clips.releaseStart(listOf(Step(StepKind.COUNTDOWN, 5), Step(StepKind.EDGE, 120)), 0))
+        assertEquals("release", ClipKind.RELEASE.tag)
+        assertTrue(ClipKind.RELEASE.video)
+    }
+
+    @Test
     fun cbtIsFilmedWhole() {
         val steps = listOf(Step(StepKind.CBT, 20, bpm = 20, reps = 5), Step(StepKind.STROKE, 30, bpm = 100))
         val cbt = Clips.nextTake(null, steps, 0, SessionSettings(), 1_000, 1)!!
