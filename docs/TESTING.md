@@ -1,9 +1,20 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.27.4 (her record, punishment cap). Sections 0 to 0z4 cover what 0.6.0 to 0.27.4 changed
+> **Version under test:** 0.28.0 (sessions: less video, edge clips, the ruin). Sections 0 to 0z5 cover what 0.6.0 to 0.28.0 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z5. New in 0.28.0: sessions with less video
+- [ ] Settings > About shows **Version 0.28.0**
+- [ ] A session or quickshot never stops to play one of your clips, and nothing replays after the ruin
+- [ ] At "I'm at the edge" the camera doesn't flip, and no "Your face at edge" photo is added
+- [ ] Guided sessions settings no longer has "During sessions" under "She makes you watch your clips"
+- [ ] **Edge clip** (edges filming on): REC stays on about 10 seconds after your tap; in Her videos the clip is about 20 seconds, with your tap in the middle
+- [ ] **Ruin:** she says get to the edge and tap; then she counts 5 to 1 out loud while the beat keeps going; at zero, hands off
+- [ ] **Ruin clip:** starts about 10 seconds before your edge tap and runs through the countdown and the ruin
+- [ ] Owed ruin: the minute of CBT is still filmed, but no CBT clip plays during the strokes
+- [ ] Check-in and lock screen clips still play as before
 
 ## 0z4. New in 0.27.4: her record, punishment cap
 - [ ] Settings > About shows **Version 0.27.4**
@@ -507,6 +518,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.27.4 | Session videos | User: videos in sessions felt spammed. Removed playback in sessions and the edge face; edge clips cut to 10 seconds each side; ruin is edge, countdown, hands off. In 0.28.0 |
 | 2026-10-08 | 0.27.3 | Punishment lockout length | User: the lockout reached over 4 hours. Failures stacked with no cap and no list of what failed. Her record and a 3 hour cap added in 0.27.4 |
 | 2026-10-08 | 0.27.2 | Lockout on the home screen | User: "Google is locked as punishment" over the home screen, had to close it three times. Widget events from the Google app counted as the app in front. Fixed in 0.27.3 |
 | 2026-10-07 | 0.27.1 | Edge face photo | User: the photo came from the camera aimed at their crotch, not their face. Fixed in 0.27.2 (front camera) |

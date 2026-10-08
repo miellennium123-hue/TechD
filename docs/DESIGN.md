@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.27.4 (her record of failures; punishment lockouts capped at 3 hours). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 94)
+> **Status:** v0.28.0 (sessions: no clips during sessions, no edge face, edge clips are 10 seconds either side of your tap, every ruin is edge, countdown, hands off). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 95)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -119,7 +119,8 @@ Two lockout scopes:
 - **From v0.24.0:** motion checks and "out of view" catching are **removed** (they didn't work). The camera is on for **every** session so you watch yourself. She films your **ruins, edges and CBT** (with sound) into **Her videos**, apart from proof photos, and **makes you watch** a clip: mid-session, at check-ins (open within a minute), and on her bedtime and Caught screens. **From v0.24.1:** every session, about every other check-in and about every other lock screen
 - **From v0.26.0:** her voice reads commands (whispering late at night), beat patterns, exact counts, grip commands, an edge goal with shrinking rests, edge timing and an edge face photo, her deal, cruel countdowns, cum on command, keep going, instant replay, then vs now, captions, a ruin reel and session history
 - **From v0.27.0:** themes, her own lengths, a training program, warm-up and cool-down, booked sessions, punishment sessions, a ruin owed after a Porn block catch, clamps, small-size remarks, a framing preview, landscape, dark mode and a torch
-- Details in 9.9 and section 8 (v0.11.0, v0.12.0, v0.24.0, v0.26.0 and v0.27.0)
+- **From v0.28.0:** no clips play during sessions (no watch break, no instant replay, no CBT loop) and no edge face photo. She still films ruins, and edges and CBT if you let her. An edge clip is the 10 seconds before your tap and the 10 after. Every ruin goes: get to the edge, her countdown, hands off. Clips at check-ins and on her lock screens stay
+- Details in 9.9 and section 8 (v0.11.0, v0.12.0, v0.24.0, v0.26.0, v0.27.0 and v0.28.0)
 
 ### 4.12 Her mark (v0.21.0)
 - Her small gold **collar badge** sits in a corner over every app while she's on
@@ -747,6 +748,15 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Not stacking** (a new failure resets to the full length) was not picked, so failures still add up to the cap
 - **Tests:** `RulesTest.kt` (adding up, stopping at the cap, trimming an old lockout), `LockGuardTest.kt` (lowering the cap loosens, older saves get the 3 hour cap and an empty record). 234 unit tests passed locally
 
+### v0.28.0 (round 95, sessions: less video, edge clips, the ruin)
+- **Asked:** videos in sessions felt spammed. Remove watching your own videos back and her photo of your face; keep filming CBT, edges and ruins. Edge clips should be 10 seconds before the edge tap and 10 after. A ruin should go: she has you get to the edge, then counts you down
+- **Removed from sessions:** her watch break (`StepKind.WATCH`, the "During sessions" switch `watchInSessions`, `Clips.inSession`), the instant replay after a ruin (`StepKind.REPLAY`), and the owed ruin's CBT loop (`Step.showCbt`). The camera still shows you yourself live the whole session. Her lines Watch yourself, Stroke while you watch, Instant replay and Stroke to your CBT are gone (edits to them are ignored). Clips at check-ins and on her bedtime and Caught screens are unchanged
+- **Edge face removed:** no more photo at your edge tap, and no more flipping to the front camera. Old edge face photos stay in Her videos until you delete them
+- **Edge clips (`Clips.take`, `Clips.trimStartMs`, `core/ClipTrim.kt`):** with "She films your edges and CBT" on, she films from the start of the edge, keeps filming 10 seconds after your tap (into the next command), then cuts the start on the phone so the clip is the 10 seconds before your tap and the 10 after. No tap (her time ran out) counts the same way. If the next edge starts sooner, the clip ends there. Cutting starts at the nearest keyframe and copies without re-encoding; if it fails the whole clip is kept
+- **Every ruin (`Session.ruin`):** first she has you get to the edge (new line **Ruin: get to the edge**, tap when you're there), then she counts you down from 5 while you keep stroking to her beat (new line **Ruin: her countdown**, no taunt), and at zero: hands off (the ruin, 20 seconds). Same in a regular ruined ending (no more 30 seconds of strokes before the edge), a quickshot and the owed ruin (both keep their fast strokes before it). With "Keep going" you stroke through it afterwards
+- **Ruin clips:** one take from the ruin's edge, through the countdown, to the ruin, cut to start 10 seconds before your edge tap. Filmed even with edges and CBT filming off. Her caption is set when the take starts (ruin number, edges this session)
+- **Tests:** `SessionTest.kt` (no watch or replay anywhere, every ruin is edge then countdown then ruin with her lines), `ClipsTest.kt` (a ruin is one take from its edge, plain edges only with filming on, where the cut goes), `LockGuardTest.kt` (saves with the old switch still load). 235 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -1049,3 +1059,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 92, v0.27.3):** Hotfix. Her block screen no longer comes up over your home screen because of the Google app's widgets. Clips she plays outside sessions (check-ins, her bedtime and Caught screens) now lock the phone full screen until they end, start over if the screen goes off, and come at most once every 5 minutes. Calls and Quit for now always work. Details in section 8
 - **2026-10-08 (round 93):** No code changes. User asked how a punishment lockout reached over 4 hours. Answer: every failure adds the punishment length on top of what's left, with no cap, and there's no failure log to see which. Proposed her record, a cap, or not stacking in section 10
 - **2026-10-08 (round 94, v0.27.4):** Her record: Home now shows every failure with the time, what it was, and what it cost (merit, punishment and chastity time). Punishment lockouts still add up but never run more than 3 hours from now (Settings > When you fail > Never more than). Longer lockouts are cut down to the cap. Details in section 8
+- **2026-10-08 (round 95, v0.28.0):** Sessions: no clips play during sessions any more (no watch break, no replay, no CBT loop) and no edge face photo. She still films ruins, edges and CBT. Edge clips are the 10 seconds before your tap and the 10 after. Every ruin goes: get to the edge, her countdown from 5, hands off. Details in section 8

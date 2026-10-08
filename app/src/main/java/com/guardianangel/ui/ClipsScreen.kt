@@ -67,7 +67,7 @@ fun ClipsScreen() {
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Muted(
-            "Ruins, edges and CBT she filmed during your sessions, with sound, and your face at the edge. Stored only inside this app: not in your " +
+            "Ruins, edges and CBT she filmed during your sessions, with sound. Stored only inside this app: not in your " +
                 "gallery, not backed up, unless you tap Save to phone. She keeps the newest ${Clips.KEEP}, and sometimes makes you watch one.",
         )
         if (clips.isEmpty()) {

@@ -87,11 +87,10 @@ class SessionTest {
         // Without a lock there's nothing to unlock.
         val free = Session.build(ruinOnly, caged = false, Random(3)).steps.map { it.kind }.dropLast(1)
         assertFalse(StepKind.UNLOCK in free)
-        // Round 79: she replays the ruin right after it, and you stroke through it with "Keep going".
-        assertEquals(listOf(StepKind.RUIN, StepKind.REPLAY), free.takeLast(2))
-        assertTrue(Session.build(ruinOnly, caged = false, Random(3)).steps.last { it.kind == StepKind.REPLAY }.bpm > 0)
+        // Round 95: no replay. With "Keep going" you stroke through the ruin; without, the ruin ends it.
+        assertEquals(listOf(StepKind.RUIN, StepKind.POST), free.takeLast(2))
         val noPost = Session.build(ruinOnly.copy(kinks = ruinOnly.kinks - Kink.POST_ORGASM), caged = false, Random(3))
-        assertEquals(0, noPost.steps.last { it.kind == StepKind.REPLAY }.bpm)
+        assertEquals(StepKind.RUIN, noPost.steps.dropLast(1).last().kind)
     }
 
     @Test
@@ -100,7 +99,7 @@ class SessionTest {
             val script = Session.quickshot(caged = false, Random(seed))
             assertTrue(script.quick)
             assertEquals(SessionEnding.RUINED, script.ending)
-            assertEquals(listOf(StepKind.RUIN, StepKind.REPLAY), script.steps.takeLast(2).map { it.kind })
+            assertEquals(listOf(StepKind.EDGE, StepKind.COUNTDOWN, StepKind.RUIN), script.steps.takeLast(3).map { it.kind })
             assertEquals(Line.SESSION_QUICKSHOT, script.steps.first().line)
             assertTrue(script.estimate in 60..150)
         }
@@ -120,7 +119,7 @@ class SessionTest {
         fun last(p: Int, r: Int, d: Int) = Session.build(noPost.copy(permissionWeight = p, ruinWeight = r, denialWeight = d), false, Random(1))
             .steps.last { it.kind != StepKind.COOL }.kind
         assertEquals(StepKind.FINISH, last(100, 0, 0))
-        assertEquals(StepKind.REPLAY, last(0, 100, 0))
+        assertEquals(StepKind.RUIN, last(0, 100, 0))
         assertEquals(StepKind.DENIED, last(0, 0, 100))
     }
 
@@ -195,35 +194,51 @@ class SessionTest {
         builds(SessionSettings(kinks = emptySet()), caged = false).forEach { script ->
             val allowed = setOf(
                 StepKind.INTRO, StepKind.STROKE, StepKind.COUNT, StepKind.EDGE, StepKind.EDGE_HOLD, StepKind.COUNTDOWN,
-                StepKind.FINISH, StepKind.RUIN, StepKind.REPLAY, StepKind.DENIED, StepKind.DEAL, StepKind.COOL,
+                StepKind.FINISH, StepKind.RUIN, StepKind.DENIED, StepKind.DEAL, StepKind.COOL,
             )
             script.steps.forEach { assertTrue("${it.kind}", it.kind in allowed) }
         }
     }
 
     @Test
-    fun quickshotWatchBreak() {
-        assertTrue(Session.quickshot(caged = false, Random(1)).steps.none { it.kind == StepKind.WATCH })
-        val kinds = Session.quickshot(caged = false, Random(1), watchClip = true).steps.map { it.kind }
-        assertEquals(1, kinds.count { it == StepKind.WATCH })
-        assertEquals(StepKind.STROKE, kinds[kinds.indexOf(StepKind.WATCH) - 1])
+    fun noClipsPlayInSessions() {
+        // Round 95: no watch breaks and no replays, in any session.
+        val kinds = (builds(all, caged = false) + builds(all, caged = true)).flatMap { it.steps } +
+            Session.quickshot(caged = false, Random(1)).steps + Session.owedRuin(caged = false, Random(1)).steps
+        assertTrue(kinds.none { it.kind.name == "WATCH" || it.kind.name == "REPLAY" })
+        assertTrue(StepKind.entries.none { it.name == "WATCH" || it.name == "REPLAY" })
     }
 
     @Test
-    fun watchBreakOnlyWhenAsked() {
-        repeat(30) { seed ->
-            val plain = Session.build(all, false, Random(seed))
-            assertTrue(plain.steps.none { it.kind == StepKind.WATCH })
-            val watched = Session.build(all, false, Random(seed), soundingReady = true, watchClip = true)
-            val at = watched.steps.indexOfFirst { it.kind == StepKind.WATCH }
-            assertEquals(1, watched.steps.count { it.kind == StepKind.WATCH })
-            assertTrue(at > 0)
-            // Never inside sounding, never right after a countdown, never in the ending.
-            val before = watched.steps[at - 1].kind
-            assertTrue("$before", before != StepKind.SOUND_IN && before != StepKind.SOUND_HOLD && before != StepKind.COUNTDOWN)
-            val endingAt = watched.steps.indexOfFirst { it.ending }
-            assertTrue(at < endingAt)
+    fun everyRuinIsEdgeThenCountdownThenHandsOff() {
+        val ruinOnly = all.copy(permissionWeight = 0, ruinWeight = 100, denialWeight = 0)
+        val scripts = listOf(false, true).flatMap { caged ->
+            seeds.take(20).flatMap { seed ->
+                listOf(
+                    Session.build(ruinOnly, caged, Random(seed)),
+                    Session.quickshot(caged, Random(seed)),
+                    Session.owedRuin(caged, Random(seed)),
+                )
+            }
         }
+        scripts.forEach { script ->
+            val steps = script.steps
+            val at = steps.indexOfFirst { it.kind == StepKind.RUIN }
+            assertTrue(at >= 2)
+            val edge = steps[at - 2]
+            val countdown = steps[at - 1]
+            assertEquals(StepKind.EDGE, edge.kind)
+            assertEquals(Line.SESSION_RUIN_EDGE, edge.line)
+            assertEquals(StepKind.COUNTDOWN, countdown.kind)
+            assertEquals(Line.SESSION_RUIN_COUNTDOWN, countdown.line)
+            assertEquals(Session.RUIN_COUNTDOWN_SECONDS, countdown.seconds)
+            // You keep stroking to her beat through the countdown, with no taunt holding it up.
+            assertTrue(countdown.bpm > 0)
+            assertEquals(0, countdown.tauntAt)
+        }
+        // The regular ending goes straight to the edge, no strokes before it.
+        val free = Session.endingSteps(SessionEnding.RUINED, caged = false, all.kinks, Random(1)).map { it.kind }
+        assertEquals(StepKind.EDGE, free.first())
     }
 
     @Test
@@ -269,16 +284,6 @@ class SessionTest {
             assertTrue(first > 0)
             assertTrue(script.steps.drop(first).all { it.ending })
         }
-    }
-
-    @Test
-    fun youStrokeWhileYouWatchUnlessLocked() {
-        val free = Session.build(all, false, Random(4), watchClip = true).steps.first { it.kind == StepKind.WATCH }
-        assertTrue(free.bpm > 0)
-        assertEquals(Line.SESSION_WATCH_STROKE, free.line)
-        val locked = Session.build(all, true, Random(4), watchClip = true).steps.first { it.kind == StepKind.WATCH }
-        assertEquals(0, locked.bpm)
-        assertEquals(Line.SESSION_WATCH, locked.line)
     }
 
     @Test
@@ -450,11 +455,11 @@ class SessionTest {
             assertEquals(Session.OWED_CBT_SECONDS * Session.OWED_CBT_BPM / 60, cbt.reps)
             assertTrue(cbt.seconds >= Session.OWED_CBT_SECONDS)
             assertTrue(cbt.kind.skippable)
-            // Then strokes, edge, countdown and ruin, all with your CBT on screen, then the replay.
-            val withCbt = script.steps.filter { it.showCbt }.map { it.kind }
-            assertEquals(listOf(StepKind.STROKE, StepKind.FASTER, StepKind.EDGE, StepKind.COUNTDOWN, StepKind.RUIN), withCbt)
-            assertEquals(listOf(StepKind.RUIN, StepKind.REPLAY), kinds.takeLast(2))
-            assertFalse(script.steps.last().showCbt)
+            // Then fast strokes and her ruin: edge, countdown, hands off. No clips on screen (round 95).
+            assertEquals(
+                listOf(StepKind.STROKE, StepKind.FASTER, StepKind.EDGE, StepKind.COUNTDOWN, StepKind.RUIN),
+                kinds.drop(2),
+            )
         }
         // Locked: CBT with the cage on, then unlock, and back on after.
         val locked = Session.owedRuin(caged = true, Random(1)).steps.map { it.kind }

@@ -1,9 +1,6 @@
 package com.guardianangel.ui
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.os.Handler
-import android.os.Looper
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -20,6 +17,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,29 +29,46 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.guardianangel.core.ClipKind
+import com.guardianangel.core.ClipTrim
+import com.guardianangel.core.Clips
 import com.guardianangel.core.Permissions
 import com.guardianangel.core.SessionClips
 import java.io.File
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 
-/** Film one step: [id] changes for every new clip, [maxSeconds] is the longest it runs. */
-data class ClipRequest(val id: Int, val kind: ClipKind, val maxSeconds: Int)
+/**
+ * One take (round 95: it can run across several commands while [id] stays the same). [startedAt]: when
+ * it began. [markAt]: your edge tap; the saved clip starts 10 seconds before it (0 keeps it all).
+ * [stopAt]: when it stops on its own (0: when the session moves on). [number] and [caption]: her caption.
+ */
+data class ClipRequest(
+    val id: Int,
+    val kind: ClipKind,
+    val startedAt: Long = 0,
+    val markAt: Long = 0,
+    val stopAt: Long = 0,
+    val number: Int = 0,
+    val caption: String = "",
+)
+
+/** A recording in progress: its latest request (for the mark and caption) and when it was stopped. */
+private class Take(request: ClipRequest) {
+    @Volatile var request: ClipRequest = request
+    @Volatile var stoppedAt: Long = 0
+}
 
 /**
  * The camera during a session (round 77: on for every session, so you see yourself). Front by
- * default, [back] for the back one. It stays on the whole session; while [record] is set it films that
- * step into Her videos, with sound if the microphone is allowed, and reports the file (null if it
- * failed). Nothing else is ever saved. No more checks of what it sees.
+ * default, [back] for the back one. It stays on the whole session; while [record] is set it films into
+ * Her videos, with sound if the microphone is allowed, and reports the file (null if it failed). A new
+ * [ClipRequest.id] starts a new clip; null stops. Round 95: no more edge face photos, and a clip with a
+ * mark is cut to start 10 seconds before it. Nothing else is ever saved. No checks of what it sees.
  */
 @Composable
 fun SessionCamera(
     record: ClipRequest?,
-    onClip: (ClipKind, File?) -> Unit,
+    onClip: (ClipRequest, File?) -> Unit,
     modifier: Modifier = Modifier,
     back: Boolean = false,
-    snapshot: Int = 0,
     torch: Boolean = false,
 ) {
     val context = LocalContext.current
@@ -62,11 +77,9 @@ fun SessionCamera(
     val previewView = remember { PreviewView(context) }
     var capture by remember { mutableStateOf<VideoCapture<Recorder>?>(null) }
     var camera by remember { mutableStateOf<Camera?>(null) }
-    // Round 87: her edge face comes from the front camera, even while she films you with the back one.
-    var selfie by remember { mutableStateOf(false) }
-    val useBack = back && !selfie
+    val live = remember { arrayOfNulls<Take>(1) }
 
-    DisposableEffect(lifecycleOwner, useBack) {
+    DisposableEffect(lifecycleOwner, back) {
         val main = ContextCompat.getMainExecutor(context)
         val future = ProcessCameraProvider.getInstance(context)
         var provider: ProcessCameraProvider? = null
@@ -78,8 +91,8 @@ fun SessionCamera(
                 provider = p
                 val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
                 // The camera you picked; the other one only if this phone doesn't have it.
-                val wanted = if (useBack) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
-                val other = if (useBack) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+                val wanted = if (back) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
+                val other = if (back) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
                 val selector = if (runCatching { p.hasCamera(wanted) }.getOrDefault(false)) wanted else other
                 val recorder = Recorder.Builder()
                     .setQualitySelector(QualitySelector.from(Quality.SD, FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)))
@@ -99,17 +112,24 @@ fun SessionCamera(
         }
     }
 
+    // Keeps the take's mark and caption up to date while it films.
+    SideEffect {
+        val take = live[0]
+        if (take != null && record != null && record.id == take.request.id) take.request = record
+    }
+
     DisposableEffect(record?.id, capture) {
         val request = record
         val output = capture
         if (request == null || output == null) return@DisposableEffect onDispose { }
-        val handler = Handler(Looper.getMainLooper())
+        val take = Take(request)
+        live[0] = take
         val file = SessionClips.newFile(context, request.kind)
-        val recording = runCatching { start(context, output, file, request.kind) { kind, ok -> clip(kind, ok) } }.getOrNull()
-        if (recording == null) clip(request.kind, null)
-        handler.postDelayed({ recording?.stop() }, request.maxSeconds * 1_000L)
+        val recording = runCatching { start(context, output, file, take) { req, f -> clip(req, f) } }.getOrNull()
+        if (recording == null) clip(request, null)
         onDispose {
-            handler.removeCallbacksAndMessages(null)
+            take.stoppedAt = System.currentTimeMillis()
+            if (live[0] === take) live[0] = null
             recording?.stop()
         }
     }
@@ -120,38 +140,6 @@ fun SessionCamera(
         if (c.cameraInfo.hasFlashUnit()) runCatching { c.cameraControl.enableTorch(torch) }
     }
 
-    // Round 79: her edge face. Each new [snapshot] number takes a photo of your face. Round 87: always
-    // from the front camera, which faces you while you watch her screen. Filming with the back camera,
-    // she flips to the front for a moment, waits for a clear picture, takes it, and flips back.
-    LaunchedEffect(snapshot) {
-        if (snapshot <= 0) return@LaunchedEffect
-        val flipped = back
-        if (flipped) {
-            selfie = true
-            // Let the switch start, wait for the front camera to stream (up to 3 seconds), then a moment
-            // for its exposure.
-            delay(300)
-            var waited = 0
-            while (waited < 30 && previewView.previewStreamState.value != PreviewView.StreamState.STREAMING) {
-                delay(100)
-                waited++
-            }
-            delay(400)
-        }
-        val frame = previewView.bitmap
-        if (flipped) selfie = false
-        if (frame == null) return@LaunchedEffect
-        val file = withContext(Dispatchers.IO) {
-            runCatching {
-                val out = SessionClips.newFile(context, ClipKind.FACE)
-                out.outputStream().use { frame.compress(Bitmap.CompressFormat.JPEG, 85, it) }
-                SessionClips.prune(context)
-                out
-            }.getOrNull()
-        }
-        clip(ClipKind.FACE, file)
-    }
-
     AndroidView(factory = { previewView }, modifier = modifier)
 }
 
@@ -160,16 +148,28 @@ private fun start(
     context: android.content.Context,
     capture: VideoCapture<Recorder>,
     file: File,
-    kind: ClipKind,
-    done: (ClipKind, File?) -> Unit,
+    take: Take,
+    done: (ClipRequest, File?) -> Unit,
 ): Recording {
+    val main = ContextCompat.getMainExecutor(context)
     val pending = capture.output.prepareRecording(context, FileOutputOptions.Builder(file).build())
     if (Permissions.microphone(context)) pending.withAudioEnabled()
-    return pending.start(ContextCompat.getMainExecutor(context)) { event ->
+    return pending.start(main) { event ->
         if (event is VideoRecordEvent.Finalize) {
-            val ok = file.exists() && file.length() > 0
-            if (ok) SessionClips.prune(context) else file.delete()
-            done(kind, if (ok) file else null)
+            val request = take.request
+            if (!file.exists() || file.length() == 0L) {
+                file.delete()
+                done(request, null)
+            } else {
+                // Round 95: cut it to start 10 seconds before your edge tap, off the main thread.
+                Thread {
+                    val stoppedAt = take.stoppedAt.takeIf { it > 0 } ?: System.currentTimeMillis()
+                    val cut = Clips.trimStartMs(ClipTrim.durationMs(file), stoppedAt, request.markAt)
+                    if (cut > 0) ClipTrim.cutStart(file, cut)
+                    SessionClips.prune(context)
+                    main.execute { done(request, file.takeIf { it.exists() }) }
+                }.start()
+            }
         }
     }
 }

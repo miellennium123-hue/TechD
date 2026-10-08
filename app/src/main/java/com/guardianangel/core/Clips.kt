@@ -10,7 +10,7 @@ enum class ClipKind(val label: String, val tag: String, val ext: String = "mp4")
     RUIN("Ruin", "ruin"),
     EDGE("Edge", "edge"),
     CBT("CBT", "cbt"),
-    /** Round 79: her snapshot of your face the moment you tap "I'm at the edge". */
+    /** Round 79: her snapshot of your face at your edge tap. Round 95: she stopped taking them; old ones still show. */
     FACE("Edge face", "face", "jpg"),
     ;
 
@@ -19,6 +19,9 @@ enum class ClipKind(val label: String, val tag: String, val ext: String = "mp4")
 
 /** One of her videos: its file name, when she filmed it, and what it shows. */
 data class ClipInfo(val name: String, val at: Long, val kind: ClipKind)
+
+/** Round 95: one recording in a session. [id] is the command it started on; it can run across several. */
+data class ClipTake(val id: Int, val kind: ClipKind)
 
 /**
  * Her videos (round 77): what she films during sessions (ruins always, edges and CBT if you let her),
@@ -35,10 +38,9 @@ object Clips {
     const val WATCH_DUE_SECONDS = 60
 
     /**
-     * How often she makes you watch (round 78): every session, and about every other check-in and
-     * time her lock screen opens (at random, so you never know which).
+     * How often she makes you watch (round 78): about every other check-in and time her lock screen
+     * opens (at random, so you never know which). Round 95: never inside sessions.
      */
-    const val SESSION_CHANCE = 1.0
     const val CHECK_IN_CHANCE = 0.5
     const val LOCK_SCREEN_CHANCE = 0.5
 
@@ -46,6 +48,12 @@ object Clips {
     const val COOLDOWN_MS = 5 * MINUTE
     /** Round 92: a full-screen clip stops holding the phone after this long, in case it never ends. */
     const val FORCED_MAX_MS = 10 * MINUTE
+
+    /** Round 95: an edge clip keeps this long before your "I'm at the edge" tap, and this long after. */
+    const val EDGE_BEFORE_MS = 10_000L
+    const val EDGE_AFTER_MS = 10_000L
+    /** Round 95: she only cuts a clip when there's at least this much to cut. */
+    const val MIN_TRIM_MS = 1_000L
 
     /** Her 5 minute cooldown since the last full-screen clip is over. */
     fun cooldownOver(lastClipAt: Long, now: Long): Boolean = now - lastClipAt >= COOLDOWN_MS
@@ -104,9 +112,39 @@ object Clips {
         return if (ruins.isNotEmpty() && random.nextDouble() < 0.5) ruins[random.nextInt(ruins.size)] else clips[random.nextInt(clips.size)]
     }
 
-    /** A session gets a "watch yourself" break: the setting is on, you have clips, and [roll] (0 until 1) says so. */
-    fun inSession(settings: SessionSettings, clips: Int, roll: Double): Boolean =
-        settings.watchInSessions && clips > 0 && roll < SESSION_CHANCE
+    /**
+     * Round 95: what she's filming at command [index]. A ruin is one take from its edge, through her
+     * countdown, to the ruin (always filmed). Otherwise [films] decides, one take per command.
+     */
+    fun take(steps: List<Step>, index: Int, settings: SessionSettings): ClipTake? {
+        ruinStart(steps, index)?.let { return ClipTake(it, ClipKind.RUIN) }
+        val kind = steps.getOrNull(index)?.let { films(it.kind, settings) } ?: return null
+        return ClipTake(index, kind)
+    }
+
+    /** Round 95: if [index] is part of a ruin (its edge, countdown or the ruin itself), the edge's index. */
+    fun ruinStart(steps: List<Step>, index: Int): Int? {
+        fun kind(i: Int) = steps.getOrNull(i)?.kind
+        val start = when (kind(index)) {
+            StepKind.EDGE -> index
+            StepKind.COUNTDOWN -> index - 1
+            StepKind.RUIN -> index - 2
+            else -> return null
+        }
+        return start.takeIf {
+            kind(it) == StepKind.EDGE && kind(it + 1) == StepKind.COUNTDOWN && kind(it + 2) == StepKind.RUIN
+        }
+    }
+
+    /**
+     * Round 95: where to cut the start of a clip so it begins [EDGE_BEFORE_MS] before your edge tap
+     * ([markAt]). [durationMs] is the whole recording, which ended at [stoppedAt]. 0 keeps it all.
+     */
+    fun trimStartMs(durationMs: Long, stoppedAt: Long, markAt: Long): Long {
+        if (markAt <= 0 || durationMs <= 0) return 0
+        val keep = (stoppedAt - markAt).coerceAtLeast(0) + EDGE_BEFORE_MS
+        return (durationMs - keep).coerceAtLeast(0).takeIf { it >= MIN_TRIM_MS } ?: 0
+    }
 
     /** Her bedtime or caught screen opens with a clip: she's on, the setting is on, you have clips, and [roll] says so. */
     fun onLockScreen(config: GuardianConfig, clips: Int, roll: Double): Boolean =

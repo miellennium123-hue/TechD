@@ -197,5 +197,7 @@ class LockGuardTest {
         // Round 94: older saves get the 3 hour punishment cap and an empty record.
         assertEquals(180, json.decodeFromString(GuardianConfig.serializer(), "{\"punishment\":{\"on\":true}}").punishment.capMinutes)
         assertTrue(json.decodeFromString(GuardianState.serializer(), "{\"punishmentUntil\":5}").failures.isEmpty())
+        // Round 95: the old "watch during sessions" switch is gone; saves that have it still load.
+        assertTrue(json.decodeFromString(GuardianConfig.serializer(), "{\"session\":{\"watchInSessions\":true}}").session.filmTasks)
     }
 }
