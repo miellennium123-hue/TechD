@@ -539,6 +539,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.28.3 | Sessions, edge clips, quickshot, owed ruin | User: "All tests pass" |
 | 2026-10-08 | 0.28.2 | Guided sessions | User: after the warm-up she quit the session back to its start screen. Her 1 minute wallpaper cycle reloading the screen. Fixed in 0.28.3 |
 | 2026-10-08 | 0.28.2 | Wallpaper with Lock guard | User: passes |
 | 2026-10-08 | 0.28.1 | Quit for now | User: "Seems to work now" |
