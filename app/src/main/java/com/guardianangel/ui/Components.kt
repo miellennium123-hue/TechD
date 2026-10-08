@@ -112,7 +112,8 @@ fun SpeechBubble(text: String, modifier: Modifier = Modifier) {
 @Composable
 fun QuitButton(modifier: Modifier = Modifier, onQuit: () -> Unit) {
     // Always here and always finishes, never punished. The user chose a slow way out (rounds 41 and 43): about 10 minutes.
-    var open by remember { mutableStateOf(false) }
+    // Round 96: saved, so Android reloading the screen keeps her slow exit open.
+    var open by rememberSaveable { mutableStateOf(false) }
     if (open) {
         SlowExitDialog(
             title = "Quit for now",
@@ -152,7 +153,7 @@ fun QuitButton(modifier: Modifier = Modifier, onQuit: () -> Unit) {
  */
 @Composable
 fun EnabledSwitch(title: String, subtitle: String?, checked: Boolean) {
-    var slowOff by remember { mutableStateOf(false) }
+    var slowOff by rememberSaveable { mutableStateOf(false) }
     if (slowOff) {
         SlowExitDialog(
             title = "Switch her off",

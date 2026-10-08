@@ -185,6 +185,19 @@ object Guardian {
     }
 
     /** Ends every lock, timer and restriction immediately and switches her off. Never penalized. */
+    /** Round 96: her slow exit screen is in front. While it is, she holds still. */
+    fun quittingBeat() {
+        state.update { it.copy(quittingAt = now()) }
+    }
+
+    /** Round 96: her slow exit screen closed or went to the background. */
+    fun quittingDone() {
+        if (state.value.quittingAt != 0L) state.update { it.copy(quittingAt = 0) }
+    }
+
+    /** Round 96: you're on her slow exit screen right now. Nothing of hers may take the screen. */
+    fun quitting(): Boolean = LockGuard.quitting(state.value.quittingAt, now())
+
     fun quitForNow() {
         val proofs = state.value.proofs
         config.update { it.copy(enabled = false) }
@@ -207,6 +220,7 @@ object Guardian {
                 ruinOwedBy = 0,
                 owedPunishment = false,
                 forcedClip = null,
+                quittingAt = 0,
             )
         }
         Scheduler.cancelAll(appContext, proofs)
@@ -799,6 +813,8 @@ object Guardian {
     /** A visit waiting for the phone: shown once it's unlocked, not in a call, and not running into quiet time. */
     fun showVisitIfReady(): Boolean {
         val visit = state.value.visit ?: return false
+        // Round 96: never over her slow exit screen. It waits until you're done or leave it.
+        if (quitting()) return false
         if (!visit.pending || !config.value.enabled) return false
         if (Rules.visitExpired(visit, now()) || !Rules.canShowVisit(config.value, visit, minuteOfDay())) {
             clearVisit()

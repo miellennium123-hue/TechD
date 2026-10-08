@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Clips
 import com.guardianangel.core.Guardian
+import com.guardianangel.core.LockGuard
 import com.guardianangel.core.SessionClips
 import com.guardianangel.core.InstalledApps
 import com.guardianangel.core.Line
@@ -88,8 +89,11 @@ private fun BedtimeScreen(onOpen: (Intent) -> Unit, onDone: () -> Unit) {
     val line = remember { Guardian.say(Line.BEDTIME_SCREEN) }
     val bedtime = config.enabled && config.bedtime.screen && Rules.isBedtime(config.bedtime, Guardian.minuteOfDay())
 
-    // Bedtime over, switched off, or Quit for now: she lets you go.
-    LaunchedEffect(bedtime) { if (!bedtime) onDone() }
+    // Bedtime over, switched off, or Quit for now: she lets you go. Round 96: not in the middle of your
+    // slow exit, so it isn't lost; it closes when you finish or leave it.
+    val gstate by Guardian.state.flow.collectAsState()
+    val quitting = LockGuard.quitting(gstate.quittingAt, now)
+    LaunchedEffect(bedtime, quitting) { if (!bedtime && !quitting) onDone() }
 
     LockedOutScreen(
         line = line,
@@ -111,7 +115,7 @@ fun rememberLockScreenClip(): File? {
     val context = LocalContext.current
     return remember {
         val clips = SessionClips.videos(context)
-        if (Guardian.clipCooldownOver() && Clips.onLockScreen(Guardian.config.value, clips.size, Random.nextDouble())) {
+        if (!Guardian.quitting() && Guardian.clipCooldownOver() && Clips.onLockScreen(Guardian.config.value, clips.size, Random.nextDouble())) {
             Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }
         } else {
             null
@@ -137,7 +141,7 @@ fun LockedOutScreen(
     val config by Guardian.config.flow.collectAsState()
     // Round 92: her clip takes the whole screen and your phone until it ends (WatchActivity).
     LaunchedEffect(clip) {
-        if (clip != null && Guardian.clipCooldownOver()) {
+        if (clip != null && Guardian.clipCooldownOver() && !Guardian.quitting()) {
             Guardian.forceClip(clip.name, ClipSource.LOCK_SCREEN)
             context.startActivity(WatchActivity.intent(context))
         }

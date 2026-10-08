@@ -200,4 +200,22 @@ class LockGuardTest {
         // Round 95: the old "watch during sessions" switch is gone; saves that have it still load.
         assertTrue(json.decodeFromString(GuardianConfig.serializer(), "{\"session\":{\"watchInSessions\":true}}").session.filmTasks)
     }
+
+    @Test
+    fun sheHoldsStillWhileYouQuit() {
+        // Round 96: fresh check-ins from her slow exit screen mean she holds still; a quiet screen doesn't.
+        val t = 1_000_000L
+        assertFalse(LockGuard.quitting(0, t))
+        assertTrue(LockGuard.quitting(t, t))
+        assertTrue(LockGuard.quitting(t - LockGuard.QUIT_BEAT_SECONDS * 1_000L, t))
+        assertTrue(LockGuard.quitting(t - (LockGuard.QUIT_STALE_SECONDS - 1) * 1_000L, t))
+        assertFalse(LockGuard.quitting(t - LockGuard.QUIT_STALE_SECONDS * 1_000L, t))
+        // A clock that went backwards never counts.
+        assertFalse(LockGuard.quitting(t + 5_000, t))
+        // The screen checks in well before she'd stop holding still.
+        assertTrue(LockGuard.QUIT_BEAT_SECONDS * 3 < LockGuard.QUIT_STALE_SECONDS)
+        // Older saves load with nobody quitting.
+        val json = Json { ignoreUnknownKeys = true }
+        assertEquals(0L, json.decodeFromString(GuardianState.serializer(), "{}").quittingAt)
+    }
 }

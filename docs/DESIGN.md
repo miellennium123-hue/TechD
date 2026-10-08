@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.28.0 (sessions: no clips during sessions, no edge face, edge clips are 10 seconds either side of your tap, every ruin is edge, countdown, hands off). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 95)
+> **Status:** v0.28.1 (fix: Quit for now no longer gets wiped partway through). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 96)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -757,6 +757,14 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Ruin clips:** one take from the ruin's edge, through the countdown, to the ruin, cut to start 10 seconds before your edge tap. Filmed even with edges and CBT filming off. Her caption is set when the take starts (ruin number, edges this session)
 - **Tests:** `SessionTest.kt` (no watch or replay anywhere, every ruin is edge then countdown then ruin with her lines), `ClipsTest.kt` (a ruin is one take from its edge, plain edges only with filming on, where the cut goes), `LockGuardTest.kt` (saves with the old switch still load). 235 unit tests passed locally
 
+### v0.28.1 (round 96, fix: Quit for now kept getting wiped)
+- **Reported:** during Quit for now, at about 5 minutes in, "she just closes my screen" and the wait starts over, so it never finishes. That breaks the rule that Quit for now always finishes
+- **Cause (most likely):** her background cycle changes the wallpaper on a timer. On Android 12+ a new wallpaper changes the phone's colors, and Android reloads every open screen. The slow exit's progress (and whether it was open at all) wasn't saved, and the reload counted as leaving, so it was wiped. Other things of hers could also take the screen mid-exit: a site visit warning, a lock screen clip, or her lock screen closing itself or a clip ending
+- **Fix 1, it survives reloads (`ui/SlowExit.kt`, `QuitButton`, `EnabledSwitch`):** the step, what you typed and the end time of the wait are saved, and the open dialog is too. A reload by Android (new wallpaper, rotation, dark mode) isn't you leaving, so it doesn't start over. The wait counts to a saved end time
+- **Fix 2, she holds still (`GuardianState.quittingAt`, `LockGuard.quitting`, `Guardian.quitting`):** while a slow exit screen (Quit for now, switching her off, loosening) is in front, it checks in every 10 seconds. While that's fresh (45 seconds) she changes no wallpaper, opens none of her screens (block, bedtime, Caught, her clip, a site visit), doesn't catch you, and her bedtime and Caught screens and a lock screen clip don't close themselves under it. Leaving the screen still starts it over (unchanged), and stops the hold right away, so it can't be used to dodge her
+- **Unchanged:** the timings (about 10 minutes), screen off or leaving starts it over, never penalized
+- **Tests:** `LockGuardTest.kt` (when she holds still, older saves load). 236 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -1060,3 +1068,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-08 (round 93):** No code changes. User asked how a punishment lockout reached over 4 hours. Answer: every failure adds the punishment length on top of what's left, with no cap, and there's no failure log to see which. Proposed her record, a cap, or not stacking in section 10
 - **2026-10-08 (round 94, v0.27.4):** Her record: Home now shows every failure with the time, what it was, and what it cost (merit, punishment and chastity time). Punishment lockouts still add up but never run more than 3 hours from now (Settings > When you fail > Never more than). Longer lockouts are cut down to the cap. Details in section 8
 - **2026-10-08 (round 95, v0.28.0):** Sessions: no clips play during sessions any more (no watch break, no replay, no CBT loop) and no edge face photo. She still films ruins, edges and CBT. Edge clips are the 10 seconds before your tap and the 10 after. Every ruin goes: get to the edge, her countdown from 5, hands off. Details in section 8
+- **2026-10-08 (round 96, v0.28.1):** Fix. Quit for now was wiped about 5 minutes in, most likely by her background cycle: a new wallpaper makes Android 12+ reload every screen. The slow exit now keeps its progress through a reload, and while it's in front she holds still (no wallpaper change, none of her screens). Details in section 8

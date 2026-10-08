@@ -1,5 +1,8 @@
 package com.guardianangel.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,13 +29,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,10 +57,22 @@ import kotlinx.coroutines.isActive
 
 private enum class ExitStep { HOLD, TYPE, WAIT, READY }
 
+/** The activity behind a (dialog's) context. */
+private fun Context.findActivity(): Activity? {
+    var c: Context? = this
+    while (c is ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
+}
+
 /**
  * The slow way out, full screen: hold the button, type her sentence exactly (a typo starts it
  * over), then wait with this screen open while she talks. Leaving the screen starts it all over.
  * It always finishes; [onFinished] runs when you tap the last button. [onCancel] keeps everything as it was.
+ * Round 96: Android reloading the screen (a new wallpaper, rotation, dark mode) keeps your progress, and
+ * while this screen is in front she holds still: nothing of hers goes over it.
  */
 @Composable
 fun SlowExitDialog(
@@ -90,11 +108,13 @@ private fun SlowExit(
     onFinished: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    var step by remember { mutableStateOf(ExitStep.HOLD) }
+    // Round 96: saved, so a reload of the screen by Android keeps your place.
+    var step by rememberSaveable { mutableStateOf(ExitStep.HOLD) }
     var holding by remember { mutableStateOf(false) }
     var held by remember { mutableFloatStateOf(0f) }
-    var typed by remember { mutableStateOf("") }
-    var typo by remember { mutableStateOf(false) }
+    var typed by rememberSaveable { mutableStateOf("") }
+    var typo by rememberSaveable { mutableStateOf(false) }
+    var waitEndsAt by rememberSaveable { mutableLongStateOf(0L) }
     var left by remember { mutableIntStateOf(waitSeconds) }
     var said by remember { mutableStateOf("") }
 
@@ -104,15 +124,33 @@ private fun SlowExit(
         held = 0f
         typed = ""
         typo = false
+        waitEndsAt = 0L
         left = waitSeconds
     }
 
-    // Leaving the screen (home, another app, screen off) starts it all over.
+    // Leaving the screen (home, another app, screen off) starts it all over. Android reloading it
+    // (a new wallpaper, rotation, dark mode) doesn't: that isn't you leaving.
     val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = LocalContext.current.findActivity()
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) restart() }
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP && activity?.isChangingConfigurations != true) {
+                restart()
+                Guardian.quittingDone()
+            }
+        }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            Guardian.quittingDone()
+        }
+    }
+    // Round 96: while this screen is in front, she holds still (no wallpaper change, none of her screens).
+    LaunchedEffect(lifecycleOwner) {
+        while (isActive) {
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) Guardian.quittingBeat()
+            delay(LockGuard.QUIT_BEAT_SECONDS * 1_000L)
+        }
     }
     val view = LocalView.current
     DisposableEffect(view) {
@@ -139,18 +177,19 @@ private fun SlowExit(
         }
     }
 
-    // The wait, with her talking every few seconds.
+    // The wait, with her talking every few seconds. It runs to a saved end time, so a reload keeps it.
     LaunchedEffect(step) {
         if (step != ExitStep.WAIT) return@LaunchedEffect
-        left = waitSeconds
+        if (waitEndsAt == 0L) waitEndsAt = System.currentTimeMillis() + waitSeconds * 1_000L
         var since = LockGuard.TALK_EVERY_SECONDS
-        while (left > 0) {
+        while (true) {
+            left = ((waitEndsAt - System.currentTimeMillis() + 999) / 1_000).toInt().coerceIn(0, waitSeconds)
+            if (left <= 0) break
             if (since >= LockGuard.TALK_EVERY_SECONDS) {
                 said = Guardian.line(talk)
                 since = 0
             }
             delay(1_000)
-            left--
             since++
         }
         step = ExitStep.READY

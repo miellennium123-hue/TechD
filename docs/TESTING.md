@@ -1,9 +1,17 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.28.0 (sessions: less video, edge clips, the ruin). Sections 0 to 0z5 cover what 0.6.0 to 0.28.0 changed
+> **Version under test:** 0.28.1 (Quit for now fix). Sections 0 to 0z6 cover what 0.6.0 to 0.28.1 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z6. Fixed in 0.28.1: Quit for now finishes
+Turn on Backgrounds with the cycle set to 1 minute to test it.
+- [ ] Settings > About shows **Version 0.28.1**
+- [ ] Start Quit for now and let the wait run: the wallpaper doesn't change while you're on it, and it reaches zero and finishes
+- [ ] Rotate the phone (or switch dark mode) mid-wait: you stay on the same step and the timer keeps going
+- [ ] Going home mid-wait still starts it over (by design), and the wallpaper cycle resumes within a minute
+- [ ] From her Caught or bedtime screen: Quit for now finishes even if the lock ends while you wait
 
 ## 0z5. New in 0.28.0: sessions with less video
 - [ ] Settings > About shows **Version 0.28.0**
@@ -518,6 +526,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.28.0 | Quit for now | User: at about 5 minutes in, "she just closes my screen" and it never finishes. Likely her wallpaper cycle reloading the screen. Fixed in 0.28.1 |
 | 2026-10-08 | 0.27.4 | Session videos | User: videos in sessions felt spammed. Removed playback in sessions and the edge face; edge clips cut to 10 seconds each side; ruin is edge, countdown, hands off. In 0.28.0 |
 | 2026-10-08 | 0.27.3 | Punishment lockout length | User: the lockout reached over 4 hours. Failures stacked with no cap and no list of what failed. Her record and a 3 hour cap added in 0.27.4 |
 | 2026-10-08 | 0.27.2 | Lockout on the home screen | User: "Google is locked as punishment" over the home screen, had to close it three times. Widget events from the Google app counted as the app in front. Fixed in 0.27.3 |
