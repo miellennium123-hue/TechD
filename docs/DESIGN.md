@@ -2,7 +2,7 @@
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
 > **Status:** v0.27.3 (Home screen block fix; her clips lock the phone until they end). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-08 (round 92)
+> **Last updated:** 2026-10-08 (round 93)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -896,6 +896,12 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
   - **Rules that stay:** Quit for now everywhere and never longer, calls and emergency use never blocked, quiet hours respected, mood only changes her words (whims and verdicts are random or based on what you did), nothing she does reaches other people
   - **Claude's top 4:** her daily orders, the surrender period, the ratchet, cage orders
 
+- **Punishment lockout stacking (round 93, question, nothing changed):** the user's punishment lockout reached over 4 hours
+  - **Why:** every failure adds the punishment length (Short 30 minutes, Long 3 hours) on top of the time already left (`Guardian.fail`), with no cap. Long: two failures make 6 hours. Short: 8 failures make 4 hours
+  - **Failures that can pile up without you noticing:** a check-in clip not opened within a minute (about every other check-in sends one since v0.24.1), a missed photo proof or task deadline, a Porn block catch (with "A catch is a failure" on), a missed booked session or owed ruin, an F grade (if set), "I couldn't stop" or missing her command in a session, and Lock guard tampering (her watch restarting during a lock, which some phones do on their own)
+  - **Gap:** the app keeps no list of failures, so it can't show which ones it was
+  - **Proposed fixes, waiting on the user:** her record (a list of every failure with the time and what it added), a cap on the total punishment time, and/or not stacking (a new failure resets to the full length instead of adding)
+
 - **E-stim control (round 82, plan only, no code):** the user asked whether she could control their DG-Lab Coyote 3.0. Answer: very likely. Build only when the user has the box to test
   - **How (Claude's pick): straight over Bluetooth.** DG-Lab publishes the Coyote 3.0 Bluetooth protocol (V3). The app sends one small command every 100 ms with both channels' strength (0 to 200) and the waveform, and a separate command sets a strength ceiling on the box (it has to be set again on every connection). No extra app, works offline, nothing leaves the phone. Needs Android's Bluetooth permissions
   - **Other ways:** through Intiface Central (Buttplug), which community adapters connect to the Coyote and which would also bring vibrators and other toys; or DG-Lab's own app with its remote socket control (goes through a server, so it's the least private)
@@ -1032,3 +1038,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 90, v0.27.2):** Fix. Her edge face photo now always comes from the front camera: filming with the back camera, she flips to the front for a moment at your edge tap, takes it and flips back
 - **2026-10-07 (round 91):** No code changes. User asked how the ruin compilation works. Answer: Her videos > Play her ruin reel plays every saved ruin clip back to back, oldest first, with her caption on each (a playlist, not one stitched file)
 - **2026-10-08 (round 92, v0.27.3):** Hotfix. Her block screen no longer comes up over your home screen because of the Google app's widgets. Clips she plays outside sessions (check-ins, her bedtime and Caught screens) now lock the phone full screen until they end, start over if the screen goes off, and come at most once every 5 minutes. Calls and Quit for now always work. Details in section 8
+- **2026-10-08 (round 93):** No code changes. User asked how a punishment lockout reached over 4 hours. Answer: every failure adds the punishment length on top of what's left, with no cap, and there's no failure log to see which. Proposed her record, a cap, or not stacking in section 10
