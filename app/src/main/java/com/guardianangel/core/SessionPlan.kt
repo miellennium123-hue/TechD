@@ -4,6 +4,7 @@ import com.guardianangel.data.CbtLevel
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.Kink
+import com.guardianangel.data.SessionOutcome
 import com.guardianangel.data.SessionSettings
 import com.guardianangel.data.SessionTheme
 import com.guardianangel.data.Sessions
@@ -11,6 +12,9 @@ import kotlin.random.Random
 
 /** Why this session is what it is: what she chose, and what you owe her. */
 enum class SessionReason { CHOSEN, PUNISHMENT, RUIN_OWED }
+
+/** Round 104: what a finished session pays off: the punishment session you owed, and the ruin you owed. */
+data class PaidOff(val punishment: Boolean, val ruin: Boolean)
 
 /** One session's plan: the settings it runs with, its theme, and why (round 84). */
 data class SessionPlanned(
@@ -112,6 +116,23 @@ object SessionPlan {
         if (reason != SessionReason.CHOSEN) planned = planned.copy(permissionWeight = 0, ruinWeight = 100, denialWeight = 0)
         return SessionPlanned(planned, theme, reason, week, s.herLength)
     }
+
+    /**
+     * Round 104: what a finished session pays off. A punishment session pays the punishment you owed.
+     * A ruin pays the ruin you owed after a catch, and since that ruin is her punishment for the catch
+     * (which also counted as a failure), it pays the punishment session too.
+     */
+    fun paysOff(theme: SessionTheme, outcome: SessionOutcome, ruinOwed: Boolean): PaidOff {
+        val ruin = outcome == SessionOutcome.RUINED && ruinOwed
+        return PaidOff(punishment = theme == SessionTheme.PUNISHMENT || ruin, ruin = ruin)
+    }
+
+    /**
+     * Round 104, once on update: before the fix, doing the ruin you owed after a catch left the catch's
+     * punishment session owed. If your last failure was that catch and its ruin is paid, it's cleared.
+     */
+    fun leftoverFromCatch(owedPunishment: Boolean, ruinOwedBy: Long, lastFailureKind: String?): Boolean =
+        owedPunishment && ruinOwedBy == 0L && lastFailureKind == "CAUGHT_PORN"
 
     /** You owe her a ruin (Porn block caught you) and it isn't overdue yet. */
     fun ruinOwed(config: GuardianConfig, state: GuardianState, now: Long): Boolean =

@@ -107,6 +107,11 @@ object Guardian {
         val upgraded = Questions.upgrade(questions)
         if (upgraded != questions) config.update { it.copy(questions = upgraded) }
         capPunishment()
+        // Round 104: the punishment session left owed by the old owed-ruin bug.
+        val st = state.value
+        if (SessionPlan.leftoverFromCatch(st.owedPunishment, st.ruinOwedBy, st.failures.lastOrNull()?.kind)) {
+            state.update { it.copy(owedPunishment = false) }
+        }
     }
 
     /** Round 94: a punishment lockout longer than her cap (from before the cap, or a lowered cap) is cut to it. */
@@ -1118,8 +1123,10 @@ object Guardian {
     fun finishSession(record: SessionRecord): Pair<String, Long?> {
         state.update { it.copy(sessions = (it.sessions + record).takeLast(Sessions.HISTORY)) }
         // Round 84: a punishment session pays off the punishment; a ruin pays off the ruin you owed.
-        if (record.theme == SessionTheme.PUNISHMENT) state.update { it.copy(owedPunishment = false) }
-        if (record.outcome == SessionOutcome.RUINED && state.value.ruinOwedBy > 0) clearRuinOwed()
+        // Round 104: the owed ruin is her punishment for the catch, so it pays the punishment session too.
+        val paid = SessionPlan.paysOff(record.theme, record.outcome, ruinOwed = state.value.ruinOwedBy > 0)
+        if (paid.punishment) state.update { it.copy(owedPunishment = false) }
+        if (paid.ruin) clearRuinOwed()
         val line = if (record.outcome == SessionOutcome.RUIN_FAILED) {
             fail(Failure.RUIN_FAILED)
         } else if (record.outcome == SessionOutcome.MISSED_COMMAND) {

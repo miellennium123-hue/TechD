@@ -1,9 +1,14 @@
 # Guardian Angel: Test Checklist
 
 > On-device checks for the current version. Tick items as you go and report anything odd (what you tapped, what you expected, what happened, phone model and Android version).
-> **Version under test:** 0.28.3 (sessions fix, straight ruin). Sections 0 to 0z8 cover what 0.6.0 to 0.28.3 changed
+> **Version under test:** 0.28.4 (owed ruin fix). Sections 0 to 0z9 cover what 0.6.0 to 0.28.4 changed
 
 **Tip:** keep the risky settings low while testing. Use Social media scope, short timers, and remember **Quit for now** (top right) ends everything instantly.
+
+## 0z9. Fixed in 0.28.4: owed ruin pays it all
+- [ ] Settings > About shows **Version 0.28.4**
+- [ ] After updating, Home no longer says "A punishment session for your last failure" if your last failure was a catch you already ruined for
+- [ ] Get caught (Debug mode helps), do the owed ruin: Home's "She's expecting a session" card is gone afterwards
 
 ## 0z8. New in 0.28.3: sessions fix, straight ruin
 - [ ] Settings > About shows **Version 0.28.3**
@@ -539,6 +544,7 @@ Use **Try it now** in Settings to summon her.
 ## Results log
 | Date | Version | Item | Result |
 |---|---|---|---|
+| 2026-10-08 | 0.28.3 | Owed ruin | User: after the punishment ruin, Home still asked for a session (no date). Fixed in 0.28.4 |
 | 2026-10-08 | 0.28.3 | Sessions, edge clips, quickshot, owed ruin | User: "All tests pass" |
 | 2026-10-08 | 0.28.2 | Guided sessions | User: after the warm-up she quit the session back to its start screen. Her 1 minute wallpaper cycle reloading the screen. Fixed in 0.28.3 |
 | 2026-10-08 | 0.28.2 | Wallpaper with Lock guard | User: passes |
