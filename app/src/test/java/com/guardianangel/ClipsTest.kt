@@ -8,6 +8,8 @@ import com.guardianangel.core.Clips
 import com.guardianangel.core.LockGuard
 import com.guardianangel.core.Rules
 import com.guardianangel.core.StepKind
+import com.guardianangel.data.ClipSource
+import com.guardianangel.data.ForcedClip
 import com.guardianangel.data.GuardianConfig
 import com.guardianangel.data.GuardianState
 import com.guardianangel.data.QuietHoursSettings
@@ -173,5 +175,40 @@ class ClipsTest {
             ClipInfo("r1", 10, ClipKind.RUIN),
         )
         assertEquals(listOf("r1", "r2"), Clips.reel(clips).map { it.name })
+    }
+
+    // ---- Round 92 ---------------------------------------------------------------------------
+
+    @Test
+    fun fiveMinutesBetweenHerClips() {
+        val ended = 1_000_000L
+        assertFalse(Clips.cooldownOver(ended, ended + 4 * 60_000))
+        assertTrue(Clips.cooldownOver(ended, ended + 5 * 60_000))
+        assertTrue(Clips.cooldownOver(0, 10 * 60_000))
+        // Check-ins wait out her cooldown, and never send one while another is playing.
+        val quietOff = on.copy(quietHours = QuietHoursSettings(on = false))
+        val sure = CheckInRolls(task = 0.99, summons = 0.99, proof = 0.99, watch = 0.0)
+        val recent = GuardianState(lastClipAt = ended)
+        assertEquals(CheckInAction.PLAIN, Rules.checkInAction(quietOff, recent, noon, true, sure, clips = 2, now = ended + 60_000))
+        assertEquals(CheckInAction.WATCH, Rules.checkInAction(quietOff, recent, noon, true, sure, clips = 2, now = ended + 6 * 60_000))
+        val playing = GuardianState(forcedClip = ForcedClip("clip_1_ruin.mp4", ClipSource.LOCK_SCREEN, ended))
+        assertEquals(CheckInAction.PLAIN, Rules.checkInAction(quietOff, playing, noon, true, sure, clips = 2, now = ended + 6 * 60_000))
+    }
+
+    @Test
+    fun herClipHoldsThePhoneUntilItEnds() {
+        val since = 1_000_000L
+        val forced = ForcedClip("clip_1_ruin.mp4", ClipSource.CHECK_IN, since)
+        assertTrue(Clips.forcing(forced, since + 60_000))
+        assertFalse(Clips.forcing(null, since))
+        // A clip that never ends stops holding the phone after 10 minutes.
+        assertFalse(Clips.forcing(forced, since + Clips.FORCED_MAX_MS))
+        // Back to it from the home screen and any app, Always-allowed ones too.
+        assertTrue(Clips.pullsBack(forced, since, ownApp = false, launcher = true, exempt = true))
+        assertTrue(Clips.pullsBack(forced, since, ownApp = false, launcher = false, exempt = false))
+        // Never from her own screens, the phone, Settings or system screens.
+        assertFalse(Clips.pullsBack(forced, since, ownApp = true, launcher = false, exempt = false))
+        assertFalse(Clips.pullsBack(forced, since, ownApp = false, launcher = false, exempt = true))
+        assertFalse(Clips.pullsBack(null, since, ownApp = false, launcher = true, exempt = false))
     }
 }

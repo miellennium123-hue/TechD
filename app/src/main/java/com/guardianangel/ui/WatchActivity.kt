@@ -33,11 +33,22 @@ import androidx.compose.ui.unit.dp
 import com.guardianangel.core.Guardian
 import com.guardianangel.core.SessionClips
 import com.guardianangel.ui.theme.GuardianTheme
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.TextButton
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.guardianangel.core.Line
+import com.guardianangel.data.ClipSource
 
 /**
- * A check-in made you watch one of your clips (round 77). Opening it meets her one-minute deadline;
- * it plays to the end with sound and no controls, then you tell her you watched. Back does nothing,
- * Quit for now is always here.
+ * Her full-screen clip (round 77, locked since round 92): a check-in clip, or one her bedtime or Caught
+ * screen plays. Opening a check-in clip meets her one-minute deadline. It plays to the end with sound
+ * and no controls, and until it ends her watch sends you back here from anywhere (never from calls).
+ * Turn the screen off and it starts over when you're back. Back does nothing; Quit for now and an
+ * emergency call are always here.
  */
 class WatchActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,15 +73,43 @@ class WatchActivity : ComponentActivity() {
 @Composable
 private fun WatchScreen(onDone: () -> Unit) {
     val context = LocalContext.current
-    val request = remember { Guardian.state.value.watch }
-    val file = remember { request?.let { SessionClips.file(context, it.clip) }?.takeIf { it.exists() } }
-    var line by remember { mutableStateOf(Guardian.state.value.lastLine) }
+    val forced = remember { Guardian.state.value.forcedClip }
+    val file = remember { forced?.let { SessionClips.file(context, it.clip) }?.takeIf { it.exists() } }
+    var line by remember {
+        mutableStateOf(if (forced?.source == ClipSource.LOCK_SCREEN) Guardian.line(Line.WATCH_LOCKED) else Guardian.state.value.lastLine)
+    }
     var ended by remember { mutableStateOf(false) }
+    // Round 92: screen off, then back: the clip starts over from the beginning.
+    var restarts by remember { mutableIntStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        var stopped = false
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> stopped = true
+                Lifecycle.Event.ON_START -> if (stopped && !ended) {
+                    stopped = false
+                    restarts++
+                    Guardian.clipRestarted()
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    fun finished() {
+        ended = true
+        val said = Guardian.clipEnded()
+        // A lock screen clip hands you straight back to her lock screen.
+        if (said == null) onDone() else line = said
+    }
 
     // Nothing to watch (already watched, or the clip was deleted): she lets it go.
     LaunchedEffect(file) {
         if (file == null) {
-            if (request != null) Guardian.watchFinished()
+            if (forced != null || Guardian.state.value.watch != null) Guardian.clipEnded()
             onDone()
         }
     }
@@ -83,11 +122,14 @@ private fun WatchScreen(onDone: () -> Unit) {
         ) {
             if (line.isNotBlank()) SpeechBubble(line)
             if (file != null && !ended) {
-                ClipPlayer(file, Modifier.fillMaxWidth().weight(1f), onEnd = {
-                    ended = true
-                    line = Guardian.watchFinished()
-                })
-                Text("Watch to the end.", style = MaterialTheme.typography.titleMedium)
+                key(restarts) {
+                    ClipPlayer(file, Modifier.fillMaxWidth().weight(1f), onEnd = { finished() })
+                }
+                Text("Your phone is hers until it ends.", style = MaterialTheme.typography.titleMedium)
+                // Calls are never blocked.
+                TextButton(onClick = {
+                    runCatching { context.startActivity(Intent(Intent.ACTION_DIAL).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                }) { Text("Emergency call") }
             } else if (ended) {
                 AngelImage(Modifier.weight(1f))
                 Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Done") }

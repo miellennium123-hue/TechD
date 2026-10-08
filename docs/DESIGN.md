@@ -1,8 +1,8 @@
 # Guardian Angel: Design Doc
 
 > **Living document.** Updated after every message (see Update rule below). Source of truth for what the app is and how it should behave.
-> **Status:** v0.27.2 (Edge face from the front camera). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
-> **Last updated:** 2026-10-07 (round 91)
+> **Status:** v0.27.3 (Home screen block fix; her clips lock the phone until they end). Latest APK: https://github.com/miellennium123-hue/TechD/releases/latest Partner remote control and Bluetooth toys are still later phases.
+> **Last updated:** 2026-10-08 (round 92)
 >
 > **Update rule:** Claude updates this doc after every message in the development chat, in the same commit as any code change. Each update refreshes "Last updated", records new decisions in the relevant section, and adds a changelog entry. If a message changes nothing, the changelog says so.
 
@@ -729,6 +729,16 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **Reported:** her edge face photo came from the camera aimed at your crotch (the back camera), so it showed that instead of your face
 - **Fixed (`ui/SessionCamera.kt`):** the edge face always comes from the front camera, which faces you while you watch her screen. Filming with the back camera, at your "I'm at the edge" tap she flips to the front camera for about a second, waits until it's streaming, takes the photo and flips back. The edge clip has already stopped at the tap, so nothing is lost; a step right after may start filming a moment later. With the front camera already in use, nothing changes
 
+### v0.27.3 (round 92, hotfix: home screen block, locked clips)
+- **Reported:** during a lockout, on the home screen, her block screen said "Google is locked as punishment" and came back two more times before the home screen was usable
+- **Cause:** her watch reacted to every window event, including ones from widgets and overlays on the home screen (the Google app's search bar and feed). It took Google for the app you were in, blocked it, and blocked it again each time you went home
+- **Fixed (`GuardianAccessibilityService.isForegroundApp`):** an app only counts as the one you're in when the event is one of its screens (an activity), or when its window is the active one (an app's own dialog). Widgets and overlays on the home screen don't count, and nothing is checked or blocked for them
+- **Asked:** when she plays your clips on screen, lock the phone on the video until it's done, then a 5 minute cooldown before she can play another; and if the phone goes off, the video starts over next time
+- **Built (`Clips.forcing`, `Clips.pullsBack`, `Clips.cooldownOver`, `GuardianState.forcedClip`):** every clip she plays outside a session (a check-in clip, and the one her bedtime or Caught screen plays) now plays full screen on her Watch screen. Until it ends her watch sends you straight back to it from the home screen and every app, Always-allowed apps included (the user's choice: a full lock for the length of the clip). Never from calls, the phone, Settings or system screens, and her Watch screen has an **Emergency call** button and Quit for now. Turning the screen off (or leaving) starts the clip over from the beginning when you're back. When it ends: a check-in clip earns its merit as before; a lock screen clip hands you back to her lock screen
+- **Cooldown:** no new full-screen clip (check-in or lock screen) until 5 minutes after the last one ended (`GuardianState.lastClipAt`). Clips inside your sessions are unchanged and don't count
+- **Safety:** a clip that somehow never ends stops holding the phone after 10 minutes. Quit for now clears it
+- **Tests:** `ClipsTest.kt` (the cooldown, check-ins waiting it out, holding and pulling back, what's exempt). 232 unit tests passed locally
+
 ---
 
 ## 10. Open questions
@@ -1021,3 +1031,4 @@ A JOI-style "virtual succubus" idea. **Part 1 built in v0.11.0** and **part 2 (c
 - **2026-10-07 (round 89):** No code changes. User decided to stop the Windows port, so it's not happening. Closed the round 88 doc PR and marked the plan shelved in section 10
 - **2026-10-07 (round 90, v0.27.2):** Fix. Her edge face photo now always comes from the front camera: filming with the back camera, she flips to the front for a moment at your edge tap, takes it and flips back
 - **2026-10-07 (round 91):** No code changes. User asked how the ruin compilation works. Answer: Her videos > Play her ruin reel plays every saved ruin clip back to back, oldest first, with her caption on each (a playlist, not one stitched file)
+- **2026-10-08 (round 92, v0.27.3):** Hotfix. Her block screen no longer comes up over your home screen because of the Google app's widgets. Clips she plays outside sessions (check-ins, her bedtime and Caught screens) now lock the phone full screen until they end, start over if the screen goes off, and come at most once every 5 minutes. Calls and Quit for now always work. Details in section 8
