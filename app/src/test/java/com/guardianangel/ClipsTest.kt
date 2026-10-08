@@ -4,9 +4,11 @@ import com.guardianangel.core.CheckInAction
 import com.guardianangel.core.CheckInRolls
 import com.guardianangel.core.ClipInfo
 import com.guardianangel.core.ClipKind
+import com.guardianangel.core.ClipTake
 import com.guardianangel.core.Clips
 import com.guardianangel.core.LockGuard
 import com.guardianangel.core.Rules
+import com.guardianangel.core.Step
 import com.guardianangel.core.StepKind
 import com.guardianangel.data.ClipSource
 import com.guardianangel.data.ForcedClip
@@ -67,7 +69,47 @@ class ClipsTest {
         assertNull(Clips.films(StepKind.EDGE, ruinsOnly))
         assertNull(Clips.films(StepKind.CBT, ruinsOnly))
         assertNull(Clips.films(StepKind.STROKE, films))
-        assertNull(Clips.films(StepKind.WATCH, films))
+    }
+
+    @Test
+    fun aRuinIsOneTakeFromItsEdge() {
+        // Round 95: edge, countdown and ruin are one ruin clip, started at the edge, even with edges not filmed.
+        val ruinsOnly = SessionSettings(filmTasks = false)
+        val steps = listOf(
+            Step(StepKind.STROKE, 30, bpm = 100),
+            Step(StepKind.EDGE, 180, bpm = 130),
+            Step(StepKind.COUNTDOWN, 5, bpm = 160),
+            Step(StepKind.RUIN, 20),
+            Step(StepKind.COOL, 45),
+        )
+        assertNull(Clips.take(steps, 0, ruinsOnly))
+        (1..3).forEach { assertEquals(ClipTake(1, ClipKind.RUIN), Clips.take(steps, it, ruinsOnly)) }
+        assertNull(Clips.take(steps, 4, ruinsOnly))
+        assertEquals(1, Clips.ruinStart(steps, 3))
+        // A plain edge (no ruin after it) is its own edge clip, only with edges filmed.
+        val edges = listOf(Step(StepKind.EDGE, 180), Step(StepKind.EDGE_HOLD, 20), Step(StepKind.CBT, 20))
+        assertEquals(ClipTake(0, ClipKind.EDGE), Clips.take(edges, 0, SessionSettings()))
+        assertNull(Clips.take(edges, 0, ruinsOnly))
+        assertNull(Clips.take(edges, 1, SessionSettings()))
+        assertEquals(ClipTake(2, ClipKind.CBT), Clips.take(edges, 2, SessionSettings()))
+        assertNull(Clips.ruinStart(edges, 0))
+        // A countdown that isn't a ruin's isn't filmed.
+        val countdown = listOf(Step(StepKind.COUNTDOWN, 5), Step(StepKind.STROKE, 20))
+        assertNull(Clips.take(countdown, 0, SessionSettings()))
+    }
+
+    @Test
+    fun edgeClipsKeepTenSecondsEachSide() {
+        // 60 seconds filmed, stopped 10 seconds after the tap: keep the last 20.
+        val stopped = 1_000_000L
+        assertEquals(40_000L, Clips.trimStartMs(60_000, stopped, stopped - Clips.EDGE_AFTER_MS))
+        // A ruin: stopped 25 seconds after the tap (countdown and ruin), so keep 35.
+        assertEquals(25_000L, Clips.trimStartMs(60_000, stopped, stopped - 25_000))
+        // Too short to cut, or no tap: keep it all.
+        assertEquals(0L, Clips.trimStartMs(15_000, stopped, stopped - Clips.EDGE_AFTER_MS))
+        assertEquals(0L, Clips.trimStartMs(20_500, stopped, stopped - Clips.EDGE_AFTER_MS))
+        assertEquals(0L, Clips.trimStartMs(60_000, stopped, 0))
+        assertEquals(0L, Clips.trimStartMs(0, stopped, stopped - 5_000))
     }
 
     @Test
@@ -80,11 +122,6 @@ class ClipsTest {
     @Test
     fun whenSheMakesYouWatch() {
         val s = SessionSettings()
-        assertTrue(Clips.inSession(s, clips = 1, roll = 0.0))
-        assertFalse(Clips.inSession(s, clips = 0, roll = 0.0))
-        // Every session (round 78), as long as there's something to watch.
-        assertTrue(Clips.inSession(s, clips = 1, roll = 0.99))
-        assertFalse(Clips.inSession(s.copy(watchInSessions = false), clips = 1, roll = 0.0))
         assertTrue(Clips.onLockScreen(on, clips = 1, roll = 0.0))
         assertTrue(Clips.onLockScreen(on, clips = 1, roll = 0.4))
         assertFalse(Clips.onLockScreen(on, clips = 1, roll = 0.6))
@@ -123,7 +160,6 @@ class ClipsTest {
         val strict = on.copy(lockGuard = true)
         assertTrue(LockGuard.loosens(strict, strict.copy(session = SessionSettings(watchAtCheckIns = false))))
         assertTrue(LockGuard.loosens(strict, strict.copy(session = SessionSettings(watchOnLockScreens = false))))
-        assertFalse(LockGuard.loosens(strict, strict.copy(session = SessionSettings(watchInSessions = false))))
         assertFalse(LockGuard.loosens(strict, strict.copy(session = SessionSettings(filmTasks = false))))
     }
 

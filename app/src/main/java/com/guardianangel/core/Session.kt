@@ -23,7 +23,7 @@ enum class StepKind(
     val stroking: Boolean = false,
     val watched: Boolean = true,
     val skippable: Boolean = false,
-    /** Expected length of a [tap], [WATCH], [REPLAY] or [DEAL] step, for the time estimate. */
+    /** Expected length of a [tap] or [DEAL] step, for the time estimate. */
     val expected: Int = 0,
 ) {
     INTRO(Line.SESSION_START, watched = false),
@@ -53,19 +53,12 @@ enum class StepKind(
     SOUND_HOLD(Line.SESSION_SOUND_HOLD, still = true, watched = false, skippable = true),
     SOUND_OUT(Line.SESSION_SOUND_OUT, watched = false, skippable = true),
     COUNTDOWN(Line.SESSION_COUNTDOWN, watched = false),
-    /**
-     * Round 77: she plays one of your clips and you watch yourself. Moves on when it ends. Since round 79
-     * you stroke to her beat while you watch (hands still during a lock), with the live camera beside it.
-     */
-    WATCH(Line.SESSION_WATCH, watched = false, expected = 40),
     /** Round 79: her offer before the ending. A sure ruin now, or more edges for a coin flip at a full one. */
     DEAL(Line.SESSION_DEAL, watched = false, expected = 20),
     /** Round 79: the coin flip after you took her edges. [Step.line] says whether you won. */
     FLIP(Line.SESSION_FLIP_LOST, still = true, watched = false),
     /** Round 79, "Keep going" kink: stroke right through your orgasm or ruin. */
     POST(Line.SESSION_POST, watched = false),
-    /** Round 79: she plays your ruin back right away (stroking through it with "Keep going"). */
-    REPLAY(Line.SESSION_REPLAY, watched = false, expected = 20),
     UNLOCK(Line.SESSION_UNLOCK, tap = "Unlocked", watched = false, expected = 30),
     /** Round 79: cum on her exact command, then tell her honestly if you made it. */
     FINISH(Line.SESSION_FINISH, watched = false, expected = 30),
@@ -107,6 +100,7 @@ enum class DealChoice { RUIN_NOW, EDGES }
  * [reps] counts CBT and exact counts. [comment] is an extra praise or humiliation line shown with it.
  * [ending]: part of her ending, which her deal can swap (round 79). [pattern] and [style]: how to stroke.
  * [tauntAt] (round 79): a countdown holds on this number while she taunts you; 0 for a straight count.
+ * Round 95: no clips play inside sessions any more (no watch breaks, no replay, no CBT loop).
  */
 data class Step(
     val kind: StepKind,
@@ -122,8 +116,6 @@ data class Step(
     val tauntAt: Int = 0,
     /** Round 84: part of her warm-up. */
     val warmup: Boolean = false,
-    /** Round 85: the CBT she filmed this session loops on screen during this command. */
-    val showCbt: Boolean = false,
 ) {
     /** Her beat [elapsedMs] into the step: steady, or partway from [bpm] to [bpmTo]. */
     fun bpmAt(elapsedMs: Long): Int {
@@ -155,8 +147,8 @@ object Session {
     const val RUIN_CLIP_SECONDS = 20
     /** A quickshot's edge waits at most this long for your tap. */
     const val QUICKSHOT_EDGE_SECONDS = 120
-    /** A clip she plays can run this long at most (a whole edge is up to 3 minutes). */
-    const val WATCH_MAX_SECONDS = EDGE_MAX_SECONDS + 30
+    /** Round 95: after you reach the edge for a ruin, she counts you down this many seconds, then hands off. */
+    const val RUIN_COUNTDOWN_SECONDS = 5
     const val CBT_SOFT_LIMIT = 2
     const val CBT_HARD_LIMIT = 4
 
@@ -233,14 +225,12 @@ object Session {
     /**
      * The whole session. [soundingReady] is your "sterile sound and lube ready" tick; without it
      * there's no sounding. During a lock ([caged]) only cage-safe commands run until the ending.
-     * [watchClip] (round 77, see Clips.inSession): somewhere in the middle she plays one of your clips.
      */
     fun build(
         settings: SessionSettings,
         caged: Boolean,
         random: Random,
         soundingReady: Boolean = false,
-        watchClip: Boolean = false,
         sizeKnown: Boolean = false,
     ): SessionScript {
         val kinks = kinks(settings, caged).let { if (soundingReady) it else it - Kink.SOUNDING }
@@ -297,7 +287,6 @@ object Session {
                 elapsed += commented.estimate
             }
         }
-        if (watchClip) insertWatch(steps, caged, random)
         // Her deal before the ending: never during a lock or when you'd already get permission.
         if (!caged && ending != SessionEnding.PERMISSION && random.nextDouble() < DEAL_CHANCE) {
             steps += Step(StepKind.DEAL, DEAL_SECONDS)
@@ -352,36 +341,15 @@ object Session {
             Step(StepKind.COUNTDOWN, seconds)
         }
 
-    /**
-     * Her watch break: stroke slowly to her beat while your clip plays (round 79), or hands still
-     * during a lock.
-     */
-    fun watchStep(caged: Boolean, random: Random): Step =
-        if (caged) {
-            Step(StepKind.WATCH, WATCH_MAX_SECONDS)
-        } else {
-            Step(StepKind.WATCH, WATCH_MAX_SECONDS, bpm = random.nextInt(60, 91), line = Line.SESSION_WATCH_STROKE)
-        }
-
-    /** One "watch yourself" break in the middle half of the body, never inside sounding. */
-    private fun insertWatch(steps: MutableList<Step>, caged: Boolean, random: Random) {
-        val inSounding = setOf(StepKind.SOUND_IN, StepKind.SOUND_HOLD)
-        val places = (1..steps.size).filter { i ->
-            steps[i - 1].kind !in inSounding && steps[i - 1].kind != StepKind.COUNTDOWN
-        }
-        val middle = places.filter { it >= steps.size / 4 && it <= steps.size * 3 / 4 }.ifEmpty { places }
-        steps.add(middle[random.nextInt(middle.size)], watchStep(caged, random))
-    }
-
     /** Round 85: the owed ruin opens with this long of hard CBT, every slap counted and filmed. */
     const val OWED_CBT_SECONDS = 60
     const val OWED_CBT_BPM = 30
 
     /**
      * The ruin you owe her after a Porn block catch (round 85): a quickshot that opens with a full minute
-     * of hard CBT she films, then fast strokes, the edge and the ruin while that CBT clip loops on screen
-     * above you (you still see yourself below). Then her instant replay of the ruin. "Too much" still skips
-     * the CBT with no penalty. During a lock: the CBT with the cage on, then unlock, and back on after.
+     * of hard CBT she films, then fast strokes and her ruin: the edge, her countdown, hands off.
+     * "Too much" still skips the CBT with no penalty. During a lock: the CBT with the cage on, then unlock,
+     * and back on after. Round 95: no more CBT loop or replay on screen.
      */
     fun owedRuin(caged: Boolean, random: Random): SessionScript = SessionScript(
         SessionEnding.RUINED,
@@ -391,12 +359,9 @@ object Session {
             val reps = OWED_CBT_SECONDS * OWED_CBT_BPM / 60
             add(Step(StepKind.CBT, OWED_CBT_SECONDS + 3, bpm = OWED_CBT_BPM, reps = reps, line = Line.SESSION_CBT_HARD))
             if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
-            add(Step(StepKind.STROKE, 20, bpm = random.nextInt(130, 151), line = Line.SESSION_WATCH_CBT, showCbt = true))
-            add(Step(StepKind.FASTER, 15, bpm = random.nextInt(170, 191), showCbt = true))
-            add(Step(StepKind.EDGE, QUICKSHOT_EDGE_SECONDS, bpm = 150, bpmTo = 180, showCbt = true))
-            add(Step(StepKind.COUNTDOWN, 3, showCbt = true))
-            add(Step(StepKind.RUIN, RUIN_CLIP_SECONDS, showCbt = true))
-            add(Step(StepKind.REPLAY, RUIN_CLIP_SECONDS + 5))
+            add(Step(StepKind.STROKE, 20, bpm = random.nextInt(130, 151)))
+            add(Step(StepKind.FASTER, 15, bpm = random.nextInt(170, 191)))
+            addAll(ruin(QUICKSHOT_EDGE_SECONDS, 150))
             if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
         }.map { it.copy(ending = true) },
         quick = true,
@@ -405,32 +370,37 @@ object Session {
     /**
      * A quickshot (round 49): about two minutes, fast to her beat, always a ruin she films.
      * Ignores the kink menu, the length and the ending sliders. During a lock: unlock first, cage back on after.
-     * [watchClip] (round 78): she plays one of your clips after the first strokes, like every session.
-     * Round 79: her edge speeds up, and she replays your ruin right after.
+     * Round 95: her ruin is the edge, her countdown, hands off. No clips play.
      */
-    fun quickshot(caged: Boolean, random: Random, watchClip: Boolean = false): SessionScript = SessionScript(
+    fun quickshot(caged: Boolean, random: Random): SessionScript = SessionScript(
         SessionEnding.RUINED,
         caged,
         buildList {
             add(Step(StepKind.INTRO, 4, line = Line.SESSION_QUICKSHOT))
             if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
             add(Step(StepKind.STROKE, 15, bpm = random.nextInt(130, 151)))
-            if (watchClip) add(watchStep(caged = false, random = random))
             add(Step(StepKind.FASTER, 10, bpm = random.nextInt(170, 191)))
-            add(Step(StepKind.EDGE, QUICKSHOT_EDGE_SECONDS, bpm = 150, bpmTo = 180))
-            add(Step(StepKind.COUNTDOWN, 3))
-            add(Step(StepKind.RUIN, RUIN_CLIP_SECONDS))
-            add(Step(StepKind.REPLAY, RUIN_CLIP_SECONDS + 5))
+            addAll(ruin(QUICKSHOT_EDGE_SECONDS, 150))
             if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
         }.map { it.copy(ending = true) },
         quick = true,
     )
 
     /**
+     * Round 95: every ruin goes the same way. First she has you get to the edge (tap when you're there),
+     * then she counts you down while you keep stroking, and at zero: hands off. She films all of it.
+     */
+    fun ruin(edgeSeconds: Int, bpm: Int): List<Step> = listOf(
+        Step(StepKind.EDGE, edgeSeconds, bpm = bpm, bpmTo = bpm + 30, line = Line.SESSION_RUIN_EDGE),
+        Step(StepKind.COUNTDOWN, RUIN_COUNTDOWN_SECONDS, bpm = bpm + 30, line = Line.SESSION_RUIN_COUNTDOWN),
+        Step(StepKind.RUIN, RUIN_CLIP_SECONDS),
+    )
+
+    /**
      * Her ending. Edges speed up to the edge (round 79). Every step is marked [Step.ending].
      * Round 79 cruelty: sometimes her countdown to cum stops at 1 ("not yet") for one more edge, and a
-     * denial can come at the end of a countdown. After a ruin she replays it; with "Keep going" (never
-     * during a lock) you stroke right through your orgasm or the replay. Permission is on her exact command.
+     * denial can come at the end of a countdown. With "Keep going" (never during a lock) you stroke right
+     * through your orgasm or ruin. Permission is on her exact command. A ruin is [ruin] (round 95).
      */
     fun endingSteps(ending: SessionEnding, caged: Boolean, kinks: Set<Kink>, random: Random): List<Step> {
         val keepGoing = Kink.POST_ORGASM in kinks && !caged
@@ -453,12 +423,8 @@ object Session {
             }
             SessionEnding.RUINED -> buildList {
                 if (caged) add(Step(StepKind.UNLOCK, TAP_MAX_SECONDS))
-                add(Step(StepKind.STROKE, 30, bpm = 110))
-                add(edge(130))
-                add(Step(StepKind.COUNTDOWN, 3))
-                add(Step(StepKind.RUIN, RUIN_CLIP_SECONDS))
-                // Instant replay, stroking through it with "Keep going".
-                add(Step(StepKind.REPLAY, RUIN_CLIP_SECONDS + 5, bpm = if (keepGoing) random.nextInt(50, 71) else 0))
+                addAll(ruin(EDGE_MAX_SECONDS, 130))
+                if (keepGoing) add(postStep(random))
                 if (caged) add(Step(StepKind.RELOCK, TAP_MAX_SECONDS))
             }
             SessionEnding.DENIED -> if (caged) {

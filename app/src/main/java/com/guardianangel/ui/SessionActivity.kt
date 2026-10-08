@@ -46,7 +46,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -136,13 +135,9 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
     var clip by remember { mutableStateOf<File?>(null) }
     var clipFailed by remember { mutableStateOf(false) }
     var filmed by remember { mutableIntStateOf(0) }
-    // Round 77: the clip she plays mid-session, picked when it starts.
-    var watchFile by remember { mutableStateOf<File?>(null) }
     // Round 79: what she counts, her deal, your finish on command, and remarks between commands.
     var edges by remember { mutableIntStateOf(0) }
     var fastestEdge by remember { mutableIntStateOf(0) }
-    var lastEdgeSeconds by remember { mutableIntStateOf(0) }
-    var snapshot by remember { mutableIntStateOf(0) }
     var deal by remember { mutableStateOf("") }
     var finishOutcome by remember { mutableStateOf(SessionOutcome.FINISHED) }
     var remark by remember { mutableStateOf<String?>(null) }
@@ -154,8 +149,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
         SessionPlan.plan(config, gstate, chosen, System.currentTimeMillis(), lengthRoll)
     }
     var running by remember { mutableStateOf<SessionPlanned?>(null) }
-    // Round 85: the owed ruin films your CBT and plays it back while you stroke.
-    var cbtClip by remember { mutableStateOf<File?>(null) }
+    // Round 85: the owed ruin always films your CBT.
     val owedRuin = running?.reason == SessionReason.RUIN_OWED
     val sizeNote = gstate.ratings.lastOrNull()?.let { "Rate me: longer than ${it.lengthPercentile}% of men." }
     val voice = remember {
@@ -226,15 +220,13 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     onAllowCamera = { permission.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)) },
                     modifier = Modifier.weight(1f),
                     onStart = {
-                        val clips = SessionClips.videos(context)
-                        val watch = Clips.inSession(settings, clips.size, Random.Default.nextDouble())
                         val built = if (plan.reason == SessionReason.RUIN_OWED) {
                             // Round 85: what you owe her after a catch is always her CBT quickshot.
                             Session.owedRuin(caged, Random.Default)
                         } else if (quick) {
-                            Session.quickshot(caged, Random.Default, watchClip = watch)
+                            Session.quickshot(caged, Random.Default)
                         } else {
-                            Session.build(plan.settings, caged, Random.Default, soundingReady, watchClip = watch, sizeKnown = sizeNote != null)
+                            Session.build(plan.settings, caged, Random.Default, soundingReady, sizeKnown = sizeNote != null)
                         }
                         running = plan
                         if (!quick && plan.reason == SessionReason.CHOSEN && chosen != settings.theme) {
@@ -247,7 +239,6 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                             "Tonight: ${plan.theme.label}.".takeIf { !quick && plan.theme != SessionTheme.YOURS && plan.reason == SessionReason.CHOSEN },
                             (Guardian.line(Line.SESSION_TRAINING) + " Week ${plan.week}.").takeIf { !quick && plan.week > 0 },
                         ).joinToString(" ").ifBlank { null }
-                        watchFile = Clips.pick(clips, Random.Default)?.let { SessionClips.file(context, it.name) }
                         script = built
                         steps = built.steps
                         index = 0
@@ -260,13 +251,9 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                     caged = caged,
                     beatSound = settings.beatSound,
                     bigText = settings.bigText,
-                    watchFile = watchFile,
-                    replayFile = clip,
-                    cbtFile = cbtClip,
                     filmAll = owedRuin,
                     backCamera = settings.backCamera,
                     voice = voice,
-                    snapshot = snapshot,
                     secretLength = !quick && running?.secretLength == true,
                     sizeNote = sizeNote,
                     remark = remark,
@@ -279,10 +266,8 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                         advance()
                     },
                     onEdge = { seconds ->
-                        lastEdgeSeconds = seconds
                         if (fastestEdge == 0 || seconds < fastestEdge) fastestEdge = seconds
                         if (Session.edgeFast(seconds)) remark = Guardian.say(Line.SESSION_EDGE_FAST)
-                        snapshot++
                         advance()
                     },
                     onDeal = { choice ->
@@ -301,23 +286,16 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                         if (outcome == SessionOutcome.FINISHED) remark = Guardian.say(Line.SESSION_ON_COMMAND)
                         advance()
                     },
-                    onClip = { kind, file ->
+                    onClip = { take, file ->
                         if (file != null) {
                             filmed++
                             // Her caption on what she just saved.
-                            val number = when (kind) {
-                                ClipKind.RUIN -> SessionClips.infos(context).count { it.kind == ClipKind.RUIN }
-                                else -> edges
-                            }
-                            val reps = steps.getOrNull(index)?.takeIf { it.kind == StepKind.CBT }?.reps
-                                ?: steps.take(index).lastOrNull { it.kind == StepKind.CBT }?.reps ?: 0
-                            Guardian.captionClip(file.name, Clips.caption(kind, number, lastEdgeSeconds, reps, edges))
+                            if (take.caption.isNotBlank()) Guardian.captionClip(file.name, take.caption)
                         }
-                        if (kind == ClipKind.RUIN) {
+                        if (take.kind == ClipKind.RUIN) {
                             clip = file
                             clipFailed = file == null
                         }
-                        if (kind == ClipKind.CBT && file != null) cbtClip = file
                     },
                 )
                 phase == SessionPhase.HONOR -> Column(
@@ -354,7 +332,7 @@ private fun SessionScreen(quick: Boolean, onDone: () -> Unit) {
                             ).joinToString(" · "),
                         )
                     }
-                    if (filmed > 0) Muted("She saved $filmed ${if (filmed == 1) "clip or photo" else "clips and photos"}. They're in Guided sessions > Her videos.")
+                    if (filmed > 0) Muted("She saved $filmed ${if (filmed == 1) "clip" else "clips"}. They're in Guided sessions > Her videos.")
                     val proof = relockProof
                     if (proof != null) {
                         Button(onClick = {
@@ -401,14 +379,14 @@ private fun Setup(
             // Round 85: the ruin you owe her after a Porn block catch, whichever button you came from.
             Text("The ruin you owe her", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.error)
             Text(
-                "For what Porn block caught. A full minute of hard CBT that she films, then a quickshot: fast strokes, the edge " +
-                    "and a ruin, while your CBT plays above you and you watch yourself below.",
+                "For what Porn block caught. A full minute of hard CBT that she films, then a quickshot: fast strokes, then " +
+                    "the edge, her countdown, and hands off.",
             )
             Muted("Stop if it ever hurts sharply. \"Too much\" skips the CBT with no penalty.")
             if (caged) Muted("You're locked: the CBT with the cage on, then she has you take it off, and put it back on after.")
         } else if (quick) {
             Text("Quickshot", style = MaterialTheme.typography.headlineSmall)
-            Text("About 2 minutes, fast to her beat. It always ends ruined, and she films the ruin.")
+            Text("About 2 minutes, fast to her beat. Then the edge, her countdown, and hands off: always ruined, and she films it.")
             if (caged) Muted("You're locked: she has you take the cage off first, and put it back on after.")
         } else {
             Text("Guided session", style = MaterialTheme.typography.headlineSmall)
@@ -446,7 +424,7 @@ private fun Setup(
             }
         }
         Muted(
-            "Prop the phone up where the camera sees you: you'll watch yourself the whole time. She films your ruin" +
+            "Prop the phone up where the camera sees you: you'll see yourself live the whole time. She films your ruin" +
                 (if (config.session.filmTasks && !quick) ", edges and CBT" else "") +
                 " into Guided sessions > Her videos, private to this app. Stop or Quit for now any time.",
         )
@@ -482,13 +460,9 @@ private fun Running(
     caged: Boolean,
     beatSound: Boolean,
     bigText: Boolean,
-    watchFile: File?,
-    replayFile: File?,
-    cbtFile: File?,
     filmAll: Boolean,
     backCamera: Boolean,
     voice: SessionVoice?,
-    snapshot: Int,
     secretLength: Boolean,
     sizeNote: String?,
     remark: String?,
@@ -500,8 +474,9 @@ private fun Running(
     onEdge: (Int) -> Unit,
     onDeal: (DealChoice) -> Unit,
     onFinish: (SessionOutcome) -> Unit,
-    onClip: (ClipKind, File?) -> Unit,
+    onClip: (ClipRequest, File?) -> Unit,
 ) {
+    val context = LocalContext.current
     val step = steps[index]
     val now = rememberNow(250)
     var startedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -509,21 +484,12 @@ private fun Running(
     var count by remember { mutableIntStateOf(0) }
     var line by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf<String?>(null) }
-    var replay by remember { mutableStateOf<File?>(null) }
     val pulse = remember { Animatable(1f) }
     val tone = remember { runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 70) }.getOrNull() }
     DisposableEffect(Unit) { onDispose { tone?.release() } }
     val config by Guardian.config.flow.collectAsState()
     val edgeGoal = steps.count { it.kind == StepKind.EDGE }
     val edgeNumber = steps.take(index + 1).count { it.kind == StepKind.EDGE }
-    // A clip she plays: one of yours mid-session, or the ruin you just did. Gone: she moves straight on.
-    val clipToPlay = when {
-        step.kind == StepKind.WATCH -> watchFile?.takeIf { it.exists() }
-        step.kind == StepKind.REPLAY -> replay
-        // Round 85: your CBT loops above you while you stroke and ruin.
-        step.showCbt -> cbtFile?.takeIf { it.exists() }
-        else -> null
-    }
 
     // Each command: her line (spoken too), then wait its time. Tap steps move on when you tap or time runs out.
     LaunchedEffect(index, step) {
@@ -542,23 +508,6 @@ private fun Running(
         voice?.say(listOfNotNull(remark, line).joinToString(" "))
         extras.drop(if (remark != null) 1 else 0).forEach { voice?.then(it) }
         when (step.kind) {
-            StepKind.WATCH -> if (watchFile?.exists() != true) {
-                onNext()
-                return@LaunchedEffect
-            }
-            StepKind.REPLAY -> {
-                // The ruin clip is still being saved for a moment; wait up to 4 seconds for it.
-                var waited = 0
-                while (replayFile == null && waited < 8) {
-                    delay(500)
-                    waited++
-                }
-                replay = replayFile
-                if (replay == null) {
-                    onNext()
-                    return@LaunchedEffect
-                }
-            }
             StepKind.COUNTDOWN -> {
                 // Her countdown, spoken. With a taunt she holds on her number while she teases you.
                 for (n in step.seconds downTo 1) {
@@ -590,8 +539,63 @@ private fun Running(
         onNext()
     }
 
+    // Round 95: what she films. One take can run across commands: a ruin from 10 seconds before your edge,
+    // through her countdown, to the ruin; an edge until 10 seconds after you tap. The camera cuts the start.
+    val filmSettings = if (filmAll) config.session.copy(filmTasks = true) else config.session
+    var take by remember { mutableStateOf<ClipRequest?>(null) }
+    LaunchedEffect(index, step) {
+        val t = System.currentTimeMillis()
+        // You just left an edge (your tap, or her time ran out): she marks the moment.
+        val prev = take?.let { p ->
+            if (p.markAt == 0L && p.id == index - 1 && steps.getOrNull(index - 1)?.kind == StepKind.EDGE) {
+                val edge = p.kind == ClipKind.EDGE
+                p.copy(
+                    markAt = t,
+                    stopAt = if (edge) t + Clips.EDGE_AFTER_MS else p.stopAt,
+                    caption = if (edge) Clips.caption(ClipKind.EDGE, p.number, ((t - p.startedAt) / 1_000).toInt()) else p.caption,
+                )
+            } else {
+                p
+            }
+        }
+        val wanted = Clips.take(steps, index, filmSettings)
+        take = when {
+            // The same take going on: at the ruin, it stops just before the ruin's time is up.
+            wanted != null && prev != null && prev.id == wanted.id ->
+                if (step.kind == StepKind.RUIN) prev.copy(stopAt = t + (Session.RUIN_CLIP_SECONDS - 1) * 1_000L) else prev
+            wanted != null -> {
+                val number = when (wanted.kind) {
+                    ClipKind.RUIN -> SessionClips.infos(context).count { it.kind == ClipKind.RUIN } + 1
+                    ClipKind.EDGE -> edgeNumber
+                    else -> 0
+                }
+                ClipRequest(
+                    id = wanted.id,
+                    kind = wanted.kind,
+                    startedAt = t,
+                    stopAt = if (step.kind == StepKind.RUIN) t + (Session.RUIN_CLIP_SECONDS - 1) * 1_000L else 0,
+                    number = number,
+                    caption = when (wanted.kind) {
+                        ClipKind.RUIN -> Clips.caption(ClipKind.RUIN, number, edges = edgeNumber)
+                        ClipKind.CBT -> Clips.caption(ClipKind.CBT, 0, reps = step.reps)
+                        else -> Clips.caption(wanted.kind, number)
+                    },
+                )
+            }
+            // An edge's 10 seconds after your tap.
+            prev != null && prev.markAt > 0 && prev.stopAt > t -> prev
+            else -> null
+        }
+    }
+    LaunchedEffect(take?.id, take?.stopAt) {
+        val stopAt = take?.stopAt ?: 0L
+        if (stopAt <= 0) return@LaunchedEffect
+        delay((stopAt - System.currentTimeMillis()).coerceAtLeast(0))
+        take = null
+    }
+
     // Round 79: eyes on the lens while she films an edge or CBT.
-    val films = Clips.films(step.kind, if (filmAll) config.session.copy(filmTasks = true) else config.session)
+    val films = Clips.films(step.kind, filmSettings)
     LaunchedEffect(index, step, films) {
         if (films == null || films == ClipKind.RUIN) return@LaunchedEffect
         delay(8_000)
@@ -661,15 +665,10 @@ private fun Running(
         }
     }
 
-    // What she films on this step: the ruin always, edges and CBT if you let her. Index keeps each step its own clip.
-    val record = films?.let {
-        ClipRequest(index, it, if (it == ClipKind.RUIN) Session.RUIN_CLIP_SECONDS - 1 else step.seconds)
-    }
+    val record = take
 
     val left = ((startedAt + step.seconds * 1_000L - now) / 1_000).coerceAtLeast(0)
-    // A clip that replaces the command (her watch break, the replay). Your CBT loop doesn't.
-    val playing = clipToPlay != null && !step.showCbt
-    val totalLeft = (if (playing) 0 else left) + steps.drop(index + 1).sumOf { it.estimate }
+    val totalLeft = left + steps.drop(index + 1).sumOf { it.estimate }
     val bpmNow = step.bpmAt(now - startedAt)
     // Round 84: dark mode (only her beat on screen), the torch, and landscape.
     var dark by remember { mutableStateOf(false) }
@@ -677,37 +676,16 @@ private fun Running(
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val chapter = Session.chapter(step)
 
-    // The camera, her clip and her beat. In dark mode the screen goes black except for her beat.
+    // The camera and her beat. In dark mode the screen goes black except for her beat. Round 95: no clips
+    // play here any more; you only see yourself live.
     val stage: @Composable (Modifier) -> Unit = { m ->
         Column(m, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            // Then vs now: her clip above, you live below. Otherwise you see yourself the whole session.
-            if (clipToPlay != null) {
-                Text(
-                    when {
-                        step.showCbt -> "Your punishment"
-                        step.kind == StepKind.REPLAY -> "Your ruin, just now"
-                        else -> "You, then"
-                    },
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                // A new player for each clip; your CBT loops across commands until the replay takes over.
-                key(clipToPlay.path) {
-                    if (step.showCbt) {
-                        ClipPlayer(clipToPlay, Modifier.weight(1f).fillMaxWidth(), loop = true)
-                    } else {
-                        ClipPlayer(clipToPlay, Modifier.weight(1f).fillMaxWidth(), onEnd = onNext)
-                    }
-                }
-                Text("You, now", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            }
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 SessionCamera(
                     record = record,
                     onClip = onClip,
                     modifier = Modifier.fillMaxSize(),
                     back = backCamera,
-                    snapshot = snapshot,
                     torch = torch && backCamera,
                 )
                 if (dark) Box(Modifier.matchParentSize().background(Color.Black))
@@ -756,8 +734,6 @@ private fun Running(
     // The count and your buttons.
     val controls: @Composable ColumnScope.() -> Unit = {
         val detail = when {
-            playing && step.bpm > 0 -> "Stroke through it · ${step.bpm} per minute"
-            playing -> "Watch yourself"
             step.kind == StepKind.CBT -> "Count: ${ticks.coerceAtMost(step.reps)} of ${step.reps}"
             step.kind == StepKind.COUNT -> "Stroke ${ticks.coerceAtMost(step.reps)} of ${step.reps}"
             step.kind == StepKind.COUNTDOWN || step.kind == StepKind.DEAL || step.kind == StepKind.FINISH -> null
@@ -795,7 +771,7 @@ private fun Running(
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { dark = !dark }) { Text(if (dark) "Show camera" else "Dark") }
             if (backCamera) TextButton(onClick = { torch = !torch }) { Text(if (torch) "Torch off" else "Torch") }
-            if (record == null && !playing) {
+            if (record == null) {
                 TextButton(onClick = onSwitchCamera) { Text(if (backCamera) "Front camera" else "Back camera") }
             }
         }

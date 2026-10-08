@@ -91,8 +91,6 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_COUNTDOWN("Guided sessions", "Countdown", "Countdowns: she counts you down to her next command"),
     SESSION_PRAISE("Guided sessions", "Praise remark", "Praise: a remark during a command"),
     SESSION_HUMILIATION("Guided sessions", "Humiliation remark", "Humiliation: a remark during a command"),
-    SESSION_WATCH("Guided sessions", "Watch yourself", "Mid-session she plays one of your clips and you watch, hands still (during a lock)"),
-    SESSION_WATCH_STROKE("Guided sessions", "Stroke while you watch", "Mid-session she plays one of your clips and you stroke to her beat while you watch"),
     SESSION_RAMP("Guided sessions", "Faster and faster", "Speed changes: her beat speeds up the whole command"),
     SESSION_POST("Guided sessions", "Keep going", "Keep going kink: stroke right through your orgasm or ruin"),
     SESSION_COUNT("Guided sessions", "Exact count", "She wants an exact number of strokes, counted on screen"),
@@ -109,9 +107,7 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_FLIP_WON("Guided sessions", "Coin flip: won", "Her coin says you may cum"),
     SESSION_FLIP_LOST("Guided sessions", "Coin flip: lost", "Her coin says no, and the ending stays as it was"),
     SESSION_ON_COMMAND("Guided sessions", "On command", "You came right on her command"),
-    SESSION_REPLAY("Guided sessions", "Instant replay", "Right after the ruin she plays it back to you"),
     SESSION_OWED_RUIN("Guided sessions", "Owed ruin", "The ruin you owe her after a Porn block catch: a minute of hard CBT, then a quickshot ruin"),
-    SESSION_WATCH_CBT("Guided sessions", "Stroke to your CBT", "In the owed ruin: stroke fast while your CBT clip plays"),
     SESSION_WARMUP("Guided sessions", "Warm-up", "Her warm-up: slow, light strokes before she starts for real"),
     SESSION_COOL("Guided sessions", "Cool-down", "Her cool-down after the ending: hands off, breathe"),
     SESSION_CLAMP_ON("Guided sessions", "Clamps on", "Clamps kink: put your clamps or pins on"),
@@ -125,7 +121,9 @@ enum class Line(val group: String, val label: String, val note: String) {
     SESSION_BOOK_NOW("Guided sessions", "Booked session time", "Your booked session starts now; start within 15 minutes"),
     SESSION_UNLOCK("Guided sessions", "Unlock", "Ruined ending during a lock: take the cage off"),
     SESSION_FINISH("Guided sessions", "Permission", "Permission ending: you may finish"),
-    SESSION_RUIN("Guided sessions", "Ruin", "Ruined ending: hands off at the edge. She films it"),
+    SESSION_RUIN("Guided sessions", "Ruin", "Ruins: hands off when her countdown hits zero. She films it"),
+    SESSION_RUIN_EDGE("Guided sessions", "Ruin: get to the edge", "Every ruin starts here: get to the edge and tap, then she counts you down"),
+    SESSION_RUIN_COUNTDOWN("Guided sessions", "Ruin: her countdown", "Right after the ruin edge: keep stroking while she counts down, hands off at zero"),
     SESSION_RUIN_DONE("Guided sessions", "Ruin done", "You report the ruin went as she ordered"),
     SESSION_DENIED("Guided sessions", "Denied", "Denied ending: hands off, no release"),
     SESSION_RELOCK("Guided sessions", "Lock back up", "After a ruin during a lock: cage back on, then a photo"),
@@ -322,11 +320,6 @@ object Voice {
             "So easy to control, aren't you?",
             "Pathetic little thing, doing everything I say.",
         ),
-        Line.SESSION_WATCH to listOf(
-            "Hands still for a moment, pet. Watch yourself. This is what you look like for me.",
-            "Look at you. I kept this one just for us. Watch every second.",
-            "Eyes on the screen, sweetie. Remember how desperate you were?",
-        ),
         Line.WATCH_CLIP to listOf(
             "I have something to show you, pet. Open it within a minute.",
             "Remember this? Come and watch it for me. Quickly.",
@@ -341,11 +334,6 @@ object Voice {
             "Good pet. You watched every second.",
             "There. Now you know exactly what I see.",
             "Well done. Keep that picture in your head.",
-        ),
-        Line.SESSION_WATCH_STROKE to listOf(
-            "Slow strokes, pet, and watch yourself. Look how needy you were.",
-            "Keep stroking while you watch. Remember how that felt?",
-            "Eyes on yourself, hand on yourself. Slowly, to my beat.",
         ),
         Line.SESSION_RAMP to listOf(
             "Follow me, pet. Faster... and faster... and faster.",
@@ -427,11 +415,6 @@ object Voice {
             "Perfect timing, sweetie. That's how you obey.",
             "Exactly when I said. I'm proud of you.",
         ),
-        Line.SESSION_REPLAY to listOf(
-            "Watch it back, pet. That's what you just did.",
-            "Look at your ruin. Every second of it.",
-            "Here it is again, sweetie. Watch yourself lose it.",
-        ),
         Line.SESSION_WARMUP to listOf(
             "Slowly, pet. Light little strokes. We're only warming up.",
             "Gently at first, sweetie. I want you nice and ready.",
@@ -492,11 +475,6 @@ object Voice {
             "Remember what you looked at? This is the price, sweetie. Balls first, then I ruin you.",
             "Time to pay, pet. One whole minute of slaps on camera, then a ruin.",
         ),
-        Line.SESSION_WATCH_CBT to listOf(
-            "Now stroke, pet, fast, and watch what you just did to yourself.",
-            "Look at your punishment while you stroke. Don't look away.",
-            "Stroke for me while your slaps play. Every one of them.",
-        ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock for me, pet. Just this once.",
             "Take the cage off, sweetheart. Quickly.",
@@ -506,6 +484,16 @@ object Voice {
             "You may finish, pet. Now.",
             "Go on, sweetheart. You've earned it.",
             "Let go for me. Good pet.",
+        ),
+        Line.SESSION_RUIN_EDGE to listOf(
+            "Get to the edge for me, pet. Tap when you're there, and I'll count you down to your ruin.",
+            "Take yourself right to the edge, sweetie. Tell me when, and then I count.",
+            "Edge for me now. When you're right there, tap, and listen for my count.",
+        ),
+        Line.SESSION_RUIN_COUNTDOWN to listOf(
+            "Keep stroking, pet. I'm counting you down. At zero, hands off.",
+            "Don't stop yet, sweetie. Listen to my count. Zero means let go.",
+            "Stroke to my count. When I reach zero, hands away and let it be ruined.",
         ),
         Line.SESSION_RUIN to listOf(
             "Hands off, now! Ruin it for me. I'm watching.",
@@ -935,11 +923,6 @@ object Voice {
             "So desperate. It's embarrassing.",
             "You'll do anything I say, won't you? Pathetic.",
         ),
-        Line.SESSION_WATCH to listOf(
-            "Stop. Watch yourself. Pathetic, isn't it?",
-            "Eyes on the screen. That's you. Look at it.",
-            "Watch what you were. Every second. Then back to work.",
-        ),
         Line.WATCH_CLIP to listOf(
             "Open this. You have one minute.",
             "I'm sending you something to watch. A minute. Don't make me wait.",
@@ -954,11 +937,6 @@ object Voice {
             "Watched it all. Good. Remember it.",
             "Now you know what I think of you.",
             "Done. That's what you are.",
-        ),
-        Line.SESSION_WATCH_STROKE to listOf(
-            "Stroke and watch yourself. Pathetic, isn't it? Keep going.",
-            "Look at you. Now stroke to it. Slowly.",
-            "Watch what you are, and don't you dare stop stroking.",
         ),
         Line.SESSION_RAMP to listOf(
             "Faster. Faster. Keep up with me.",
@@ -1040,11 +1018,6 @@ object Voice {
             "Right when I said. Acceptable.",
             "That's obedience.",
         ),
-        Line.SESSION_REPLAY to listOf(
-            "Watch it. That's you.",
-            "Look at your ruin. Pathetic.",
-            "Again. Watch yourself lose it.",
-        ),
         Line.SESSION_WARMUP to listOf(
             "Slow. Light. You're warming up for me.",
             "Barely touching. Don't get ahead of me.",
@@ -1105,11 +1078,6 @@ object Voice {
             "Caught looking at porn. Now you pay. Balls first.",
             "Your price: one full minute of pain, filmed. Then a ruin. Start.",
         ),
-        Line.SESSION_WATCH_CBT to listOf(
-            "Stroke. Fast. Watch your punishment.",
-            "Eyes on your slaps while you stroke. Pathetic.",
-            "Watch yourself suffer and stroke. Don't stop.",
-        ),
         Line.SESSION_UNLOCK to listOf(
             "Unlock. Quickly. Tap when you're out.",
             "Cage off. Now.",
@@ -1119,6 +1087,16 @@ object Voice {
             "Finish. Now.",
             "You may finish. Don't expect this often.",
             "Go. Now.",
+        ),
+        Line.SESSION_RUIN_EDGE to listOf(
+            "Edge. Tap when you're there. Then I count you down.",
+            "Get to the edge. Tap. Then you're mine to ruin.",
+            "To the edge. Now. Tap when you're there.",
+        ),
+        Line.SESSION_RUIN_COUNTDOWN to listOf(
+            "Keep stroking. At zero, hands off. Not a second later.",
+            "Counting you down. Zero means let go.",
+            "Stroke. Listen. At zero you ruin it.",
         ),
         Line.SESSION_RUIN to listOf(
             "Hands off. Now. Ruin it.",

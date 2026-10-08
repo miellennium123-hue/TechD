@@ -155,20 +155,17 @@ fun SessionsScreen(config: GuardianConfig, state: GuardianState, openKinks: () -
             }
             if (config.lockGuard) Muted("Lock guard: switching off her training, punishment sessions, the ruin after a catch or booked sessions takes 30 minutes.")
             Muted(
-                "The camera is on for every session, so you watch yourself the whole time. She always films a ruin. " +
+                "The camera is on for every session, so you see yourself live. She always films a ruin, from 10 seconds before " +
+                    "your edge, through her countdown, to the end. No clips play during sessions. " +
                     "Clips have sound if you allow the microphone, and stay private to this app.",
             )
             SwitchRow(
                 "She films your edges and CBT",
-                "Every edge, until you tap \"I'm at the edge\" (up to 3 minutes), and every CBT count.",
+                "Every edge: the 10 seconds before you tap \"I'm at the edge\" and the 10 after. And every CBT count.",
                 config.session.filmTasks,
             ) { v -> update { it.copy(session = it.session.copy(filmTasks = v)) } }
             Text("She makes you watch your clips", style = MaterialTheme.typography.titleSmall)
-            SwitchRow(
-                "During sessions",
-                "Every session, quickshots too, she stops once and plays one of your clips. You see yourself in the corner.",
-                config.session.watchInSessions,
-            ) { v -> update { it.copy(session = it.session.copy(watchInSessions = v)) } }
+            Muted("Never during a session. Only here:")
             SwitchRow(
                 "At check-ins",
                 "About every other check-in sends a clip. Open it within a minute or it's a failure. Never in quiet time, and only " +

@@ -23,10 +23,12 @@ data class SessionSettings(
      * you'd rather (switch on the session screen). Motion checks and "out of view" were removed.
      */
     val backCamera: Boolean = false,
-    /** Round 77: she films your edges and CBT, with sound. Ruins are always filmed. Clips go to Her videos. */
+    /**
+     * Round 77: she films your edges and CBT, with sound. Ruins are always filmed. Clips go to Her videos.
+     * Round 95: an edge clip is the 10 seconds before your tap and the 10 after.
+     */
     val filmTasks: Boolean = true,
-    /** Round 77: she makes you watch one of your clips: mid-session, at check-ins, on her lock screens. */
-    val watchInSessions: Boolean = true,
+    /** Round 77: she makes you watch one of your clips at check-ins and on her lock screens. Round 95: never in sessions. */
     val watchAtCheckIns: Boolean = true,
     val watchOnLockScreens: Boolean = true,
     /** Round 79: she speaks every command aloud and counts CBT out loud (the phone's own voice). */
